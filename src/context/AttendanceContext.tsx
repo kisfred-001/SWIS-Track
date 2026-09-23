@@ -9,6 +9,7 @@ import {
   orderBy,
   where,
   getDocs,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { seedDatabaseIfEmpty } from '../firebase/seed';
@@ -18,9 +19,11 @@ import {
   Student,
   PremisesSummary,
   PickupDropoffParty,
+  UrgentAlert,
 } from '../types';
 import { useAuth } from './AuthContext';
 import { sound } from '../utils/sound';
+import { initFCM, dispatchUrgentEditAlert, dismissUrgentAlert } from '../firebase/messaging';
 
 interface ProcessScanOptions {
   code: string; // QR code or PIN code
@@ -35,6 +38,9 @@ interface AttendanceContextType {
   todayLogs: AttendanceLog[];
   editRequests: EditRequest[];
   pendingRequestsCount: number;
+  urgentAlerts: UrgentAlert[];
+  activeUrgentAlerts: UrgentAlert[];
+  dismissAlert: (alertId: string) => Promise<void>;
   premisesSummary: PremisesSummary;
   loading: boolean;
   selectedDate: string;
@@ -57,8 +63,9 @@ interface AttendanceContextType {
   submitEditRequest: (
     logId: string,
     proposedData: Partial<AttendanceLog>,
-    reasonForEdit: string
-  ) => Promise<{ success: boolean; message: string }>;
+    reasonForEdit: string,
+    isUrgent?: boolean
+  ) => Promise<{ success: boolean; message: string; alertDispatched?: boolean }>;
   directEditLog: (
     logId: string,
     updatedData: Partial<AttendanceLog>,
@@ -81,6 +88,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [students, setStudents] = useState<Student[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [editRequests, setEditRequests] = useState<EditRequest[]>([]);
+  const [urgentAlerts, setUrgentAlerts] = useState<UrgentAlert[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
@@ -92,6 +100,13 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setLoading(false);
     });
   }, []);
+
+  // Initialize FCM registration for current staff user
+  useEffect(() => {
+    if (currentUser?.staff_id) {
+      initFCM(currentUser.staff_id).catch(() => {});
+    }
+  }, [currentUser?.staff_id]);
 
   // Subscribe to students
   useEffect(() => {
@@ -121,6 +136,38 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
     return () => unsubReqs();
   }, []);
+
+  // Subscribe to urgent alerts (FCM channel for Principals & Directors)
+  useEffect(() => {
+    const q = query(collection(db, 'urgent_alerts'), orderBy('timestamp', 'desc'), limit(15));
+    let initialLoad = true;
+    const unsubAlerts = onSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as UrgentAlert[];
+      setUrgentAlerts(list);
+
+      // Play chime if a new urgent alert arrived after initial load for Principals & Directors
+      if (!initialLoad && canApproveEditRequests) {
+        snap.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            sound.playUrgentAlert();
+          }
+        });
+      }
+      initialLoad = false;
+    });
+    return () => unsubAlerts();
+  }, [canApproveEditRequests]);
+
+  // Compute active (not dismissed) urgent alerts for current user
+  const activeUrgentAlerts = urgentAlerts.filter((a) => {
+    if (!currentUser) return false;
+    return !a.dismissed_by?.includes(currentUser.staff_id);
+  });
+
+  const dismissAlert = async (alertId: string) => {
+    if (!currentUser) return;
+    await dismissUrgentAlert(alertId, currentUser.staff_id);
+  };
 
   const todayStr = new Date().toISOString().split('T')[0];
   const todayLogs = logs.filter((l) => l.date === todayStr && l.status !== 'Deleted');
@@ -382,7 +429,8 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const submitEditRequest = async (
     logId: string,
     proposedData: Partial<AttendanceLog>,
-    reasonForEdit: string
+    reasonForEdit: string,
+    isUrgent: boolean = false
   ) => {
     try {
       const log = logs.find((l) => l.id === logId || l.log_id === logId);
@@ -419,6 +467,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           status: 'Edited',
         },
         reason_for_edit: reasonForEdit.trim(),
+        is_urgent: isUrgent,
         status: 'Pending',
         created_at: new Date().toISOString(),
       };
@@ -433,9 +482,26 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       await setDoc(doc(db, 'edit_requests', reqId), newRequest);
       sound.playSuccessChime();
 
+      // If marked as Urgent, broadcast Firebase Cloud Messaging alert to Principals & Directors
+      if (isUrgent) {
+        await dispatchUrgentEditAlert({
+          request_id: reqId,
+          log_id: log.log_id,
+          target_name: log.target_name,
+          target_type: log.target_type,
+          teacher_name: currentUser?.full_name || 'Teacher',
+          teacher_role: currentUser?.role || 'Teacher',
+          reason: reasonForEdit.trim(),
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       return {
         success: true,
-        message: 'Attendance edit request submitted successfully! It has been routed to Administrators for review.',
+        alertDispatched: isUrgent,
+        message: isUrgent
+          ? 'URGENT: Edit request submitted! Firebase Cloud Messaging alert dispatched immediately to Principals & Directors.'
+          : 'Attendance edit request submitted successfully! It has been routed to Administrators for review.',
       };
     } catch (err: any) {
       console.error('Error submitting edit request:', err);
@@ -624,6 +690,9 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         todayLogs,
         editRequests,
         pendingRequestsCount,
+        urgentAlerts,
+        activeUrgentAlerts,
+        dismissAlert,
         premisesSummary,
         loading,
         selectedDate,

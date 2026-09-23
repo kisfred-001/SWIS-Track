@@ -85,6 +85,33 @@ class SoundManager {
       // Ignore
     }
   }
+
+  public playUrgentAlert() {
+    if (!this.soundEnabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      // Triple attention beep (740Hz, 880Hz, 988Hz)
+      const freqs = [740, 880, 988];
+      freqs.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + idx * 0.12;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.25, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.1);
+      });
+    } catch {
+      // Ignore
+    }
+  }
 }
 
 export const sound = new SoundManager();

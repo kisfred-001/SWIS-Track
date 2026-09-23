@@ -1,5 +1,5 @@
 {
-  "name": "EduTrack Pro - School Attendance & Management System",
+  "name": "SWIS Track - School Attendance Management System",
   "description": "Comprehensive school management and attendance tracking platform with role-based access control, QR code & PIN scanning, real-time premises dashboards, and audit-logged edit approval workflows.",
   "requestFramePermissions": [
     "camera"

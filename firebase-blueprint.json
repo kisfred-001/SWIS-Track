@@ -56,9 +56,34 @@
         "original_data": { "type": "object", "description": "Snapshot of previous log state" },
         "proposed_data": { "type": "object", "description": "Proposed changes" },
         "reason_for_edit": { "type": "string", "description": "Justification from requester" },
+        "is_urgent": { "type": "boolean", "description": "Whether an urgent FCM alert was triggered" },
         "status": { "type": "string", "description": "Pending, Approved, Rejected" },
         "reviewed_by": { "type": "string", "description": "Admin staff ID who reviewed" },
         "review_comment": { "type": "string", "description": "Feedback or mandatory approval reason" }
+      }
+    },
+    "UrgentAlert": {
+      "collection": "urgent_alerts",
+      "fields": {
+        "id": { "type": "string", "description": "Unique alert identifier" },
+        "request_id": { "type": "string", "description": "Reference to Edit Request ID" },
+        "log_id": { "type": "string", "description": "Reference to attendance log ID" },
+        "target_name": { "type": "string", "description": "Name of student or teacher" },
+        "target_type": { "type": "string", "description": "Student or Teacher" },
+        "teacher_name": { "type": "string", "description": "Name of requester" },
+        "teacher_role": { "type": "string", "description": "Role of requester" },
+        "reason": { "type": "string", "description": "Reason for urgent edit request" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of dispatch" },
+        "dismissed_by": { "type": "array", "description": "Array of staff IDs who dismissed the alert banner" }
+      }
+    },
+    "StaffFcmToken": {
+      "collection": "staff_fcm_tokens",
+      "fields": {
+        "staff_id": { "type": "string", "description": "Unique staff identifier" },
+        "fcm_token": { "type": "string", "description": "FCM device registration token" },
+        "platform": { "type": "string", "description": "Device platform" },
+        "updated_at": { "type": "string", "description": "Last updated timestamp" }
       }
     }
   }

@@ -141,7 +141,7 @@ export const ReportingView: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `EduTrack_Attendance_Report_${todayStr}.csv`);
+    link.setAttribute('download', `SWIS_Track_Attendance_Report_${todayStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

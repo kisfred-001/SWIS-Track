@@ -14,6 +14,7 @@ import {
   Search,
   MessageSquare,
   Lock,
+  Flame,
 } from 'lucide-react';
 import { EditRequest } from '../types';
 
@@ -211,8 +212,15 @@ export const EditRequestsTab: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Status badge */}
-                  <div>
+                  {/* Status badge & Urgent Indicator */}
+                  <div className="flex items-center space-x-2">
+                    {req.is_urgent && (
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white animate-pulse shadow-xs border border-rose-700">
+                        <Flame className="w-3 h-3 fill-amber-200 text-amber-200" />
+                        <span>URGENT • FCM DISPATCH</span>
+                      </span>
+                    )}
+
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
                         req.status === 'Pending'

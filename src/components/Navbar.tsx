@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-                    EduTrack Pro
+                    SWIS Track
                   </span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 hidden sm:block">
-                  School Attendance & Roster System
+                  School Attendance Management System
                 </p>
               </div>
             </div>

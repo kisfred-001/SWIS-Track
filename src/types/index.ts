@@ -92,11 +92,26 @@ export interface EditRequest {
     status?: AttendanceLogStatus;
   };
   reason_for_edit: string;
+  is_urgent?: boolean;
   status: 'Pending' | 'Approved' | 'Rejected';
   reviewed_by?: string;
   reviewed_at?: string;
   review_comment?: string;
   created_at: string;
+}
+
+export interface UrgentAlert {
+  id: string;
+  request_id: string;
+  log_id: string;
+  target_name: string;
+  target_type: 'Student' | 'Teacher';
+  teacher_name: string;
+  teacher_role: string;
+  reason: string;
+  timestamp: string;
+  dismissed_by?: string[];
+  fcm_message_id?: string;
 }
 
 export interface PremisesSummary {

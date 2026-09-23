@@ -13,6 +13,7 @@ import { EditRequestsTab } from './components/EditRequestsTab';
 import { RosterManagement } from './components/RosterManagement';
 import { ReportingView } from './components/ReportingView';
 import { ScannerModal } from './components/ScannerModal';
+import { UrgentAlertBanner } from './components/UrgentAlertBanner';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
 
 function AppContent() {
@@ -44,6 +45,9 @@ function AppContent() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
+
+      {/* Real-time Firebase Cloud Messaging Alert Banner for Principals & Directors */}
+      <UrgentAlertBanner onNavigateToApprovals={() => setActiveTab('approvals')} />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -88,7 +92,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>EduTrack Pro School Management • Role-Based Access Control Active</span>
+            <span>SWIS Track School Attendance Management System • Role-Based Access Control Active</span>
           </div>
           <div className="text-slate-400">
             Active Session: <strong className="text-slate-700">{currentUser?.full_name}</strong> ({currentUser?.role})

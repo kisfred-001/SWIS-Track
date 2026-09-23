@@ -39,6 +39,7 @@ export const AttendanceLogs: React.FC = () => {
   const [editPartyType, setEditPartyType] = useState<'Parent' | 'Designate'>('Parent');
   const [editEarlyReason, setEditEarlyReason] = useState('');
   const [editReasonPrompt, setEditReasonPrompt] = useState('');
+  const [isUrgent, setIsUrgent] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,6 +74,7 @@ export const AttendanceLogs: React.FC = () => {
     setEditPartyName(log.pickup_dropoff_party?.name || '');
     setEditEarlyReason(log.early_departure_reason || '');
     setEditReasonPrompt('');
+    setIsUrgent(false);
     setActionError(null);
     setIsEditModalOpen(true);
   };
@@ -107,7 +109,8 @@ export const AttendanceLogs: React.FC = () => {
           },
           early_departure_reason: editEarlyReason.trim() || undefined,
         },
-        editReasonPrompt.trim()
+        editReasonPrompt.trim(),
+        isUrgent
       );
       setIsSubmitting(false);
 
@@ -556,6 +559,30 @@ export const AttendanceLogs: React.FC = () => {
                   </p>
                 )}
               </div>
+
+              {/* Urgent Alert Dispatch Option for Teachers & Assistants */}
+              {!canDirectlyEditLogs && (
+                <div className="bg-rose-50/90 p-3 rounded-xl border border-rose-200 flex items-start space-x-2.5">
+                  <input
+                    id="urgent-edit-checkbox"
+                    type="checkbox"
+                    checked={isUrgent}
+                    onChange={(e) => setIsUrgent(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 accent-rose-600 cursor-pointer"
+                  />
+                  <label htmlFor="urgent-edit-checkbox" className="text-xs text-rose-950 cursor-pointer select-none">
+                    <span className="font-bold flex items-center space-x-1.5 text-rose-800">
+                      <span>Flag as Urgent Edit Request</span>
+                      <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider">
+                        FCM Push Alert
+                      </span>
+                    </span>
+                    <span className="block text-[11px] text-rose-700/90 mt-0.5">
+                      Sends an instant Firebase Cloud Messaging priority alert and sound notification directly to Principals and Directors.
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">

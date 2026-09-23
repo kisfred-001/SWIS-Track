@@ -53,7 +53,7 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) =
             {/* Header stripe */}
             <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white -mx-5 -mt-5 p-3 mb-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-blue-200">
-                EduTrack Academy
+                SWIS Academy
               </p>
               <h4 className="font-bold text-xs uppercase tracking-wider">
                 {isStudent ? 'Official Student ID' : 'Faculty & Staff Credential'}
