@@ -83,7 +83,7 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
       s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.pin_code.includes(searchQuery) ||
-      s.grade.toLowerCase().includes(searchQuery.toLowerCase());
+      (s.grade || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCenter && matchesTeacherScope && matchesSearch;
   });
 
@@ -137,8 +137,8 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
     if (canvas) {
       try {
         return canvas.toDataURL('image/png');
-      } catch (err) {
-        console.warn('Canvas toDataURL error', err);
+      } catch {
+        // canvas pending render
       }
     }
     return undefined;
@@ -173,8 +173,7 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
       }
 
       sound.playSuccessChime();
-    } catch (err) {
-      console.error('PDF export failed:', err);
+    } catch {
       sound.playError();
     } finally {
       setIsExporting(false);

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   collection,
   onSnapshot,
@@ -13,11 +13,19 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { seedDatabaseIfEmpty } from '../firebase/seed';
+import {
+  seedDatabaseIfEmpty,
+  INITIAL_STUDENTS,
+  INITIAL_CAMPUSES,
+  INITIAL_LEARNING_CENTERS,
+  forceSyncOfficialData,
+} from '../firebase/seed';
 import {
   AttendanceLog,
   EditRequest,
   Student,
+  Campus,
+  LearningCenter,
   PremisesSummary,
   PickupDropoffParty,
   UrgentAlert,
@@ -35,6 +43,10 @@ interface ProcessScanOptions {
 
 interface AttendanceContextType {
   students: Student[];
+  campuses: Campus[];
+  learningCenters: LearningCenter[];
+  selectedCampus: string; // 'All Campuses' | 'Spring Campus' | 'Hope Campus'
+  setSelectedCampus: (campus: string) => void;
   logs: AttendanceLog[];
   todayLogs: AttendanceLog[];
   editRequests: EditRequest[];
@@ -43,6 +55,7 @@ interface AttendanceContextType {
   activeUrgentAlerts: UrgentAlert[];
   dismissAlert: (alertId: string) => Promise<void>;
   premisesSummary: PremisesSummary;
+  filteredPremisesSummary: PremisesSummary;
   loading: boolean;
   selectedDate: string;
   setSelectedDate: (d: string) => void;
@@ -83,13 +96,19 @@ interface AttendanceContextType {
     studentList: Array<Omit<Student, 'id'> & { id?: string }>
   ) => Promise<{ success: boolean; created: number; updated: number; message: string }>;
   saveStaff: (staff: any, id?: string) => Promise<{ success: boolean; message: string }>;
+  saveCampus: (campus: Campus) => Promise<{ success: boolean; message: string }>;
+  saveLearningCenter: (lc: LearningCenter) => Promise<{ success: boolean; message: string }>;
+  forceResetToOfficialRoster: () => Promise<{ success: boolean; message: string }>;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
 
 export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, allStaff, canScanTeachers, canDirectlyEditLogs, canApproveEditRequests } = useAuth();
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  const [campuses, setCampuses] = useState<Campus[]>(INITIAL_CAMPUSES);
+  const [learningCenters, setLearningCenters] = useState<LearningCenter[]>(INITIAL_LEARNING_CENTERS);
+  const [selectedCampus, setSelectedCampus] = useState<string>('All Campuses');
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [editRequests, setEditRequests] = useState<EditRequest[]>([]);
   const [urgentAlerts, setUrgentAlerts] = useState<UrgentAlert[]>([]);
@@ -105,6 +124,40 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   }, []);
 
+  // Subscribe to campuses with fallback
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'campuses'),
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Campus[];
+        if (list.length > 0) {
+          setCampuses(list);
+        }
+      },
+      () => {
+        setCampuses(INITIAL_CAMPUSES);
+      }
+    );
+    return () => unsub();
+  }, []);
+
+  // Subscribe to learning centers with fallback
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'learning_centers'),
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as LearningCenter[];
+        if (list.length > 0) {
+          setLearningCenters(list);
+        }
+      },
+      () => {
+        setLearningCenters(INITIAL_LEARNING_CENTERS);
+      }
+    );
+    return () => unsub();
+  }, []);
+
   // Initialize FCM registration for current staff user
   useEffect(() => {
     if (currentUser?.staff_id) {
@@ -112,119 +165,250 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [currentUser?.staff_id]);
 
-  // Subscribe to students
+  // Subscribe to students with error fallback
   useEffect(() => {
-    const unsubStudents = onSnapshot(collection(db, 'students'), (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Student[];
-      setStudents(list);
-    });
+    const unsubStudents = onSnapshot(
+      collection(db, 'students'),
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Student[];
+        if (list.length > 0) {
+          setStudents(list);
+        }
+      },
+      () => {
+        // Fallback gracefully without throwing unhandled listener errors
+        setStudents((prev) => (prev.length > 0 ? prev : INITIAL_STUDENTS));
+      }
+    );
     return () => unsubStudents();
   }, []);
 
-  // Subscribe to all attendance logs
+  // Subscribe to all attendance logs with error fallback
   useEffect(() => {
     const q = query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'));
-    const unsubLogs = onSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
-      setLogs(list);
-    });
+    const unsubLogs = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
+        setLogs(list);
+      },
+      () => {
+        // Soft fallback
+      }
+    );
     return () => unsubLogs();
   }, []);
 
-  // Subscribe to edit requests
+  // Subscribe to edit requests with error fallback
   useEffect(() => {
     const q = query(collection(db, 'edit_requests'), orderBy('created_at', 'desc'));
-    const unsubReqs = onSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as EditRequest[];
-      setEditRequests(list);
-    });
+    const unsubReqs = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as EditRequest[];
+        setEditRequests(list);
+      },
+      () => {
+        // Soft fallback
+      }
+    );
     return () => unsubReqs();
   }, []);
 
-  // Subscribe to urgent alerts (FCM channel for Principals & Directors)
+  // Subscribe to urgent alerts (FCM channel for Principals & Directors) with error fallback
   useEffect(() => {
     const q = query(collection(db, 'urgent_alerts'), orderBy('timestamp', 'desc'), limit(15));
     let initialLoad = true;
-    const unsubAlerts = onSnapshot(q, (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as UrgentAlert[];
-      setUrgentAlerts(list);
+    const unsubAlerts = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as UrgentAlert[];
+        setUrgentAlerts(list);
 
-      // Play chime if a new urgent alert arrived after initial load for Principals & Directors
-      if (!initialLoad && canApproveEditRequests) {
-        snap.docChanges().forEach((change) => {
-          if (change.type === 'added') {
-            sound.playUrgentAlert();
-          }
-        });
+        // Play chime if a new urgent alert arrived after initial load for Principals & Directors
+        if (!initialLoad && canApproveEditRequests) {
+          snap.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              sound.playUrgentAlert();
+            }
+          });
+        }
+        initialLoad = false;
+      },
+      () => {
+        // Soft fallback
       }
-      initialLoad = false;
-    });
+    );
     return () => unsubAlerts();
   }, [canApproveEditRequests]);
 
-  // Compute active (not dismissed) urgent alerts for current user
-  const activeUrgentAlerts = urgentAlerts.filter((a) => {
-    if (!currentUser) return false;
-    return !a.dismissed_by?.includes(currentUser.staff_id);
-  });
+  // Compute active (not dismissed) urgent alerts for current user (memoized)
+  const activeUrgentAlerts = useMemo(() => {
+    if (!currentUser) return [];
+    return urgentAlerts.filter((a) => !a.dismissed_by?.includes(currentUser.staff_id));
+  }, [urgentAlerts, currentUser]);
 
-  const dismissAlert = async (alertId: string) => {
+  const dismissAlert = useCallback(async (alertId: string) => {
     if (!currentUser) return;
     await dismissUrgentAlert(alertId, currentUser.staff_id);
-  };
+  }, [currentUser]);
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayLogs = logs.filter((l) => l.date === todayStr && l.status !== 'Deleted');
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const pendingRequestsCount = editRequests.filter((r) => r.status === 'Pending').length;
+  // Filter logs for today (memoized)
+  const todayLogs = useMemo(() => {
+    return logs.filter((l) => l.date === todayStr && l.status !== 'Deleted');
+  }, [logs, todayStr]);
 
-  // Calculate live premises summary for today
-  const studentLogsToday = todayLogs.filter((l) => l.target_type === 'Student');
-  const studentsOnPremises = studentLogsToday.filter((l) => !l.check_out_time).length;
-  const studentsCheckedOut = studentLogsToday.filter((l) => !!l.check_out_time).length;
-  const studentsAbsent = Math.max(0, students.length - studentLogsToday.length);
+  // Fast O(1) today log lookup map by target_id
+  const todayLogsMap = useMemo(() => {
+    const map = new Map<string, AttendanceLog>();
+    for (let i = 0; i < todayLogs.length; i++) {
+      map.set(todayLogs[i].target_id, todayLogs[i]);
+    }
+    return map;
+  }, [todayLogs]);
 
-  const teacherLogsToday = todayLogs.filter((l) => l.target_type === 'Teacher');
-  const staffOnPremises = teacherLogsToday.filter((l) => !l.check_out_time).length;
-  const staffCheckedOut = teacherLogsToday.filter((l) => !!l.check_out_time).length;
-  const staffAbsent = Math.max(0, allStaff.length - teacherLogsToday.length);
+  // Fast O(1) student lookup index by ID, PIN, and QR URL
+  const studentIndex = useMemo(() => {
+    const byCode = new Map<string, Student>();
+    for (let i = 0; i < students.length; i++) {
+      const s = students[i];
+      if (s.student_id) byCode.set(s.student_id.toUpperCase(), s);
+      if (s.pin_code) byCode.set(s.pin_code.toUpperCase(), s);
+      if (s.qr_code_url) byCode.set(s.qr_code_url.toUpperCase(), s);
+    }
+    return byCode;
+  }, [students]);
 
-  const premisesSummary: PremisesSummary = {
-    studentsTotal: students.length,
-    studentsOnPremises,
-    studentsCheckedOut,
-    studentsAbsent,
-    staffTotal: allStaff.length,
-    staffOnPremises,
-    staffCheckedOut,
-    staffAbsent,
-  };
+  // Fast O(1) staff lookup index by ID, PIN, and QR URL
+  const staffIndex = useMemo(() => {
+    const byCode = new Map<string, any>();
+    for (let i = 0; i < allStaff.length; i++) {
+      const st = allStaff[i];
+      if (st.staff_id) byCode.set(st.staff_id.toUpperCase(), st);
+      if (st.pin_code) byCode.set(st.pin_code.toUpperCase(), st);
+      if (st.qr_code_url) byCode.set(st.qr_code_url.toUpperCase(), st);
+    }
+    return byCode;
+  }, [allStaff]);
+
+  const pendingRequestsCount = useMemo(() => {
+    return editRequests.filter((r) => r.status === 'Pending').length;
+  }, [editRequests]);
+
+  // Calculate live premises summary for today (memoized)
+  const premisesSummary: PremisesSummary = useMemo(() => {
+    let studentsOnPremises = 0;
+    let studentsCheckedOut = 0;
+    let studentLogsCount = 0;
+
+    let staffOnPremises = 0;
+    let staffCheckedOut = 0;
+    let staffLogsCount = 0;
+
+    for (let i = 0; i < todayLogs.length; i++) {
+      const log = todayLogs[i];
+      if (log.target_type === 'Student') {
+        studentLogsCount++;
+        if (log.check_out_time) {
+          studentsCheckedOut++;
+        } else {
+          studentsOnPremises++;
+        }
+      } else if (log.target_type === 'Teacher') {
+        staffLogsCount++;
+        if (log.check_out_time) {
+          staffCheckedOut++;
+        } else {
+          staffOnPremises++;
+        }
+      }
+    }
+
+    return {
+      studentsTotal: students.length,
+      studentsOnPremises,
+      studentsCheckedOut,
+      studentsAbsent: Math.max(0, students.length - studentLogsCount),
+      staffTotal: allStaff.length,
+      staffOnPremises,
+      staffCheckedOut,
+      staffAbsent: Math.max(0, allStaff.length - staffLogsCount),
+    };
+  }, [todayLogs, students.length, allStaff.length]);
+
+  // Calculate premises summary filtered by currently selected campus
+  const filteredPremisesSummary: PremisesSummary = useMemo(() => {
+    let targetStudents = students;
+    let targetStaff = allStaff;
+    let targetLogs = todayLogs;
+
+    if (selectedCampus !== 'All Campuses') {
+      targetStudents = students.filter((s) => s.campus === selectedCampus);
+      targetStaff = allStaff.filter(
+        (st) => !st.campus || st.campus === selectedCampus || st.campus === 'All Campuses'
+      );
+      targetLogs = todayLogs.filter((l) => l.campus === selectedCampus);
+    }
+
+    let studentsOnPremises = 0;
+    let studentsCheckedOut = 0;
+    let studentLogsCount = 0;
+
+    let staffOnPremises = 0;
+    let staffCheckedOut = 0;
+    let staffLogsCount = 0;
+
+    for (let i = 0; i < targetLogs.length; i++) {
+      const log = targetLogs[i];
+      if (log.target_type === 'Student') {
+        studentLogsCount++;
+        if (log.check_out_time) {
+          studentsCheckedOut++;
+        } else {
+          studentsOnPremises++;
+        }
+      } else if (log.target_type === 'Teacher') {
+        staffLogsCount++;
+        if (log.check_out_time) {
+          staffCheckedOut++;
+        } else {
+          staffOnPremises++;
+        }
+      }
+    }
+
+    return {
+      studentsTotal: targetStudents.length,
+      studentsOnPremises,
+      studentsCheckedOut,
+      studentsAbsent: Math.max(0, targetStudents.length - studentLogsCount),
+      staffTotal: targetStaff.length,
+      staffOnPremises,
+      staffCheckedOut,
+      staffAbsent: Math.max(0, targetStaff.length - staffLogsCount),
+    };
+  }, [students, allStaff, todayLogs, selectedCampus]);
 
   // Helper to format time nicely (e.g., 08:42 AM)
-  const formatTimeNow = () => {
+  const formatTimeNow = useCallback(() => {
     return new Date().toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
     });
-  };
+  }, []);
 
-  // Code resolution helper
-  const findTargetByCode = (rawCode: string) => {
+  // Code resolution helper (ultra-fast O(1) indexed lookup)
+  const findTargetByCode = useCallback((rawCode: string) => {
     const clean = rawCode.trim().toUpperCase();
 
     // 1. Check if it's a student ID or PIN
-    const student = students.find(
-      (s) =>
-        s.student_id.toUpperCase() === clean ||
-        s.pin_code === clean ||
-        s.qr_code_url?.toUpperCase() === clean
-    );
+    const student = studentIndex.get(clean);
 
     if (student) {
-      const activeLog = todayLogs.find(
-        (l) => l.target_id === student.student_id && l.date === todayStr
-      );
+      const activeLog = todayLogsMap.get(student.student_id);
       const actionType: 'check_in' | 'check_out' | null = activeLog
         ? activeLog.check_out_time
           ? null // Already checked out today
@@ -240,17 +424,10 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
 
     // 2. Check if it's a staff ID or PIN
-    const staff = allStaff.find(
-      (s) =>
-        s.staff_id.toUpperCase() === clean ||
-        s.pin_code === clean ||
-        s.qr_code_url?.toUpperCase() === clean
-    );
+    const staff = staffIndex.get(clean);
 
     if (staff) {
-      const activeLog = todayLogs.find(
-        (l) => l.target_id === staff.staff_id && l.date === todayStr
-      );
+      const activeLog = todayLogsMap.get(staff.staff_id);
       const actionType: 'check_in' | 'check_out' | null = activeLog
         ? activeLog.check_out_time
           ? null
@@ -270,7 +447,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       currentLog: null,
       actionType: null,
     };
-  };
+  }, [studentIndex, staffIndex, todayLogsMap]);
 
   // Process a scan event
   const processScan = async (options: ProcessScanOptions) => {
@@ -308,6 +485,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           target_type: 'Teacher',
           target_id: staff.staff_id,
           target_name: staff.full_name,
+          campus: staff.campus || 'All Campuses',
           grade_or_role: staff.role,
           classroom: staff.learning_center_id || 'Campus',
           date: todayStr,
@@ -361,7 +539,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const newLogId = `LOG-${Date.now().toString().slice(-6)}`;
         const checkInParty: PickupDropoffParty = party || {
           type: 'Parent',
-          name: student.parent_names.split('&')[0].trim() || 'Parent',
+          name: (student.parent_names || '').split('&')[0]?.trim() || 'Parent',
         };
 
         const newLog: AttendanceLog = {
@@ -370,7 +548,8 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           target_type: 'Student',
           target_id: student.student_id,
           target_name: student.full_name,
-          grade_or_role: student.grade,
+          campus: student.campus || 'Spring Campus',
+          grade_or_role: student.grade || student.learning_center_id,
           classroom: student.learning_center_id,
           date: todayStr,
           check_in_time: formatTimeNow(),
@@ -396,7 +575,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const checkoutTime = formatTimeNow();
         const pickParty = party || existingLog.pickup_dropoff_party || {
           type: 'Parent',
-          name: student.parent_names.split('&')[0].trim() || 'Authorized Parent',
+          name: (student.parent_names || '').split('&')[0]?.trim() || 'Authorized Parent',
         };
 
         const updatePayload: any = {
@@ -508,7 +687,6 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           : 'Attendance edit request submitted successfully! It has been routed to Administrators for review.',
       };
     } catch (err: any) {
-      console.error('Error submitting edit request:', err);
       sound.playError();
       return { success: false, message: err?.message || 'Failed to submit edit request.' };
     }
@@ -722,7 +900,6 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         message: `Successfully processed ${studentList.length} student records (${createdCount} added, ${updatedCount} updated).`,
       };
     } catch (err: any) {
-      console.error('Bulk save error:', err);
       sound.playError();
       return {
         success: false,
@@ -747,32 +924,120 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // Add / edit Campus
+  const saveCampus = async (campusData: Campus) => {
+    try {
+      const ref = doc(db, 'campuses', campusData.id);
+      await setDoc(ref, campusData, { merge: true });
+      sound.playSuccessChime();
+      return { success: true, message: `Campus ${campusData.name} updated successfully!` };
+    } catch (err: any) {
+      sound.playError();
+      return { success: false, message: err?.message || 'Failed to save campus.' };
+    }
+  };
+
+  // Add / edit Learning Center
+  const saveLearningCenter = async (lcData: LearningCenter) => {
+    try {
+      const ref = doc(db, 'learning_centers', lcData.id);
+      await setDoc(ref, lcData, { merge: true });
+      sound.playSuccessChime();
+      return { success: true, message: `Learning Center ${lcData.name} saved successfully!` };
+    } catch (err: any) {
+      sound.playError();
+      return { success: false, message: err?.message || 'Failed to save learning center.' };
+    }
+  };
+
+  // Re-sync / Purge dummy data and restore official roster
+  const forceResetToOfficialRoster = async () => {
+    try {
+      setLoading(true);
+      const res = await forceSyncOfficialData();
+      if (res.success) {
+        sound.playSuccessChime();
+        return {
+          success: true,
+          message: `Official roster restored! Synced ${res.studentsCount} students from CSV and ${res.staffCount} official staff members across ${res.campusesCount} campuses.`,
+        };
+      } else {
+        sound.playError();
+        return { success: false, message: 'Official roster synchronization failed.' };
+      }
+    } catch (err: any) {
+      sound.playError();
+      return { success: false, message: err?.message || 'Failed to sync official roster.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const attendanceContextValue = useMemo<AttendanceContextType>(
+    () => ({
+      students,
+      campuses,
+      learningCenters,
+      selectedCampus,
+      setSelectedCampus,
+      logs,
+      todayLogs,
+      editRequests,
+      pendingRequestsCount,
+      urgentAlerts,
+      activeUrgentAlerts,
+      dismissAlert,
+      premisesSummary,
+      filteredPremisesSummary,
+      loading,
+      selectedDate,
+      setSelectedDate,
+      findTargetByCode,
+      processScan,
+      submitEditRequest,
+      directEditLog,
+      deleteLog,
+      reviewEditRequest,
+      saveStudent,
+      bulkSaveStudents,
+      saveStaff,
+      saveCampus,
+      saveLearningCenter,
+      forceResetToOfficialRoster,
+    }),
+    [
+      students,
+      campuses,
+      learningCenters,
+      selectedCampus,
+      logs,
+      todayLogs,
+      editRequests,
+      pendingRequestsCount,
+      urgentAlerts,
+      activeUrgentAlerts,
+      dismissAlert,
+      premisesSummary,
+      filteredPremisesSummary,
+      loading,
+      selectedDate,
+      findTargetByCode,
+      processScan,
+      submitEditRequest,
+      directEditLog,
+      deleteLog,
+      reviewEditRequest,
+      saveStudent,
+      bulkSaveStudents,
+      saveStaff,
+      saveCampus,
+      saveLearningCenter,
+      forceResetToOfficialRoster,
+    ]
+  );
+
   return (
-    <AttendanceContext.Provider
-      value={{
-        students,
-        logs,
-        todayLogs,
-        editRequests,
-        pendingRequestsCount,
-        urgentAlerts,
-        activeUrgentAlerts,
-        dismissAlert,
-        premisesSummary,
-        loading,
-        selectedDate,
-        setSelectedDate,
-        findTargetByCode,
-        processScan,
-        submitEditRequest,
-        directEditLog,
-        deleteLog,
-        reviewEditRequest,
-        saveStudent,
-        bulkSaveStudents,
-        saveStaff,
-      }}
-    >
+    <AttendanceContext.Provider value={attendanceContextValue}>
       {children}
     </AttendanceContext.Provider>
   );

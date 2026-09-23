@@ -29,8 +29,8 @@ export const IdleLockModal: React.FC = () => {
   } = useAuth();
 
   const [authMode, setAuthMode] = useState<'email' | 'pin'>('email');
-  const [emailInput, setEmailInput] = useState('kisfred@gmail.com');
-  const [passwordInput, setPasswordInput] = useState('P@haneroo@555');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -55,7 +55,7 @@ export const IdleLockModal: React.FC = () => {
       setPinInput('');
     } else {
       sound.playError();
-      setErrorMsg('Invalid PIN code. Try 555 for Super User or 101, 102, 201, 301.');
+      setErrorMsg('Invalid PIN code. Please enter your authorized staff PIN.');
     }
   };
 
@@ -89,13 +89,6 @@ export const IdleLockModal: React.FC = () => {
     sound.playSuccessChime();
   };
 
-  const handleQuickFillSuperUser = () => {
-    setAuthMode('email');
-    setEmailInput('kisfred@gmail.com');
-    setPasswordInput('P@haneroo@555');
-    setErrorMsg('');
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
@@ -117,13 +110,13 @@ export const IdleLockModal: React.FC = () => {
           <p className="text-xs text-slate-300 mt-1 max-w-sm mx-auto">
             {idleTimedOut
               ? `This terminal was automatically locked after ${idleTimeoutMinutes} minutes of inactivity to protect student records and premises security.`
-              : 'Sign in with your Super User account credentials or 3-digit Staff PIN.'}
+              : 'Sign in with your authorized school staff credentials or Staff PIN.'}
           </p>
 
-          {/* Quick Super User Badge */}
-          <div className="mt-3 inline-flex items-center space-x-1.5 bg-purple-500/20 border border-purple-400/30 text-purple-200 px-3 py-1 rounded-xl text-[11px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />
-            <span>ICCE Coordinator: <strong>Fredrick Kariuki</strong> (kisfred@gmail.com • PIN 555)</span>
+          {/* Security Status Badge */}
+          <div className="mt-3 inline-flex items-center space-x-1.5 bg-slate-800/80 border border-slate-700/60 text-slate-200 px-3 py-1 rounded-xl text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Authorized Personnel Terminal Access</span>
           </div>
         </div>
 
@@ -176,7 +169,7 @@ export const IdleLockModal: React.FC = () => {
                     type="email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="kisfred@gmail.com"
+                    placeholder="Enter username or email"
                     className="w-full pl-10 pr-4 py-2.5 text-sm border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 focus:outline-none transition"
                   />
                 </div>
@@ -187,13 +180,6 @@ export const IdleLockModal: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Password
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleQuickFillSuperUser}
-                    className="text-[11px] text-blue-600 hover:underline font-semibold"
-                  >
-                    Auto-fill Super User
-                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -242,7 +228,7 @@ export const IdleLockModal: React.FC = () => {
             /* PIN Entry Form */
             <form onSubmit={handleUnlockPin} className="space-y-3">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Enter 3-Digit Staff PIN (e.g. 555 for Super User)
+                Enter 3-Digit Staff PIN
               </label>
 
               <div className="flex space-x-2">
@@ -286,13 +272,6 @@ export const IdleLockModal: React.FC = () => {
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 Or Quick Switch Staff Persona
               </p>
-              <button
-                type="button"
-                onClick={handleQuickFillSuperUser}
-                className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200 hover:bg-purple-100"
-              >
-                ★ Super User Quick Fill
-              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
@@ -324,7 +303,7 @@ export const IdleLockModal: React.FC = () => {
                         {isSuper && <span className="text-[9px] text-purple-700 font-bold">★</span>}
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        PIN: <span className="font-mono font-bold text-slate-700">{staff.pin_code}</span> • {staff.role}
+                        {staff.role} • {staff.learning_center_id || 'All Centers'}
                       </p>
                     </div>
                   </button>

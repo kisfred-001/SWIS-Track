@@ -12,6 +12,8 @@ import { AttendanceLogs } from './components/AttendanceLogs';
 import { EditRequestsTab } from './components/EditRequestsTab';
 import { RosterManagement } from './components/RosterManagement';
 import { ReportingView } from './components/ReportingView';
+import { CampusesView } from './components/CampusesView';
+import { AdminSetupView } from './components/AdminSetupView';
 import { ScannerModal } from './components/ScannerModal';
 import { UrgentAlertBanner } from './components/UrgentAlertBanner';
 import { IdleLockModal } from './components/IdleLockModal';
@@ -60,6 +62,8 @@ function AppContent() {
           />
         )}
 
+        {activeTab === 'campuses' && <CampusesView />}
+
         {activeTab === 'attendance' && <AttendanceLogs />}
 
         {activeTab === 'approvals' && <EditRequestsTab />}
@@ -67,6 +71,8 @@ function AppContent() {
         {activeTab === 'roster' && <RosterManagement />}
 
         {activeTab === 'reports' && <ReportingView />}
+
+        {activeTab === 'setup' && <AdminSetupView />}
       </main>
 
       {/* Floating Action Scanner Button (Quick Access) */}

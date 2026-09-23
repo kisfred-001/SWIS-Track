@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Staff, UserRole } from '../types';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
@@ -31,8 +31,14 @@ interface AuthContextType {
   canManageStaff: boolean;
   canDirectlyEditLogs: boolean;
   canApproveEditRequests: boolean;
+  canSubmitEditRequests: boolean;
+  canAccessReports: boolean;
+  canAccessSetup: boolean;
   isSuperUser: boolean;
+  isAdministrative: boolean;
+  isSupervisorOrMonitor: boolean;
   isTeacherOnly: boolean;
+  isSupportStaff: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Ensure Super User account exists in Firestore on load
   useEffect(() => {
-    ensureSuperUserAccount().catch((e) => console.warn('Super user init:', e));
+    ensureSuperUserAccount().catch(() => {});
   }, []);
 
   const setIdleTimeoutMinutes = useCallback((mins: number) => {
@@ -206,8 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         setLoading(false);
       },
-      (err) => {
-        console.warn('Staff listener fallback:', err);
+      () => {
         setLoading(false);
       }
     );
@@ -243,14 +248,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const handleUserActivity = () => {
       const now = Date.now();
-      // Throttle event handling to once every 1 second
-      if (now - lastThrottleRef.current > 1000) {
+      // Throttle event handling to once every 2.5 seconds
+      if (now - lastThrottleRef.current > 2500) {
         lastThrottleRef.current = now;
         resetIdleTimer();
       }
     };
 
-    const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click', 'wheel', 'pointerdown'];
+    // Listen only to intentional interaction events (skip high-frequency mousemove/scroll)
+    const events = ['pointerdown', 'keydown', 'touchstart'];
     events.forEach((evt) => {
       window.addEventListener(evt, handleUserActivity, { passive: true });
     });
@@ -262,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [currentUser, resetIdleTimer]);
 
-  // Inactivity timeout checker interval (checks every second)
+  // Inactivity timeout checker interval (optimized: zero unnecessary state updates when active)
   useEffect(() => {
     if (!currentUser) {
       setShowIdleWarning(false);
@@ -275,20 +281,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const elapsed = now - lastActivityRef.current;
       const remainingMs = Math.max(0, timeoutMs - elapsed);
       const remainingSecs = Math.ceil(remainingMs / 1000);
-      setRemainingIdleSeconds(remainingSecs);
-
-      // Show countdown warning toast when 60 seconds or less remain
-      if (remainingSecs <= 60 && remainingSecs > 0) {
-        setShowIdleWarning(true);
-      } else {
-        setShowIdleWarning(false);
-      }
 
       // Inactivity timeout expired -> Auto sign-out and lock terminal
       if (elapsed >= timeoutMs) {
-        console.log(`[Security] ${idleTimeoutMinutes} minutes of inactivity reached. Auto-signing out for school safety.`);
         setShowIdleWarning(false);
         logout(true);
+        return;
+      }
+
+      // Only trigger re-render state updates when entering or inside the 60s countdown warning zone
+      if (remainingSecs <= 60 && remainingSecs > 0) {
+        setShowIdleWarning(true);
+        setRemainingIdleSeconds(remainingSecs);
+      } else {
+        setShowIdleWarning((prev) => {
+          if (prev) {
+            // Dismissed or reset
+            return false;
+          }
+          return false;
+        });
       }
     }, 1000);
 
@@ -297,52 +309,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const role: UserRole | undefined = currentUser?.role;
 
-  // Strict RBAC definitions:
-  // 1. Teachers: Can scan students in/out. Cannot scan teachers. Cannot directly edit logs.
-  // 2. Admin Assistants: All student scanning + can scan teachers in/out + manage class rosters. Cannot directly edit logs.
-  // 3. Principals & Directors: Full student & teacher scanning + directly edit/delete logs + approve/reject edit requests.
-  // 4. ICCE Coordinators: All admin privileges + Super Users (create accounts for anyone, assign roles, generate codes).
-  const canScanStudents = true; // All authenticated staff can scan students
-  const canScanTeachers = role === 'Admin Assistant' || role === 'Principal' || role === 'Director' || role === 'ICCE Coordinator';
-  const canManageStudents = role === 'Admin Assistant' || role === 'Principal' || role === 'Director' || role === 'ICCE Coordinator' || role === 'Teacher';
-  const canManageStaff = role === 'ICCE Coordinator';
-  const canDirectlyEditLogs = role === 'Principal' || role === 'Director' || role === 'ICCE Coordinator';
-  const canApproveEditRequests = role === 'Principal' || role === 'Director' || role === 'ICCE Coordinator';
-  const isSuperUser = role === 'ICCE Coordinator';
-  const isTeacherOnly = role === 'Teacher';
+  const isIcceCoordinator = role === 'ICCE Coordinator';
+  const isPrincipal = role === 'Principal';
+  const isDirector = role === 'Director';
+  const isAdministrator = role === 'Administrator';
+  const isAdminAssistant = role === 'Administrative Assistant';
+  const isSupervisor = role === 'Supervisor';
+  const isMonitor = role === 'Monitor';
+  const isSupportStaff = role === 'Support Staff';
+
+  // Administrative accounts: Principal, Director, Administrator, Admin Assistant, ICCE Coordinator
+  const isAdministrative = isIcceCoordinator || isPrincipal || isDirector || isAdministrator || isAdminAssistant;
+  const isSupervisorOrMonitor = isSupervisor || isMonitor;
+
+  // Strict RBAC requirements:
+  // 1. All staff can scan students in/out. Support staff (Mrs. Anette Mugala) ONLY has rights to sign in and out students.
+  // 2. Supervisor and Monitor have the EXACT same rights pertaining to the system.
+  // 3. Administrative accounts (Mrs. Irene Lulika, Mr. Jaxon Lulika, Mrs. Khasoma Susan, Mrs. Juliet Arinaitwe) have admin rights.
+  // 4. ICCE Coordinator (Mr. Fredrick Kariuki) has highest level administrative account and EXCLUSIVELY accesses setup module.
+  const canScanStudents = true;
+  const canScanTeachers = isAdministrative;
+  const canManageStudents = isAdministrative;
+  const canManageStaff = isIcceCoordinator || isPrincipal || isDirector || isAdministrator;
+  const canDirectlyEditLogs = isIcceCoordinator || isPrincipal || isDirector || isAdministrator;
+  const canApproveEditRequests = isAdministrative;
+  const canSubmitEditRequests = isSupervisor || isMonitor || isAdministrative;
+  const canAccessReports = isAdministrative || isSupervisor || isMonitor;
+  const canAccessSetup = isIcceCoordinator; // ONLY ICCE Coordinator
+  const isSuperUser = isIcceCoordinator;
+
+  const authContextValue = useMemo<AuthContextType>(
+    () => ({
+      currentUser,
+      allStaff,
+      loading,
+      idleTimedOut,
+      setIdleTimedOut,
+      switchUser,
+      loginWithPin,
+      loginWithEmailPassword,
+      logout,
+      resetIdleTimer,
+      idleTimeoutMinutes,
+      setIdleTimeoutMinutes,
+      remainingIdleSeconds,
+      showIdleWarning,
+      superUserCredentials: {
+        email: SUPER_USER_ACCOUNT.email,
+        pin: SUPER_USER_ACCOUNT.pin_code,
+        name: SUPER_USER_ACCOUNT.full_name,
+      },
+      canScanStudents,
+      canScanTeachers,
+      canManageStudents,
+      canManageStaff,
+      canDirectlyEditLogs,
+      canApproveEditRequests,
+      canSubmitEditRequests,
+      canAccessReports,
+      canAccessSetup,
+      isSuperUser,
+      isAdministrative,
+      isSupervisorOrMonitor,
+      isTeacherOnly: isSupervisorOrMonitor,
+      isSupportStaff,
+    }),
+    [
+      currentUser,
+      allStaff,
+      loading,
+      idleTimedOut,
+      switchUser,
+      loginWithPin,
+      loginWithEmailPassword,
+      logout,
+      resetIdleTimer,
+      idleTimeoutMinutes,
+      setIdleTimeoutMinutes,
+      remainingIdleSeconds,
+      showIdleWarning,
+      canScanStudents,
+      canScanTeachers,
+      canManageStudents,
+      canManageStaff,
+      canDirectlyEditLogs,
+      canApproveEditRequests,
+      canSubmitEditRequests,
+      canAccessReports,
+      canAccessSetup,
+      isSuperUser,
+      isAdministrative,
+      isSupervisorOrMonitor,
+      isSupportStaff,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        allStaff,
-        loading,
-        idleTimedOut,
-        setIdleTimedOut,
-        switchUser,
-        loginWithPin,
-        loginWithEmailPassword,
-        logout,
-        resetIdleTimer,
-        idleTimeoutMinutes,
-        setIdleTimeoutMinutes,
-        remainingIdleSeconds,
-        showIdleWarning,
-        superUserCredentials: {
-          email: SUPER_USER_ACCOUNT.email,
-          pin: SUPER_USER_ACCOUNT.pin_code,
-          name: SUPER_USER_ACCOUNT.full_name,
-        },
-        canScanStudents,
-        canScanTeachers,
-        canManageStudents,
-        canManageStaff,
-        canDirectlyEditLogs,
-        canApproveEditRequests,
-        isSuperUser,
-        isTeacherOnly,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

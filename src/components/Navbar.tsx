@@ -38,10 +38,20 @@ export const Navbar: React.FC<NavbarProps> = ({
     logout,
     isSuperUser,
     canScanTeachers,
+    canAccessSetup,
+    canAccessReports,
+    isSupportStaff,
     idleTimeoutMinutes,
     setIdleTimeoutMinutes,
   } = useAuth();
-  const { premisesSummary, pendingRequestsCount } = useAttendance();
+  const {
+    premisesSummary,
+    filteredPremisesSummary,
+    pendingRequestsCount,
+    campuses,
+    selectedCampus,
+    setSelectedCampus,
+  } = useAttendance();
 
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -64,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       setShowSwitchModal(false);
       sound.playSuccessChime();
     } else {
-      setPinError('Invalid 3-digit PIN. Try 101, 102, 103, 201, 301, or 302.');
+      setPinError('Invalid 3-digit PIN. (E.g. 555 for Fredrick, 101 for Irene, 102 for Jaxon, 103 for Susan, 104 for Juliet, 401 for Anette).');
       sound.playError();
     }
   };
@@ -77,11 +87,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         return 'bg-amber-100 text-amber-900 border-amber-300';
       case 'Director':
         return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      case 'Admin Assistant':
+      case 'Administrator':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+      case 'Administrative Assistant':
         return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'Teacher':
-      default:
+      case 'Supervisor':
         return 'bg-sky-100 text-sky-800 border-sky-300';
+      case 'Monitor':
+        return 'bg-teal-100 text-teal-800 border-teal-300';
+      case 'Support Staff':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
+      default:
+        return 'bg-slate-100 text-slate-800 border-slate-300';
     }
   };
 
@@ -111,22 +128,39 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Live Campus Premises Quick Pill */}
-            <div className="hidden lg:flex items-center space-x-4 bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700/60 text-xs">
+            {/* Live Campus Premises Quick Pill & Campus Dropdown */}
+            <div className="hidden lg:flex items-center space-x-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
+              {/* Campus Selector Dropdown */}
+              <div className="flex items-center space-x-1.5 pr-2 border-r border-slate-700">
+                <School className="w-3.5 h-3.5 text-indigo-400" />
+                <select
+                  value={selectedCampus}
+                  onChange={(e) => setSelectedCampus(e.target.value)}
+                  className="bg-slate-900 text-white font-bold text-xs rounded-md px-2 py-0.5 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value="All Campuses">All Campuses</option>
+                  {campuses.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-center space-x-1.5">
-                <span className="text-slate-400">Students on Campus:</span>
+                <span className="text-slate-400">Students:</span>
                 <span className="font-bold text-emerald-400">
-                  {premisesSummary.studentsOnPremises}
+                  {filteredPremisesSummary.studentsOnPremises}
                 </span>
-                <span className="text-slate-500">/ {premisesSummary.studentsTotal}</span>
+                <span className="text-slate-500">/ {filteredPremisesSummary.studentsTotal}</span>
               </div>
               <span className="text-slate-600">|</span>
               <div className="flex items-center space-x-1.5">
-                <span className="text-slate-400">Staff Present:</span>
+                <span className="text-slate-400">Staff:</span>
                 <span className="font-bold text-sky-400">
-                  {premisesSummary.staffOnPremises}
+                  {filteredPremisesSummary.staffOnPremises}
                 </span>
-                <span className="text-slate-500">/ {premisesSummary.staffTotal}</span>
+                <span className="text-slate-500">/ {filteredPremisesSummary.staffTotal}</span>
               </div>
             </div>
 
@@ -181,7 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 onClick={() => logout(false)}
                 className="p-2 bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 border border-slate-700/80 rounded-lg transition"
-                title="Lock Terminal (Auto-Locks after 30 min of inactivity)"
+                title="Lock Terminal"
               >
                 <Lock className="w-4 h-4" />
               </button>
@@ -201,6 +235,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               Real-Time Dashboard
             </button>
 
+            {/* Campus Modules Tab */}
+            <button
+              onClick={() => setActiveTab('campuses')}
+              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
+                activeTab === 'campuses'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <School className="w-3.5 h-3.5" />
+              <span>Campus Modules</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('attendance')}
               className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
@@ -209,46 +256,70 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
-              Attendance Logs & Audits
+              Attendance Logs
             </button>
 
-            <button
-              onClick={() => setActiveTab('approvals')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
-                activeTab === 'approvals'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <span>Edit Approvals</span>
-              {pendingRequestsCount > 0 && (
-                <span className="px-1.5 py-0.2 bg-red-500 text-white text-[10px] font-bold rounded-full animate-bounce">
-                  {pendingRequestsCount}
-                </span>
-              )}
-            </button>
+            {/* Edit Approvals - visible to staff with edit rights */}
+            {!isSupportStaff && (
+              <button
+                onClick={() => setActiveTab('approvals')}
+                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
+                  activeTab === 'approvals'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                <span>Edit Requests</span>
+                {pendingRequestsCount > 0 && (
+                  <span className="px-1.5 py-0.2 bg-red-500 text-white text-[10px] font-bold rounded-full animate-bounce">
+                    {pendingRequestsCount}
+                  </span>
+                )}
+              </button>
+            )}
 
-            <button
-              onClick={() => setActiveTab('roster')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
-                activeTab === 'roster'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              Roster & ID Badges
-            </button>
+            {/* Student & Staff Roster */}
+            {!isSupportStaff && (
+              <button
+                onClick={() => setActiveTab('roster')}
+                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
+                  activeTab === 'roster'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                Roster & Badges
+              </button>
+            )}
 
-            <button
-              onClick={() => setActiveTab('reports')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
-                activeTab === 'reports'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              Analytics & Reports
-            </button>
+            {/* Reports */}
+            {canAccessReports && (
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
+                  activeTab === 'reports'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                Analytics & Reports
+              </button>
+            )}
+
+            {/* ICCE Coordinator Exclusive Administrative Setup Tab */}
+            {canAccessSetup && (
+              <button
+                onClick={() => setActiveTab('setup')}
+                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
+                  activeTab === 'setup'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-amber-400 hover:text-white hover:bg-slate-800 font-semibold border border-amber-500/30'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Administrative Setup</span>
+              </button>
+            )}
           </nav>
         </div>
       </header>
@@ -280,7 +351,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
-              {/* Super User Quick Card */}
+              {/* Super User Profile Card */}
               <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
                 <div>
                   <div className="flex items-center space-x-1.5">
@@ -296,9 +367,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </p>
                   <p className="text-[11px] text-slate-600">
                     kisfred@gmail.com
-                  </p>
-                  <p className="text-[10px] text-slate-500">
-                    PIN: <span className="font-mono font-bold text-purple-700">555</span> • Password: <span className="font-mono text-slate-600">P@haneroo@555</span>
                   </p>
                 </div>
 
@@ -370,11 +438,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="relative flex-1">
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input
-                      type="text"
+                      type="password"
                       maxLength={3}
                       value={pinInput}
                       onChange={(e) => setPinInput(e.target.value)}
-                      placeholder="e.g. 555 (Super User), 101, 102, 201"
+                      placeholder="Enter 3-digit PIN"
                       className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                     />
                   </div>
@@ -426,8 +494,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                             <span className="font-semibold text-xs text-slate-900">
                               {staff.full_name}
                             </span>
-                            <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                              PIN: {staff.pin_code}
+                            <span className="text-[10px] text-slate-500">
+                              ID: {staff.staff_id}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500">

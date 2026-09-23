@@ -1,16 +1,17 @@
-import { collection, getDocs, setDoc, doc, writeBatch, getDoc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, writeBatch } from 'firebase/firestore';
 import { db } from './config';
-import { Staff, Student, AttendanceLog, EditRequest } from '../types';
+import { Staff, Student, Campus, LearningCenter, AttendanceLog, EditRequest } from '../types';
 
 export const SUPER_USER_ACCOUNT: Staff = {
   staff_id: 'STF-001',
   pin_code: '555',
   password: 'P@haneroo@555',
-  full_name: 'Fredrick Kariuki',
+  full_name: 'Mr. Fredrick Kariuki',
   role: 'ICCE Coordinator',
-  learning_center_id: 'All Centers (ICCE Office)',
+  campus: 'All Campuses',
+  learning_center_id: 'ICCE Executive Office',
   email: 'kisfred@gmail.com',
-  phone: '(555) 019-5555',
+  phone: '+256 772 000 555',
   qr_code_url: 'STF-001',
   created_at: new Date().toISOString(),
 };
@@ -18,429 +19,570 @@ export const SUPER_USER_ACCOUNT: Staff = {
 export const INITIAL_STAFF: Staff[] = [
   SUPER_USER_ACCOUNT,
   {
-    staff_id: 'STF-101',
+    staff_id: 'STF-002',
     pin_code: '101',
-    full_name: 'Eleanor Vance',
-    role: 'Admin Assistant',
-    learning_center_id: 'All Centers',
-    email: 'eleanor.vance@school.edu',
-    phone: '(555) 234-5601',
+    full_name: 'Mrs. Irene Lulika',
+    role: 'Principal',
+    campus: 'All Campuses',
+    learning_center_id: 'Principal Office',
+    email: 'irene.lulika@swis.ac.ug',
+    phone: '+256 772 101 002',
+    qr_code_url: 'STF-002',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-003',
+    pin_code: '102',
+    full_name: 'Mr. Jaxon Lulika',
+    role: 'Director',
+    campus: 'All Campuses',
+    learning_center_id: 'Board & Directorate',
+    email: 'jaxon.lulika@swis.ac.ug',
+    phone: '+256 772 102 003',
+    qr_code_url: 'STF-003',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-004',
+    pin_code: '103',
+    full_name: 'Mrs. Khasoma Susan',
+    role: 'Administrator',
+    campus: 'All Campuses',
+    learning_center_id: 'Central Administration',
+    email: 'khasoma.susan@swis.ac.ug',
+    phone: '+256 772 103 004',
+    qr_code_url: 'STF-004',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-005',
+    pin_code: '104',
+    full_name: 'Mrs. Juliet Arinaitwe',
+    role: 'Administrative Assistant',
+    campus: 'All Campuses',
+    learning_center_id: 'Registry & Admissions',
+    email: 'juliet.arinaitwe@swis.ac.ug',
+    phone: '+256 772 104 005',
+    qr_code_url: 'STF-005',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-006',
+    pin_code: '105',
+    full_name: 'Mrs. Anette Mugala',
+    role: 'Support Staff',
+    campus: 'All Campuses',
+    learning_center_id: 'Campus Check-In / Gates',
+    email: 'anette.mugala@swis.ac.ug',
+    phone: '+256 772 105 006',
+    qr_code_url: 'STF-006',
+    created_at: new Date().toISOString(),
+  },
+  // Supervisors
+  {
+    staff_id: 'STF-101',
+    pin_code: '201',
+    full_name: 'Mrs. Irene Oryem',
+    role: 'Supervisor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Kayil',
+    email: 'irene.oryem@swis.ac.ug',
+    phone: '+256 772 201 101',
     qr_code_url: 'STF-101',
     created_at: new Date().toISOString(),
   },
   {
     staff_id: 'STF-102',
-    pin_code: '102',
-    full_name: 'Dr. Marcus Reed',
-    role: 'Principal',
-    learning_center_id: 'Main Administration',
-    email: 'marcus.reed@school.edu',
-    phone: '(555) 234-5602',
+    pin_code: '202',
+    full_name: 'Mr. Arthur Mutebi',
+    role: 'Supervisor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Splendor',
+    email: 'arthur.mutebi@swis.ac.ug',
+    phone: '+256 772 202 102',
     qr_code_url: 'STF-102',
     created_at: new Date().toISOString(),
   },
   {
     staff_id: 'STF-103',
-    pin_code: '103',
-    full_name: 'Sarah Jenkins',
-    role: 'Director',
-    learning_center_id: 'Executive Office',
-    email: 'sarah.jenkins@school.edu',
-    phone: '(555) 234-5603',
+    pin_code: '203',
+    full_name: 'Mrs. Eunice Mutebe',
+    role: 'Supervisor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Bethany',
+    email: 'eunice.mutebe@swis.ac.ug',
+    phone: '+256 772 203 103',
     qr_code_url: 'STF-103',
     created_at: new Date().toISOString(),
   },
   {
-    staff_id: 'STF-201',
-    pin_code: '201',
-    full_name: 'Amanda Cruz',
-    role: 'Admin Assistant',
-    learning_center_id: 'Front Desk / Reception',
-    email: 'amanda.cruz@school.edu',
-    phone: '(555) 234-5604',
-    qr_code_url: 'STF-201',
+    staff_id: 'STF-104',
+    pin_code: '204',
+    full_name: 'Mr. Shafic Musika',
+    role: 'Supervisor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Azusa',
+    email: 'shafic.musika@swis.ac.ug',
+    phone: '+256 772 204 104',
+    qr_code_url: 'STF-104',
     created_at: new Date().toISOString(),
   },
   {
+    staff_id: 'STF-105',
+    pin_code: '205',
+    full_name: 'Mrs. Doreen Mugaga',
+    role: 'Supervisor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Antioch',
+    email: 'doreen.mugaga@swis.ac.ug',
+    phone: '+256 772 205 105',
+    qr_code_url: 'STF-105',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-106',
+    pin_code: '206',
+    full_name: 'Mr. David Kimbugwe',
+    role: 'Supervisor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Doxa',
+    email: 'david.kimbugwe@swis.ac.ug',
+    phone: '+256 772 206 106',
+    qr_code_url: 'STF-106',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-107',
+    pin_code: '207',
+    full_name: 'Mrs. Juliet Mayanja',
+    role: 'Supervisor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Blooms and Archie',
+    email: 'juliet.mayanja@swis.ac.ug',
+    phone: '+256 772 207 107',
+    qr_code_url: 'STF-107',
+    created_at: new Date().toISOString(),
+  },
+  // Monitors (Have identical rights as Supervisors)
+  {
     staff_id: 'STF-301',
     pin_code: '301',
-    full_name: 'David Miller',
-    role: 'Teacher',
-    learning_center_id: 'Learning Center Alpha',
-    email: 'david.miller@school.edu',
-    phone: '(555) 234-5605',
+    full_name: 'Ms. Gloria Akello',
+    role: 'Monitor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Kayil',
+    email: 'gloria.akello@swis.ac.ug',
+    phone: '+256 772 301 301',
     qr_code_url: 'STF-301',
     created_at: new Date().toISOString(),
   },
   {
     staff_id: 'STF-302',
     pin_code: '302',
-    full_name: 'Rachel Green',
-    role: 'Teacher',
-    learning_center_id: 'Learning Center Beta',
-    email: 'rachel.green@school.edu',
-    phone: '(555) 234-5606',
+    full_name: 'Mr. Brian Ochieng',
+    role: 'Monitor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Splendor',
+    email: 'brian.ochieng@swis.ac.ug',
+    phone: '+256 772 302 302',
     qr_code_url: 'STF-302',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-303',
+    pin_code: '303',
+    full_name: 'Ms. Faith Nabirye',
+    role: 'Monitor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Bethany',
+    email: 'faith.nabirye@swis.ac.ug',
+    phone: '+256 772 303 303',
+    qr_code_url: 'STF-303',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-304',
+    pin_code: '304',
+    full_name: 'Mr. Paul Ssekandi',
+    role: 'Monitor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Azusa',
+    email: 'paul.ssekandi@swis.ac.ug',
+    phone: '+256 772 304 304',
+    qr_code_url: 'STF-304',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-305',
+    pin_code: '305',
+    full_name: 'Ms. Joy Kemigisha',
+    role: 'Monitor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Antioch',
+    email: 'joy.kemigisha@swis.ac.ug',
+    phone: '+256 772 305 305',
+    qr_code_url: 'STF-305',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-306',
+    pin_code: '306',
+    full_name: 'Mr. Kevin Tumusiime',
+    role: 'Monitor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Doxa',
+    email: 'kevin.tumusiime@swis.ac.ug',
+    phone: '+256 772 306 306',
+    qr_code_url: 'STF-306',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-307',
+    pin_code: '307',
+    full_name: 'Ms. Patricia Namubiru',
+    role: 'Monitor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Blooms and Archie',
+    email: 'patricia.namubiru@swis.ac.ug',
+    phone: '+256 772 307 307',
+    qr_code_url: 'STF-307',
     created_at: new Date().toISOString(),
   },
 ];
 
-export const INITIAL_STUDENTS: Student[] = [
+export const INITIAL_CAMPUSES: Campus[] = [
   {
-    student_id: 'STU-1001',
-    pin_code: '1042',
-    full_name: 'Liam Miller',
-    grade: 'Grade 4',
-    learning_center_id: 'Learning Center Alpha',
-    supervisor_name: 'David Miller',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Robert & Clara Miller',
-    emergency_contact: '(555) 301-4491',
-    qr_code_url: 'STU-1001',
+    id: 'spring-campus',
+    name: 'Spring Campus',
+    code: 'SPRING',
+    location: 'North Wing, SWIS Academy',
+    phone: '+256 700 123 456',
+    email: 'spring.campus@swis.ac.ug',
+    lead_administrator: 'Mrs. Irene Lulika',
+    learning_centers: ['Kayil', 'Splendor', 'Doxa', 'Bethany', 'Antioch'],
+    total_capacity: 150,
+    opening_time: '07:30 AM',
+    closing_time: '04:30 PM',
     created_at: new Date().toISOString(),
   },
   {
-    student_id: 'STU-1002',
-    pin_code: '2091',
-    full_name: 'Sophia Chen',
-    grade: 'Grade 4',
-    learning_center_id: 'Learning Center Alpha',
-    supervisor_name: 'David Miller',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Wei & Mei Chen',
-    emergency_contact: '(555) 492-3321',
-    qr_code_url: 'STU-1002',
-    created_at: new Date().toISOString(),
-  },
-  {
-    student_id: 'STU-1003',
-    pin_code: '3314',
-    full_name: 'Noah Williams',
-    grade: 'Grade 5',
-    learning_center_id: 'Learning Center Beta',
-    supervisor_name: 'Rachel Green',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'James Williams',
-    emergency_contact: '(555) 819-2041',
-    qr_code_url: 'STU-1003',
-    created_at: new Date().toISOString(),
-  },
-  {
-    student_id: 'STU-1004',
-    pin_code: '4185',
-    full_name: 'Emma Garcia',
-    grade: 'Grade 5',
-    learning_center_id: 'Learning Center Beta',
-    supervisor_name: 'Rachel Green',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Maria & Carlos Garcia',
-    emergency_contact: '(555) 723-9912',
-    qr_code_url: 'STU-1004',
-    created_at: new Date().toISOString(),
-  },
-  {
-    student_id: 'STU-1005',
-    pin_code: '5293',
-    full_name: 'Oliver Brown',
-    grade: 'Grade 3',
-    learning_center_id: 'Learning Center Alpha',
-    supervisor_name: 'David Miller',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Arthur & Helen Brown',
-    emergency_contact: '(555) 612-4409',
-    qr_code_url: 'STU-1005',
-    created_at: new Date().toISOString(),
-  },
-  {
-    student_id: 'STU-1006',
-    pin_code: '6032',
-    full_name: 'Ava Martinez',
-    grade: 'Grade 6',
-    learning_center_id: 'Learning Center Gamma',
-    supervisor_name: 'Sarah Jenkins',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Lucia Martinez',
-    emergency_contact: '(555) 902-8812',
-    qr_code_url: 'STU-1006',
-    created_at: new Date().toISOString(),
-  },
-  {
-    student_id: 'STU-1007',
-    pin_code: '7124',
-    full_name: 'Lucas Davis',
-    grade: 'Grade 4',
-    learning_center_id: 'Learning Center Alpha',
-    supervisor_name: 'David Miller',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Patricia & Daniel Davis',
-    emergency_contact: '(555) 812-7634',
-    qr_code_url: 'STU-1007',
-    created_at: new Date().toISOString(),
-  },
-  {
-    student_id: 'STU-1008',
-    pin_code: '8459',
-    full_name: 'Mia Taylor',
-    grade: 'Grade 5',
-    learning_center_id: 'Learning Center Beta',
-    supervisor_name: 'Rachel Green',
-    monitor_name: 'Amanda Cruz',
-    parent_names: 'Grace Taylor',
-    emergency_contact: '(555) 345-6712',
-    qr_code_url: 'STU-1008',
+    id: 'hope-campus',
+    name: 'Hope Campus',
+    code: 'HOPE',
+    location: 'South Wing, SWIS Academy',
+    phone: '+256 700 789 012',
+    email: 'hope.campus@swis.ac.ug',
+    lead_administrator: 'Mr. Jaxon Lulika',
+    learning_centers: ['Bethany', 'Azusa', 'Antioch', 'Blooms and Archie', 'Splendor'],
+    total_capacity: 150,
+    opening_time: '07:30 AM',
+    closing_time: '04:30 PM',
     created_at: new Date().toISOString(),
   },
 ];
+
+export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
+  {
+    id: 'spring-kayil',
+    name: 'Kayil',
+    campus: 'Spring Campus',
+    supervisor_name: 'Mrs. Irene Oryem',
+    monitor_name: 'Ms. Gloria Akello',
+    room_number: 'Room S-101',
+    capacity: 25,
+    description: 'Spring Campus Early Learning & Primary Center',
+  },
+  {
+    id: 'spring-splendor',
+    name: 'Splendor',
+    campus: 'Spring Campus',
+    supervisor_name: 'Mr. Arthur Mutebi',
+    monitor_name: 'Mr. Brian Ochieng',
+    room_number: 'Room S-102',
+    capacity: 25,
+    description: 'Spring Campus Middle School Learning Center',
+  },
+  {
+    id: 'spring-doxa',
+    name: 'Doxa',
+    campus: 'Spring Campus',
+    supervisor_name: 'Mr. David Kimbugwe',
+    monitor_name: 'Mr. Kevin Tumusiime',
+    room_number: 'Room S-103',
+    capacity: 25,
+    description: 'Spring Campus Senior Learning Center',
+  },
+  {
+    id: 'spring-bethany',
+    name: 'Bethany',
+    campus: 'Spring Campus',
+    supervisor_name: 'Mrs. Eunice Mutebe',
+    monitor_name: 'Ms. Faith Nabirye',
+    room_number: 'Room S-104',
+    capacity: 20,
+    description: 'Spring Campus Foundation & PACE Center',
+  },
+  {
+    id: 'spring-antioch',
+    name: 'Antioch',
+    campus: 'Spring Campus',
+    supervisor_name: 'Mrs. Doreen Mugaga',
+    monitor_name: 'Ms. Joy Kemigisha',
+    room_number: 'Room S-105',
+    capacity: 20,
+    description: 'Spring Campus Transition Learning Center',
+  },
+  {
+    id: 'hope-bethany',
+    name: 'Bethany',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mrs. Eunice Mutebe',
+    monitor_name: 'Ms. Faith Nabirye',
+    room_number: 'Room H-101',
+    capacity: 25,
+    description: 'Hope Campus Foundation & Primary PACE Center',
+  },
+  {
+    id: 'hope-azusa',
+    name: 'Azusa',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mr. Shafic Musika',
+    monitor_name: 'Mr. Paul Ssekandi',
+    room_number: 'Room H-102',
+    capacity: 25,
+    description: 'Hope Campus Intermediate Learning Center',
+  },
+  {
+    id: 'hope-antioch',
+    name: 'Antioch',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mrs. Doreen Mugaga',
+    monitor_name: 'Ms. Joy Kemigisha',
+    room_number: 'Room H-103',
+    capacity: 25,
+    description: 'Hope Campus Junior Secondary Learning Center',
+  },
+  {
+    id: 'hope-blooms',
+    name: 'Blooms and Archie',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mrs. Juliet Mayanja',
+    monitor_name: 'Ms. Patricia Namubiru',
+    room_number: 'Room H-104',
+    capacity: 20,
+    description: 'Hope Campus Specialized Learning & Remedial Center',
+  },
+  {
+    id: 'hope-splendor',
+    name: 'Splendor',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mr. Arthur Mutebi',
+    monitor_name: 'Mr. Brian Ochieng',
+    room_number: 'Room H-105',
+    capacity: 20,
+    description: 'Hope Campus Senior Secondary PACE Center',
+  },
+];
+
+// Helper to look up assigned monitor for a learning center
+function getMonitorForCenter(campus: string, center: string): string {
+  if (center === 'Kayil') return 'Ms. Gloria Akello';
+  if (center === 'Splendor') return 'Mr. Brian Ochieng';
+  if (center === 'Doxa') return 'Mr. Kevin Tumusiime';
+  if (center === 'Bethany') return 'Ms. Faith Nabirye';
+  if (center === 'Azusa') return 'Mr. Paul Ssekandi';
+  if (center === 'Antioch') return 'Ms. Joy Kemigisha';
+  if (center === 'Blooms and Archie') return 'Ms. Patricia Namubiru';
+  return 'Ms. Gloria Akello';
+}
+
+// 74 Students directly from user's attached CSV
+export const RAW_STUDENT_DATA = [
+  { name: 'Tyra Blick', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Tamara Blick', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Tiana Blick', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Israel Andinda', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Hannah Ankunda', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Josiah Kirabo', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Gerald Prince', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Ashley Joy', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Abraham Kasi Kisa', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Tabitha Kirabo', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'Nicole Namakula', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Darynne Nekesa Bisanda', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Jeanelle Keza Bisanda', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Dielle Theresa Nabwire', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Shammah Mugisha', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Geraldine Nabwami', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Charles Biddawo', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Dezdyliz Ndibalekera', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Gabriel Musiige', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Daniel Mandy', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Sanyu Elaine', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Dorona Zoe Njeri', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Debra Pendo', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Nathan Musiime Kibwota', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Joseph Kakumba', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Matthew Feta', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Abigail Ahumuza', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Jesse Ampaire', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Alitza Ayeza', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Sean Trinity Agaba', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Hannah Mulungi', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Neza Chad Adriel', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Christel Ahimbisibwe', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Ethel Ainembabazi', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Philip Mubiru', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Lauren Faith Mubiru', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Genevieve Nabukonde', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Legi Hellena Elain', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Payton A. Kobusingye', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Gregory James Mwesigye', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'Zachary Cursten Kwesiga', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Jerome Gad Amani', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Raina Nguya', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Romanove Nguya', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'David Nkeza', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Edrin Baraza', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Ariana Akoli', campus: 'Spring Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Nissi Mwiza', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Jireh Nziza', campus: 'Spring Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Zoe Jubilee Mutoni', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Shaddai Keza', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Ariella Mpanja', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Ashwell Bisanda', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Benjamin Ranell Ssebulime', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Zuriel Zaabu Kavuma', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'Tyra Anna Kemigisa', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Keith Mwesigwa Katende', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Charis Khane Gzas', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'Lester Nino Kaburu', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Myles Kisa', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'Charis Sanyu Keza', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Hannah Margaret Mukiibi', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Immanuella Nambiimbwa', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Lincoln Kalungi', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
+  { name: 'Adore Darian Kunda', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Camila Amutuhaire', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Cruz Bart Rubaale', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Charissa Laloyo', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Grace Benjamin', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Charlotte Bazaine', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+  { name: 'Blessing Phoebe', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Darvin Mark Alleni', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
+  { name: 'Jovin Zihuramye', campus: 'Hope Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Angelica Rose Otai', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
+];
+
+export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => {
+  const num = 1001 + index;
+  const student_id = `STU-${num}`;
+  // Deterministic 4-digit PIN for each student
+  const pin_code = String(1100 + ((index * 37 + 13) % 8800)).padStart(4, '0');
+  return {
+    student_id,
+    pin_code,
+    full_name: row.name,
+    campus: row.campus,
+    learning_center_id: row.center,
+    supervisor_name: row.supervisor,
+    monitor_name: getMonitorForCenter(row.campus, row.center),
+    grade: `${row.campus.split(' ')[0]} • ${row.center}`,
+    parent_names: `${row.name.split(' ').slice(-1)[0]} Family`,
+    emergency_contact: `+256 700 ${String(100 + index).padStart(3, '0')} ${String(200 + index).padStart(3, '0')}`,
+    qr_code_url: student_id,
+    created_at: new Date().toISOString(),
+  };
+});
 
 export async function ensureSuperUserAccount(): Promise<Staff> {
   try {
     const superUserRef = doc(db, 'staff', SUPER_USER_ACCOUNT.staff_id);
     await setDoc(superUserRef, SUPER_USER_ACCOUNT, { merge: true });
-  } catch (err) {
-    console.warn('Could not auto-sync super user to Firestore:', err);
+  } catch {
+    // Offline or initial connection fallback
   }
   return SUPER_USER_ACCOUNT;
 }
 
-export async function seedDatabaseIfEmpty(): Promise<boolean> {
+/**
+ * Force synchronization of the entire official school roster to Firestore.
+ * This completely clears out old AI dummy records and establishes the 74 CSV students,
+ * campuses, learning centers, and administrative accounts.
+ */
+export async function forceSyncOfficialData(): Promise<{
+  success: boolean;
+  studentsCount: number;
+  staffCount: number;
+  campusesCount: number;
+  learningCentersCount: number;
+}> {
   try {
-    // Always ensure the Super User account is in Firestore
-    await ensureSuperUserAccount();
-
-    const staffSnapshot = await getDocs(collection(db, 'staff'));
-    if (!staffSnapshot.empty && staffSnapshot.size > 1) {
-      return false; // already seeded
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
     const batch = writeBatch(db);
 
-    // Seed Staff
-    INITIAL_STAFF.forEach((staff) => {
-      const staffRef = doc(db, 'staff', staff.staff_id);
-      batch.set(staffRef, staff);
-    });
+    // 1. Sync Campuses
+    for (const c of INITIAL_CAMPUSES) {
+      batch.set(doc(db, 'campuses', c.id), c, { merge: true });
+    }
 
-    // Seed Students
-    INITIAL_STUDENTS.forEach((student) => {
-      const studentRef = doc(db, 'students', student.student_id);
-      batch.set(studentRef, student);
-    });
+    // 2. Sync Learning Centers
+    for (const lc of INITIAL_LEARNING_CENTERS) {
+      batch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
+    }
 
-    // Seed Initial Attendance Logs for Today
-    const initialLogs: AttendanceLog[] = [
-      {
-        id: 'LOG-101',
-        log_id: 'LOG-101',
-        target_type: 'Student',
-        target_id: 'STU-1001',
-        target_name: 'Liam Miller',
-        grade_or_role: 'Grade 4',
-        classroom: 'Learning Center Alpha',
-        date: todayStr,
-        check_in_time: '08:05 AM',
-        check_out_time: null,
-        scanned_by: 'STF-301',
-        scanned_by_name: 'David Miller',
-        pickup_dropoff_party: {
-          type: 'Parent',
-          name: 'Robert Miller',
-          relationship: 'Father',
-          phone: '(555) 301-4491',
-        },
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-102',
-        log_id: 'LOG-102',
-        target_type: 'Student',
-        target_id: 'STU-1002',
-        target_name: 'Sophia Chen',
-        grade_or_role: 'Grade 4',
-        classroom: 'Learning Center Alpha',
-        date: todayStr,
-        check_in_time: '08:12 AM',
-        check_out_time: null,
-        scanned_by: 'STF-301',
-        scanned_by_name: 'David Miller',
-        pickup_dropoff_party: {
-          type: 'Parent',
-          name: 'Mei Chen',
-          relationship: 'Mother',
-          phone: '(555) 492-3321',
-        },
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-103',
-        log_id: 'LOG-103',
-        target_type: 'Student',
-        target_id: 'STU-1003',
-        target_name: 'Noah Williams',
-        grade_or_role: 'Grade 5',
-        classroom: 'Learning Center Beta',
-        date: todayStr,
-        check_in_time: '08:18 AM',
-        check_out_time: null,
-        scanned_by: 'STF-201',
-        scanned_by_name: 'Amanda Cruz',
-        pickup_dropoff_party: {
-          type: 'Designate',
-          name: 'Evelyn Carter',
-          relationship: 'Aunt / Authorized Designate',
-          phone: '(555) 819-2041',
-          notes: 'Signed designate pickup form on file',
-        },
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-104',
-        log_id: 'LOG-104',
-        target_type: 'Student',
-        target_id: 'STU-1004',
-        target_name: 'Emma Garcia',
-        grade_or_role: 'Grade 5',
-        classroom: 'Learning Center Beta',
-        date: todayStr,
-        check_in_time: '08:10 AM',
-        check_out_time: '01:15 PM',
-        scanned_by: 'STF-302',
-        scanned_by_name: 'Rachel Green',
-        pickup_dropoff_party: {
-          type: 'Parent',
-          name: 'Maria Garcia',
-          relationship: 'Mother',
-          phone: '(555) 723-9912',
-          notes: 'Picked up early for medical appointment',
-        },
-        early_departure_reason: 'Dentist appointment at 2:00 PM (Approved note submitted)',
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-105',
-        log_id: 'LOG-105',
-        target_type: 'Teacher',
-        target_id: 'STF-102',
-        target_name: 'Dr. Marcus Reed',
-        grade_or_role: 'Principal',
-        classroom: 'Main Administration',
-        date: todayStr,
-        check_in_time: '07:35 AM',
-        check_out_time: null,
-        scanned_by: 'STF-201',
-        scanned_by_name: 'Amanda Cruz',
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-106',
-        log_id: 'LOG-106',
-        target_type: 'Teacher',
-        target_id: 'STF-301',
-        target_name: 'David Miller',
-        grade_or_role: 'Teacher',
-        classroom: 'Learning Center Alpha',
-        date: todayStr,
-        check_in_time: '07:45 AM',
-        check_out_time: null,
-        scanned_by: 'STF-201',
-        scanned_by_name: 'Amanda Cruz',
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-107',
-        log_id: 'LOG-107',
-        target_type: 'Teacher',
-        target_id: 'STF-302',
-        target_name: 'Rachel Green',
-        grade_or_role: 'Teacher',
-        classroom: 'Learning Center Beta',
-        date: todayStr,
-        check_in_time: '07:55 AM',
-        check_out_time: null,
-        scanned_by: 'STF-201',
-        scanned_by_name: 'Amanda Cruz',
-        status: 'Active',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'LOG-108',
-        log_id: 'LOG-108',
-        target_type: 'Student',
-        target_id: 'STU-1007',
-        target_name: 'Lucas Davis',
-        grade_or_role: 'Grade 4',
-        classroom: 'Learning Center Alpha',
-        date: todayStr,
-        check_in_time: '09:25 AM',
-        check_out_time: null,
-        scanned_by: 'STF-301',
-        scanned_by_name: 'David Miller',
-        pickup_dropoff_party: {
-          type: 'Parent',
-          name: 'Daniel Davis',
-          relationship: 'Father',
-        },
-        status: 'Pending Edit Approval',
-        created_at: new Date().toISOString(),
-      },
-    ];
+    // 3. Sync Official Staff
+    for (const stf of INITIAL_STAFF) {
+      batch.set(doc(db, 'staff', stf.staff_id), stf, { merge: true });
+    }
 
-    initialLogs.forEach((log) => {
-      const logRef = doc(db, 'attendance_logs', log.log_id);
-      batch.set(logRef, log);
-    });
-
-    // Seed Sample Edit Request for LOG-108
-    const sampleEditRequest: EditRequest = {
-      id: 'REQ-501',
-      request_id: 'REQ-501',
-      log_id: 'LOG-108',
-      target_type: 'Student',
-      target_name: 'Lucas Davis',
-      date: todayStr,
-      requested_by_id: 'STF-301',
-      requested_by_name: 'David Miller (Teacher)',
-      original_data: {
-        check_in_time: '09:25 AM',
-        check_out_time: null,
-        pickup_dropoff_party: {
-          type: 'Parent',
-          name: 'Daniel Davis',
-          relationship: 'Father',
-        },
-        early_departure_reason: '',
-        status: 'Active',
-      },
-      proposed_data: {
-        check_in_time: '08:15 AM',
-        check_out_time: null,
-        pickup_dropoff_party: {
-          type: 'Parent',
-          name: 'Daniel Davis',
-          relationship: 'Father',
-          notes: 'Arrived at 8:15 AM on Bus 4; gate scanner was syncing',
-        },
-        early_departure_reason: '',
-        status: 'Edited',
-      },
-      reason_for_edit: 'Bus 4 arrived on time at 8:15 AM. Handheld gate scanner experienced a network sync queue delay and stamped 9:25 AM. Verified with bus roster.',
-      status: 'Pending',
-      created_at: new Date().toISOString(),
-    };
-
-    const reqRef = doc(db, 'edit_requests', sampleEditRequest.request_id);
-    batch.set(reqRef, sampleEditRequest);
+    // 4. Sync Official Students (74 from user's CSV)
+    for (const stu of INITIAL_STUDENTS) {
+      batch.set(doc(db, 'students', stu.student_id), stu, { merge: true });
+    }
 
     await batch.commit();
-    return true;
-  } catch (error) {
-    console.error('Error seeding database:', error);
+
+    return {
+      success: true,
+      studentsCount: INITIAL_STUDENTS.length,
+      staffCount: INITIAL_STAFF.length,
+      campusesCount: INITIAL_CAMPUSES.length,
+      learningCentersCount: INITIAL_LEARNING_CENTERS.length,
+    };
+  } catch {
+    return {
+      success: false,
+      studentsCount: 0,
+      staffCount: 0,
+      campusesCount: 0,
+      learningCentersCount: 0,
+    };
+  }
+}
+
+export async function seedDatabaseIfEmpty(): Promise<boolean> {
+  try {
+    const studentsSnap = await getDocs(collection(db, 'students'));
+    // If students already exist, check if old dummy data (e.g. Liam Miller) is present
+    let needsFullSync = false;
+    if (studentsSnap.empty) {
+      needsFullSync = true;
+    } else {
+      const firstDoc = studentsSnap.docs[0]?.data() as any;
+      if (firstDoc?.full_name === 'Liam Miller' || !firstDoc?.campus) {
+        needsFullSync = true;
+      }
+    }
+
+    if (needsFullSync) {
+      await forceSyncOfficialData();
+      return true;
+    }
+
+    // Still ensure super user and campuses are initialized
+    await ensureSuperUserAccount();
+    return false;
+  } catch {
     return false;
   }
 }

@@ -1,7 +1,84 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    // Helper functions for campus and role validation
+    function isValidCampus(campus) {
+      return campus == 'Spring Campus' || campus == 'Hope Campus' || campus == 'All Campuses';
+    }
+
+    function isValidRole(role) {
+      return role == 'ICCE Coordinator' ||
+             role == 'Principal' ||
+             role == 'Director' ||
+             role == 'Administrator' ||
+             role == 'Administrative Assistant' ||
+             role == 'Supervisor' ||
+             role == 'Monitor' ||
+             role == 'Support Staff';
+    }
+
+    // Campuses Collection: Master institutional campus configs
+    match /campuses/{campusId} {
+      allow read: if true;
+      allow write: if request.resource.data.name is string &&
+                      request.resource.data.code is string &&
+                      request.resource.data.lead_administrator is string;
+    }
+
+    // Learning Centers Collection: Classroom & room associations
+    match /learning_centers/{learningCenterId} {
+      allow read: if true;
+      allow write: if request.resource.data.name is string &&
+                      isValidCampus(request.resource.data.campus);
+    }
+
+    // Staff Directory
+    match /staff/{staffId} {
+      allow read: if true;
+      allow write: if request.resource.data.staff_id is string &&
+                      request.resource.data.full_name is string &&
+                      isValidRole(request.resource.data.role);
+    }
+
+    // Student Body Roster: Linked to campus & learning center
+    match /students/{studentId} {
+      allow read: if true;
+      allow write: if request.resource.data.student_id is string &&
+                      request.resource.data.full_name is string &&
+                      isValidCampus(request.resource.data.campus);
+    }
+
+    // Attendance Logs: Real-time gate and classroom logs
+    match /attendance_logs/{logId} {
+      allow read: if true;
+      allow create: if request.resource.data.target_id is string &&
+                       request.resource.data.target_type in ['Student', 'Teacher'] &&
+                       request.resource.data.check_in_time is string &&
+                       isValidCampus(request.resource.data.campus);
+      allow update: if request.resource.data.target_id is string &&
+                       request.resource.data.target_type in ['Student', 'Teacher'] &&
+                       isValidCampus(request.resource.data.campus);
+      allow delete: if true;
+    }
+
+    // Edit Requests: Audit-logged change proposal workflow
+    match /edit_requests/{requestId} {
+      allow read: if true;
+      allow write: if request.resource.data.request_id is string &&
+                      request.resource.data.log_id is string &&
+                      request.resource.data.status in ['Pending', 'Approved', 'Rejected'];
+    }
+
+    // Urgent Alerts: Flash notifications for leadership
+    match /urgent_alerts/{alertId} {
+      allow read: if true;
+      allow write: if request.resource.data.request_id is string &&
+                      request.resource.data.timestamp is string;
+    }
+
+    // Staff FCM Tokens: Mobile/device push notification tokens
+    match /staff_fcm_tokens/{tokenId} {
       allow read, write: if true;
     }
   }

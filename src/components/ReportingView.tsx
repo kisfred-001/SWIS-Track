@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import {
   BarChart3,
@@ -22,83 +22,100 @@ export const ReportingView: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'Student' | 'Teacher'>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
 
-  const classrooms = Array.from(new Set(students.map((s) => s.learning_center_id))).filter(Boolean);
+  const classrooms = useMemo(() => {
+    return Array.from(new Set(students.map((s) => s.learning_center_id))).filter(Boolean);
+  }, [students]);
 
   // Compute date filter boundary
-  const now = new Date();
-  const getDaysAgo = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString().split('T')[0];
-  };
-
-  const todayStr = now.toISOString().split('T')[0];
-  const sevenDaysAgo = getDaysAgo(7);
-  const thirtyDaysAgo = getDaysAgo(30);
-
-  const filteredLogs = logs.filter((log) => {
-    if (log.status === 'Deleted') return false;
-
-    // Date range filter
-    if (dateRange === 'today' && log.date !== todayStr) return false;
-    if (dateRange === '7days' && log.date < sevenDaysAgo) return false;
-    if (dateRange === '30days' && log.date < thirtyDaysAgo) return false;
-
-    // Target type
-    if (filterType !== 'all' && log.target_type !== filterType) return false;
-
-    // Classroom
-    if (selectedClass !== 'all' && log.classroom !== selectedClass) return false;
-
-    return true;
-  });
-
-  // Calculate statistics
-  const totalLogsCount = filteredLogs.length;
-  const studentLogs = filteredLogs.filter((l) => l.target_type === 'Student');
-  const earlyDeparturesCount = studentLogs.filter((l) => l.early_departure_reason && l.early_departure_reason.trim() !== '').length;
-
-  // Identify students with patterns of concern
-  // 1. Chronic non-attendance or absent today
-  const absentStudents = students.filter(
-    (s) => !todayLogs.some((l) => l.target_id === s.student_id)
-  );
-
-  // 2. Early departures frequency
-  const earlyDepartureCountsByStudent: Record<string, number> = {};
-  studentLogs.forEach((l) => {
-    if (l.early_departure_reason) {
-      earlyDepartureCountsByStudent[l.target_name] = (earlyDepartureCountsByStudent[l.target_name] || 0) + 1;
-    }
-  });
-
-  // 3. Late arrivals (after 8:30 AM)
-  const lateArrivals = studentLogs.filter((l) => {
-    if (!l.check_in_time) return false;
-    // Simple check: if check-in is after 08:30 AM
-    return l.check_in_time.includes('09:') || l.check_in_time.includes('10:') || l.check_in_time.includes('11:');
-  });
-
-  // Daily attendance trends for the last 7 days
-  const last7DaysList: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    last7DaysList.push(getDaysAgo(i));
-  }
-
-  const trendsByDay = last7DaysList.map((dayDate) => {
-    const dayLogs = logs.filter((l) => l.date === dayDate && l.status !== 'Deleted' && l.target_type === 'Student');
-    const dayLabel = new Date(dayDate + 'T00:00:00').toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'numeric',
-      day: 'numeric',
-    });
-    return {
-      date: dayDate,
-      label: dayLabel,
-      count: dayLogs.length,
-      percentage: students.length > 0 ? Math.min(100, Math.round((dayLogs.length / students.length) * 100)) : 0,
+  const { todayStr, sevenDaysAgo, thirtyDaysAgo, last7DaysList } = useMemo(() => {
+    const getDaysAgo = (days: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return d.toISOString().split('T')[0];
     };
-  });
+    const t = new Date().toISOString().split('T')[0];
+    const s = getDaysAgo(7);
+    const m = getDaysAgo(30);
+    const daysList: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      daysList.push(getDaysAgo(i));
+    }
+    return { todayStr: t, sevenDaysAgo: s, thirtyDaysAgo: m, last7DaysList: daysList };
+  }, []);
+
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      if (log.status === 'Deleted') return false;
+
+      // Date range filter
+      if (dateRange === 'today' && log.date !== todayStr) return false;
+      if (dateRange === '7days' && log.date < sevenDaysAgo) return false;
+      if (dateRange === '30days' && log.date < thirtyDaysAgo) return false;
+
+      // Target type
+      if (filterType !== 'all' && log.target_type !== filterType) return false;
+
+      // Classroom
+      if (selectedClass !== 'all' && log.classroom !== selectedClass) return false;
+
+      return true;
+    });
+  }, [logs, dateRange, todayStr, sevenDaysAgo, thirtyDaysAgo, filterType, selectedClass]);
+
+  // Calculate statistics (memoized)
+  const totalLogsCount = filteredLogs.length;
+
+  const studentLogs = useMemo(() => {
+    return filteredLogs.filter((l) => l.target_type === 'Student');
+  }, [filteredLogs]);
+
+  const earlyDeparturesCount = useMemo(() => {
+    return studentLogs.filter((l) => l.early_departure_reason && l.early_departure_reason.trim() !== '').length;
+  }, [studentLogs]);
+
+  // Identify students with patterns of concern (memoized O(1) set lookup)
+  const absentStudents = useMemo(() => {
+    const loggedStudentIds = new Set(todayLogs.map((l) => l.target_id));
+    return students.filter((s) => !loggedStudentIds.has(s.student_id));
+  }, [students, todayLogs]);
+
+  // Early departures frequency (memoized)
+  const earlyDepartureCountsByStudent = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (let i = 0; i < studentLogs.length; i++) {
+      const l = studentLogs[i];
+      if (l.early_departure_reason) {
+        counts[l.target_name] = (counts[l.target_name] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [studentLogs]);
+
+  // Late arrivals (memoized)
+  const lateArrivals = useMemo(() => {
+    return studentLogs.filter((l) => {
+      if (!l.check_in_time) return false;
+      return l.check_in_time.includes('09:') || l.check_in_time.includes('10:') || l.check_in_time.includes('11:');
+    });
+  }, [studentLogs]);
+
+  // Daily attendance trends for the last 7 days (memoized)
+  const trendsByDay = useMemo(() => {
+    return last7DaysList.map((dayDate) => {
+      const dayLogs = logs.filter((l) => l.date === dayDate && l.status !== 'Deleted' && l.target_type === 'Student');
+      const dayLabel = new Date(dayDate + 'T00:00:00').toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'numeric',
+        day: 'numeric',
+      });
+      return {
+        date: dayDate,
+        label: dayLabel,
+        count: dayLogs.length,
+        percentage: students.length > 0 ? Math.min(100, Math.round((dayLogs.length / students.length) * 100)) : 0,
+      };
+    });
+  }, [last7DaysList, logs, students.length]);
 
   // Export to CSV function
   const handleExportCSV = () => {

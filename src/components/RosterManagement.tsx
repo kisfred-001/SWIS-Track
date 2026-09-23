@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -25,7 +25,15 @@ import { BulkUploadModal } from './BulkUploadModal';
 import { IDCardGeneratorModal } from './IDCardGeneratorModal';
 
 export const RosterManagement: React.FC = () => {
-  const { students, saveStudent, saveStaff } = useAttendance();
+  const {
+    students,
+    saveStudent,
+    saveStaff,
+    campuses,
+    learningCenters,
+    selectedCampus,
+    setSelectedCampus,
+  } = useAttendance();
   const { currentUser, allStaff, isSuperUser, isTeacherOnly } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'students' | 'staff'>('students');
@@ -45,10 +53,11 @@ export const RosterManagement: React.FC = () => {
   // Add Student Modal
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [studentName, setStudentName] = useState('');
+  const [studentCampus, setStudentCampus] = useState('Spring Campus');
   const [studentGrade, setStudentGrade] = useState('Grade 4');
-  const [studentCenter, setStudentCenter] = useState('Learning Center Alpha');
-  const [studentSupervisor, setStudentSupervisor] = useState('David Miller');
-  const [studentMonitor, setStudentMonitor] = useState('Amanda Cruz');
+  const [studentCenter, setStudentCenter] = useState('Kayil');
+  const [studentSupervisor, setStudentSupervisor] = useState('Mrs. Rachel');
+  const [studentMonitor, setStudentMonitor] = useState('Mr. Benson');
   const [studentParents, setStudentParents] = useState('');
   const [studentEmergency, setStudentEmergency] = useState('');
   const [studentPin, setStudentPin] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
@@ -57,41 +66,62 @@ export const RosterManagement: React.FC = () => {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [staffName, setStaffName] = useState('');
   const [staffEmail, setStaffEmail] = useState('');
-  const [staffRole, setStaffRole] = useState<UserRole>('Teacher');
-  const [staffCenter, setStaffCenter] = useState('Learning Center Gamma');
+  const [staffRole, setStaffRole] = useState<UserRole>('Supervisor');
+  const [staffCenter, setStaffCenter] = useState('Kayil');
   const [staffPhone, setStaffPhone] = useState('');
   const [staffPin, setStaffPin] = useState(() => Math.floor(100 + Math.random() * 900).toString());
 
   const [formMsg, setFormMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const centers = Array.from(new Set(students.map((s) => s.learning_center_id))).filter(Boolean);
+  const centers = useMemo(() => {
+    const list =
+      selectedCampus === 'All Campuses'
+        ? students
+        : students.filter((s) => s.campus === selectedCampus);
+    return Array.from(new Set(list.map((s) => s.learning_center_id))).filter(Boolean);
+  }, [students, selectedCampus]);
 
   // If user is a Teacher, enforce learning center scope if assigned
   const teacherCenter = isTeacherOnly ? currentUser?.learning_center_id : null;
 
-  // Filter students
-  const filteredStudents = students.filter((s) => {
-    // If teacher only, prioritize their classroom
-    const matchesTeacherScope = !teacherCenter || s.learning_center_id === teacherCenter || centerFilter !== 'all';
-    const matchesCenter = centerFilter === 'all' || s.learning_center_id === centerFilter;
-    const matchesSearch =
-      s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.pin_code.includes(searchQuery) ||
-      s.grade.toLowerCase().includes(searchQuery.toLowerCase());
+  // Filter students (memoized)
+  const filteredStudents = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return students.filter((s) => {
+      const matchesCampus =
+        selectedCampus === 'All Campuses' || s.campus === selectedCampus;
+      const matchesCenter =
+        centerFilter === 'all' || s.learning_center_id === centerFilter;
+      const matchesSearch =
+        !q ||
+        s.full_name.toLowerCase().includes(q) ||
+        s.student_id.toLowerCase().includes(q) ||
+        s.pin_code.includes(q) ||
+        (s.grade || '').toLowerCase().includes(q) ||
+        s.supervisor_name.toLowerCase().includes(q);
 
-    return matchesCenter && matchesSearch && (teacherCenter ? s.learning_center_id === teacherCenter : true);
-  });
+      return (
+        matchesCampus &&
+        matchesCenter &&
+        matchesSearch &&
+        (teacherCenter ? s.learning_center_id === teacherCenter : true)
+      );
+    });
+  }, [students, selectedCampus, centerFilter, searchQuery, teacherCenter]);
 
-  // Filter staff
-  const filteredStaff = allStaff.filter((st) => {
-    const matchesSearch =
-      st.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      st.staff_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      st.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      st.pin_code.includes(searchQuery);
-    return matchesSearch;
-  });
+  // Filter staff (memoized)
+  const filteredStaff = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return allStaff.filter((st) => {
+      const matchesSearch =
+        !q ||
+        st.full_name.toLowerCase().includes(q) ||
+        st.staff_id.toLowerCase().includes(q) ||
+        st.role.toLowerCase().includes(q) ||
+        st.pin_code.includes(q);
+      return matchesSearch;
+    });
+  }, [allStaff, searchQuery]);
 
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +135,7 @@ export const RosterManagement: React.FC = () => {
       student_id: newId,
       pin_code: studentPin,
       full_name: studentName.trim(),
+      campus: studentCampus || 'Spring Campus',
       grade: studentGrade,
       learning_center_id: studentCenter,
       supervisor_name: studentSupervisor,
@@ -321,6 +352,21 @@ export const RosterManagement: React.FC = () => {
             />
           </div>
 
+          {activeTab === 'students' && (
+            <select
+              value={selectedCampus}
+              onChange={(e) => setSelectedCampus(e.target.value)}
+              className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+              <option value="All Campuses">All Campuses</option>
+              {campuses.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+
           {activeTab === 'students' && !teacherCenter && (
             <select
               value={centerFilter}
@@ -368,8 +414,19 @@ export const RosterManagement: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3 px-3">
-                        <span className="font-semibold text-slate-800">{s.grade}</span>
-                        <div className="text-[11px] text-slate-500">{s.learning_center_id}</div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-semibold text-slate-800">{s.learning_center_id}</span>
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                              s.campus === 'Spring Campus'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-sky-100 text-sky-800'
+                            }`}
+                          >
+                            {s.campus || 'Campus'}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400">{s.grade}</div>
                       </td>
                       <td className="py-3 px-3">
                         <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">

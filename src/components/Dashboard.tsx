@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -17,6 +17,7 @@ import {
   UserCheck,
   ChevronRight,
   Sparkles,
+  School,
 } from 'lucide-react';
 import { Student, Staff, AttendanceLog } from '../types';
 
@@ -33,6 +34,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     students,
     todayLogs,
     premisesSummary,
+    filteredPremisesSummary,
+    campuses,
+    selectedCampus,
+    setSelectedCampus,
     pendingRequestsCount,
     processScan,
   } = useAttendance();
@@ -43,135 +48,215 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'on_premises' | 'checked_out' | 'absent'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Extract unique classrooms
-  const classrooms = Array.from(new Set(students.map((s) => s.learning_center_id))).filter(Boolean);
-
-  // Student status mapping for today
-  const studentStatusList = students.map((student) => {
-    const log = todayLogs.find((l) => l.target_id === student.student_id);
-    let status: 'on_premises' | 'checked_out' | 'absent' = 'absent';
-    if (log) {
-      status = log.check_out_time ? 'checked_out' : 'on_premises';
+  // Fast O(1) log lookup map by target_id
+  const todayLogsMap = useMemo(() => {
+    const map = new Map<string, AttendanceLog>();
+    for (let i = 0; i < todayLogs.length; i++) {
+      map.set(todayLogs[i].target_id, todayLogs[i]);
     }
-    return {
-      student,
-      log,
-      status,
-    };
-  });
+    return map;
+  }, [todayLogs]);
 
-  // Filter students based on UI controls
-  const filteredStudents = studentStatusList.filter((item) => {
-    const matchesSearch =
-      item.student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.student.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.student.pin_code.includes(searchQuery);
+  // Extract unique classrooms (memoized)
+  const classrooms = useMemo(() => {
+    const relevantStudents =
+      selectedCampus === 'All Campuses'
+        ? students
+        : students.filter((s) => s.campus === selectedCampus);
+    return Array.from(new Set(relevantStudents.map((s) => s.learning_center_id))).filter(Boolean);
+  }, [students, selectedCampus]);
 
-    const matchesClass =
-      selectedClassroom === 'all' || item.student.learning_center_id === selectedClassroom;
+  // Student status mapping for today (memoized O(1) lookup)
+  const studentStatusList = useMemo(() => {
+    return students.map((student) => {
+      const log = todayLogsMap.get(student.student_id);
+      let status: 'on_premises' | 'checked_out' | 'absent' = 'absent';
+      if (log) {
+        status = log.check_out_time ? 'checked_out' : 'on_premises';
+      }
+      return {
+        student,
+        log,
+        status,
+      };
+    });
+  }, [students, todayLogsMap]);
 
-    const matchesStatus =
-      statusFilter === 'all' || item.status === statusFilter;
+  // Filter students based on UI controls (memoized)
+  const filteredStudents = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return studentStatusList.filter((item) => {
+      const matchesCampus =
+        selectedCampus === 'All Campuses' || item.student.campus === selectedCampus;
 
-    return matchesSearch && matchesClass && matchesStatus;
-  });
+      const matchesSearch =
+        !query ||
+        item.student.full_name.toLowerCase().includes(query) ||
+        item.student.student_id.toLowerCase().includes(query) ||
+        item.student.pin_code.includes(query) ||
+        item.student.supervisor_name.toLowerCase().includes(query);
 
-  // Staff status mapping for today
-  const staffStatusList = allStaff.map((staff) => {
-    const log = todayLogs.find((l) => l.target_id === staff.staff_id);
-    let status: 'on_premises' | 'checked_out' | 'off_campus' = 'off_campus';
-    if (log) {
-      status = log.check_out_time ? 'checked_out' : 'on_premises';
-    }
-    return {
-      staff,
-      log,
-      status,
-    };
-  });
+      const matchesClass =
+        selectedClassroom === 'all' || item.student.learning_center_id === selectedClassroom;
 
-  const filteredStaff = staffStatusList.filter((item) => {
-    const matchesSearch =
-      item.staff.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.staff.staff_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.staff.role.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === 'all' || item.status === statusFilter;
 
-    const matchesStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'on_premises' && item.status === 'on_premises') ||
-      (statusFilter === 'checked_out' && item.status === 'checked_out') ||
-      (statusFilter === 'absent' && item.status === 'off_campus');
+      return matchesCampus && matchesSearch && matchesClass && matchesStatus;
+    });
+  }, [studentStatusList, searchQuery, selectedCampus, selectedClassroom, statusFilter]);
 
-    return matchesSearch && matchesStatus;
-  });
+  // Staff status mapping for today (memoized O(1) lookup)
+  const staffStatusList = useMemo(() => {
+    return allStaff.map((staff) => {
+      const log = todayLogsMap.get(staff.staff_id);
+      let status: 'on_premises' | 'checked_out' | 'off_campus' = 'off_campus';
+      if (log) {
+        status = log.check_out_time ? 'checked_out' : 'on_premises';
+      }
+      return {
+        staff,
+        log,
+        status,
+      };
+    });
+  }, [allStaff, todayLogsMap]);
+
+  const filteredStaff = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return staffStatusList.filter((item) => {
+      const matchesCampus =
+        selectedCampus === 'All Campuses' ||
+        !item.staff.campus ||
+        item.staff.campus === selectedCampus ||
+        item.staff.campus === 'All Campuses';
+
+      const matchesSearch =
+        !query ||
+        item.staff.full_name.toLowerCase().includes(query) ||
+        item.staff.staff_id.toLowerCase().includes(query) ||
+        item.staff.role.toLowerCase().includes(query);
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'on_premises' && item.status === 'on_premises') ||
+        (statusFilter === 'checked_out' && item.status === 'checked_out') ||
+        (statusFilter === 'absent' && item.status === 'off_campus');
+
+      return matchesCampus && matchesSearch && matchesStatus;
+    });
+  }, [staffStatusList, searchQuery, selectedCampus, statusFilter]);
 
   return (
     <div className="space-y-6">
+      {/* Campus Scope Banner */}
+      <div className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center space-x-2">
+          <School className="w-5 h-5 text-indigo-600" />
+          <div>
+            <span className="text-xs font-bold text-slate-800">Campus Attendance Scope:</span>
+            <span className="text-xs text-slate-500 ml-1.5 font-medium">
+              {selectedCampus === 'All Campuses'
+                ? 'Displaying combined metrics for Spring Campus and Hope Campus'
+                : `Filtered strictly for ${selectedCampus}`}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setSelectedCampus('All Campuses')}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+              selectedCampus === 'All Campuses'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            All Campuses
+          </button>
+          {campuses.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setSelectedCampus(c.name)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                selectedCampus === c.name
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Top Stat Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Students On Premises */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Students Present</span>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
           </div>
           <div className="mt-2 flex items-baseline space-x-1.5">
             <span className="text-3xl font-extrabold text-emerald-600">
-              {premisesSummary.studentsOnPremises}
+              {filteredPremisesSummary.studentsOnPremises}
             </span>
             <span className="text-xs text-slate-400 font-medium">
-              / {premisesSummary.studentsTotal}
+              / {filteredPremisesSummary.studentsTotal}
             </span>
           </div>
           <p className="text-[11px] text-emerald-700 mt-1 font-medium">
-            {premisesSummary.studentsTotal > 0
+            {filteredPremisesSummary.studentsTotal > 0
               ? `${Math.round(
-                  (premisesSummary.studentsOnPremises / premisesSummary.studentsTotal) * 100
+                  (filteredPremisesSummary.studentsOnPremises / filteredPremisesSummary.studentsTotal) * 100
                 )}% on premises`
               : '0%'}
           </p>
         </div>
 
         {/* Students Checked Out */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Students Departed</span>
             <LogOut className="w-4 h-4 text-blue-500" />
           </div>
           <div className="mt-2 flex items-baseline space-x-1.5">
             <span className="text-3xl font-extrabold text-blue-600">
-              {premisesSummary.studentsCheckedOut}
+              {filteredPremisesSummary.studentsCheckedOut}
             </span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">Checked out today</p>
         </div>
 
         {/* Students Absent */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Students Absent</span>
             <AlertCircle className="w-4 h-4 text-amber-500" />
           </div>
           <div className="mt-2 flex items-baseline space-x-1.5">
             <span className="text-3xl font-extrabold text-amber-600">
-              {premisesSummary.studentsAbsent}
+              {filteredPremisesSummary.studentsAbsent}
             </span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">Not scanned today</p>
         </div>
 
         {/* Staff On Premises */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Staff On Campus</span>
             <Briefcase className="w-4 h-4 text-indigo-500" />
           </div>
           <div className="mt-2 flex items-baseline space-x-1.5">
             <span className="text-3xl font-extrabold text-indigo-600">
-              {premisesSummary.staffOnPremises}
+              {filteredPremisesSummary.staffOnPremises}
             </span>
             <span className="text-xs text-slate-400 font-medium">
-              / {premisesSummary.staffTotal}
+              / {filteredPremisesSummary.staffTotal}
             </span>
           </div>
           <p className="text-[11px] text-indigo-700 mt-1 font-medium">
@@ -180,17 +265,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Total Registered */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Total Enrolled</span>
             <GraduationCap className="w-4 h-4 text-slate-400" />
           </div>
           <div className="mt-2 flex items-baseline space-x-1.5">
             <span className="text-3xl font-extrabold text-slate-900">
-              {premisesSummary.studentsTotal}
+              {filteredPremisesSummary.studentsTotal}
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Across all centers</p>
+          <p className="text-[11px] text-slate-500 mt-1">
+            {selectedCampus === 'All Campuses' ? 'Across all campuses' : selectedCampus}
+          </p>
         </div>
 
         {/* Pending Edit Approvals */}
@@ -399,9 +486,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                       {/* Grade & Center */}
                       <td className="py-3 px-3">
-                        <span className="font-semibold text-slate-800">{student.grade}</span>
-                        <div className="text-[11px] text-slate-500">
-                          {student.learning_center_id}
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-semibold text-slate-800">{student.learning_center_id}</span>
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                              student.campus === 'Spring Campus'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-sky-100 text-sky-800'
+                            }`}
+                          >
+                            {student.campus || 'Campus'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          Sup: <strong className="text-slate-700">{student.supervisor_name}</strong>
                         </div>
                       </td>
 

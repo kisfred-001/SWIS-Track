@@ -13,7 +13,6 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
   const notificationTitle = payload.notification?.title || 'SWIS Track - Urgent Edit Request';
   const notificationOptions = {
     body: payload.notification?.body || 'An urgent attendance edit request was submitted by a teacher.',

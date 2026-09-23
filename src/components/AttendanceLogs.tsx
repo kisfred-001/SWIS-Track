@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -47,24 +47,29 @@ export const AttendanceLogs: React.FC = () => {
   // Delete modal state
   const [deleteReason, setDeleteReason] = useState('');
 
-  const classrooms = Array.from(new Set(logs.map((l) => l.classroom))).filter(Boolean);
+  const classrooms = useMemo(() => {
+    return Array.from(new Set(logs.map((l) => l.classroom))).filter(Boolean);
+  }, [logs]);
 
-  // Filter logs
-  const filteredLogs = logs.filter((log) => {
-    // If selected date is active, match it (or ignore if 'all')
-    const matchesDate = !selectedDate || log.date === selectedDate;
+  // Filter logs (memoized)
+  const filteredLogs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return logs.filter((log) => {
+      // If selected date is active, match it (or ignore if 'all')
+      const matchesDate = !selectedDate || log.date === selectedDate;
+      const matchesType = filterType === 'all' || log.target_type === filterType;
+      const matchesStatus = filterStatus === 'all' || log.status === filterStatus;
+      const matchesClass = filterClass === 'all' || log.classroom === filterClass;
 
-    const matchesType = filterType === 'all' || log.target_type === filterType;
-    const matchesStatus = filterStatus === 'all' || log.status === filterStatus;
-    const matchesClass = filterClass === 'all' || log.classroom === filterClass;
+      const matchesSearch =
+        !q ||
+        log.target_name.toLowerCase().includes(q) ||
+        log.target_id.toLowerCase().includes(q) ||
+        log.log_id.toLowerCase().includes(q);
 
-    const matchesSearch =
-      log.target_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.target_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.log_id.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesDate && matchesType && matchesStatus && matchesClass && log.status !== 'Deleted';
-  });
+      return matchesDate && matchesType && matchesStatus && matchesClass && log.status !== 'Deleted';
+    });
+  }, [logs, selectedDate, filterType, filterStatus, filterClass, searchQuery]);
 
   const openEditModal = (log: AttendanceLog) => {
     setSelectedLog(log);

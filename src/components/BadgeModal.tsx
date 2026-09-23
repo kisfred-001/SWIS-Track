@@ -43,8 +43,7 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) =
       const safeName = fullName.replace(/[^a-zA-Z0-9]/g, '_');
       doc.save(`SWIS_${type}_ID_${safeName}.pdf`);
       sound.playSuccessChime();
-    } catch (err) {
-      console.error('Failed to download badge PDF:', err);
+    } catch {
       sound.playError();
     } finally {
       setIsExporting(false);

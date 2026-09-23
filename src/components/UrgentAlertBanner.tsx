@@ -21,17 +21,22 @@ export const UrgentAlertBanner: React.FC<UrgentAlertBannerProps> = ({ onNavigate
   const { activeUrgentAlerts, dismissAlert } = useAttendance();
   const { canApproveEditRequests, currentUser } = useAuth();
 
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
-    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
-  );
+  const isTopWindow = typeof window !== 'undefined' && window.self === window.top;
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => {
+    try {
+      return typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default';
+    } catch {
+      return 'default';
+    }
+  });
 
   const requestPushPermission = async () => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
+    if (isTopWindow && typeof window !== 'undefined' && 'Notification' in window) {
       try {
         const perm = await Notification.requestPermission();
         setNotificationPermission(perm);
-      } catch (err) {
-        console.warn('Could not request notification permission:', err);
+      } catch {
+        // Silently handle if user or browser rejects
       }
     }
   };
@@ -84,7 +89,7 @@ export const UrgentAlertBanner: React.FC<UrgentAlertBannerProps> = ({ onNavigate
 
           {/* Right: Actions */}
           <div className="flex items-center space-x-2 shrink-0 self-end md:self-auto">
-            {notificationPermission !== 'granted' && typeof window !== 'undefined' && 'Notification' in window && (
+            {isTopWindow && notificationPermission !== 'granted' && typeof window !== 'undefined' && 'Notification' in window && (
               <button
                 type="button"
                 onClick={requestPushPermission}

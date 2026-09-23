@@ -1,15 +1,44 @@
 {
   "entities": {
+    "Campus": {
+      "collection": "campuses",
+      "fields": {
+        "id": { "type": "string", "description": "Unique campus ID (e.g. spring-campus, hope-campus)" },
+        "name": { "type": "string", "description": "Campus name: Spring Campus or Hope Campus" },
+        "code": { "type": "string", "description": "Campus code: SPRING or HOPE" },
+        "lead_administrator": { "type": "string", "description": "Primary campus administrator name" },
+        "location": { "type": "string", "description": "Physical address / campus location" },
+        "phone": { "type": "string", "description": "Campus contact telephone" },
+        "email": { "type": "string", "description": "Campus official email" },
+        "opening_time": { "type": "string", "description": "Standard gates open time (e.g. 07:30 AM)" },
+        "closing_time": { "type": "string", "description": "Standard gates close time (e.g. 04:30 PM)" },
+        "capacity": { "type": "number", "description": "Max student capacity" }
+      }
+    },
+    "LearningCenter": {
+      "collection": "learning_centers",
+      "fields": {
+        "id": { "type": "string", "description": "Unique learning center identifier" },
+        "name": { "type": "string", "description": "Learning center name" },
+        "campus": { "type": "string", "description": "Associated campus (Spring Campus or Hope Campus)" },
+        "supervisor_name": { "type": "string", "description": "Assigned class supervisor" },
+        "monitor_name": { "type": "string", "description": "Assigned class monitor (equal rights as supervisor)" },
+        "room_number": { "type": "string", "description": "Room or wing identifier" },
+        "capacity": { "type": "number", "description": "Room capacity" },
+        "description": { "type": "string", "description": "Grade / stage description" }
+      }
+    },
     "Staff": {
       "collection": "staff",
       "fields": {
-        "staff_id": { "type": "string", "description": "Unique staff identifier (e.g. STF-101)" },
+        "staff_id": { "type": "string", "description": "Unique staff identifier (e.g. STF-001)" },
         "pin_code": { "type": "string", "description": "Unique 3-digit code" },
         "full_name": { "type": "string", "description": "Staff full name" },
-        "role": { "type": "string", "description": "Teacher, Admin Assistant, Principal, Director, ICCE Coordinator" },
-        "learning_center_id": { "type": "string", "description": "Assigned classroom / learning center" },
-        "email": { "type": "string", "description": "Email address" },
-        "phone": { "type": "string", "description": "Contact number" },
+        "role": { "type": "string", "description": "ICCE Coordinator, Principal, Director, Administrator, Administrative Assistant, Supervisor, Monitor, Support Staff" },
+        "campus": { "type": "string", "description": "Spring Campus, Hope Campus, or All Campuses" },
+        "learning_center_id": { "type": "string", "description": "Assigned learning center" },
+        "email": { "type": "string", "description": "Institutional email address" },
+        "phone": { "type": "string", "description": "Contact telephone" },
         "qr_code_url": { "type": "string", "description": "QR code token / payload" },
         "created_at": { "type": "string", "description": "Creation timestamp" }
       }
@@ -19,14 +48,15 @@
       "fields": {
         "student_id": { "type": "string", "description": "Unique student identifier (e.g. STU-1001)" },
         "pin_code": { "type": "string", "description": "Unique 4-digit code" },
-        "full_name": { "type": "string", "description": "Student full name" },
-        "grade": { "type": "string", "description": "Grade level" },
-        "learning_center_id": { "type": "string", "description": "Classroom / Learning Center identifier" },
-        "supervisor_name": { "type": "string", "description": "Main teacher / supervisor" },
-        "monitor_name": { "type": "string", "description": "Assistant teacher / monitor" },
+        "full_name": { "type": "string", "description": "Student full name from official roster" },
+        "grade": { "type": "string", "description": "Grade level / Class" },
+        "campus": { "type": "string", "description": "Campus: Spring Campus or Hope Campus" },
+        "learning_center_id": { "type": "string", "description": "Assigned Learning Center" },
+        "supervisor_name": { "type": "string", "description": "Main supervisor name" },
+        "monitor_name": { "type": "string", "description": "Assigned monitor name" },
         "qr_code_url": { "type": "string", "description": "QR code token / payload" },
         "parent_names": { "type": "string", "description": "Parent or guardian names" },
-        "emergency_contact": { "type": "string", "description": "Emergency telephone number" },
+        "emergency_contact": { "type": "string", "description": "Emergency contact number" },
         "created_at": { "type": "string", "description": "Creation timestamp" }
       }
     },
@@ -37,6 +67,7 @@
         "target_type": { "type": "string", "description": "Student or Teacher" },
         "target_id": { "type": "string", "description": "student_id or staff_id" },
         "target_name": { "type": "string", "description": "Name of student or teacher" },
+        "campus": { "type": "string", "description": "Spring Campus or Hope Campus" },
         "date": { "type": "string", "description": "Date formatted YYYY-MM-DD" },
         "check_in_time": { "type": "string", "description": "Timestamp or HH:mm string of check in" },
         "check_out_time": { "type": "string", "description": "Timestamp or HH:mm string of check out, or null" },
@@ -56,10 +87,10 @@
         "original_data": { "type": "object", "description": "Snapshot of previous log state" },
         "proposed_data": { "type": "object", "description": "Proposed changes" },
         "reason_for_edit": { "type": "string", "description": "Justification from requester" },
-        "is_urgent": { "type": "boolean", "description": "Whether an urgent FCM alert was triggered" },
+        "is_urgent": { "type": "boolean", "description": "Whether an urgent alert was triggered" },
         "status": { "type": "string", "description": "Pending, Approved, Rejected" },
         "reviewed_by": { "type": "string", "description": "Admin staff ID who reviewed" },
-        "review_comment": { "type": "string", "description": "Feedback or mandatory approval reason" }
+        "review_comment": { "type": "string", "description": "Mandatory approval reason / feedback" }
       }
     },
     "UrgentAlert": {
@@ -75,15 +106,6 @@
         "reason": { "type": "string", "description": "Reason for urgent edit request" },
         "timestamp": { "type": "string", "description": "ISO timestamp of dispatch" },
         "dismissed_by": { "type": "array", "description": "Array of staff IDs who dismissed the alert banner" }
-      }
-    },
-    "StaffFcmToken": {
-      "collection": "staff_fcm_tokens",
-      "fields": {
-        "staff_id": { "type": "string", "description": "Unique staff identifier" },
-        "fcm_token": { "type": "string", "description": "FCM device registration token" },
-        "platform": { "type": "string", "description": "Device platform" },
-        "updated_at": { "type": "string", "description": "Last updated timestamp" }
       }
     }
   }

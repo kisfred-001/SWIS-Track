@@ -27,6 +27,7 @@ interface BulkUploadModalProps {
 interface ParsedStudentRow {
   student_id: string;
   full_name: string;
+  campus: string;
   grade: string;
   learning_center_id: string;
   supervisor_name: string;
@@ -224,6 +225,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
     const idIdx = findIndex(['student_id', 'id', 'studentid', 'student_code', 'code']);
     const nameIdx = findIndex(['full_name', 'name', 'student_name', 'studentname', 'fullname']);
     const gradeIdx = findIndex(['grade', 'grade_level', 'class', 'year']);
+    const campusIdx = findIndex(['campus', 'school_campus', 'branch', 'location']);
     const centerIdx = findIndex([
       'learning_center_id',
       'learning_center',
@@ -292,6 +294,12 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
 
       const isExisting = !!currentRecord;
 
+      let rawCampus =
+        campusIdx !== -1 && cols[campusIdx]
+          ? cols[campusIdx].trim()
+          : currentRecord?.campus ||
+            (['Kayil', 'Splendor', 'Doxa'].includes(rawCenter) ? 'Spring Campus' : 'Hope Campus');
+
       // Assign student_id if empty
       if (!rawId) {
         const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -306,6 +314,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
       rows.push({
         student_id: rawId,
         full_name: rawName.trim(),
+        campus: rawCampus,
         grade: rawGrade,
         learning_center_id: rawCenter,
         supervisor_name: rawSupervisor,
@@ -397,6 +406,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
       id: r.student_id,
       student_id: r.student_id,
       full_name: r.full_name,
+      campus: r.campus || 'Spring Campus',
       grade: r.grade,
       learning_center_id: r.learning_center_id,
       supervisor_name: r.supervisor_name,

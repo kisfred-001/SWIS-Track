@@ -105,8 +105,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
       );
 
       setCameraActive(true);
-    } catch (err: any) {
-      console.warn('Camera start error:', err);
+    } catch {
       setCameraError(
         'Unable to access camera. Please allow camera permissions or use the PIN pad fallback.'
       );
@@ -194,7 +193,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
       // Prepopulate form defaults
       if (actionType === 'check_in') {
         setPartyType('Parent');
-        setPartyName(student.parent_names.split('&')[0]?.trim() || '');
+        setPartyName((student.parent_names || '').split('&')[0]?.trim() || '');
         setPartyRelationship('Parent / Guardian');
         setPartyPhone(student.emergency_contact || '');
         setNotes('');
@@ -202,7 +201,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
         setEarlyDepartureReason('');
       } else {
         setPartyType('Parent');
-        setPartyName(student.parent_names.split('&')[0]?.trim() || '');
+        setPartyName((student.parent_names || '').split('&')[0]?.trim() || '');
         setPartyRelationship('Parent / Guardian');
         setPartyPhone(student.emergency_contact || '');
         setNotes('');
@@ -682,7 +681,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         }}
                         className="px-2 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 rounded text-[11px] font-medium text-slate-700"
                       >
-                        Liam Miller (PIN 1042)
+                        Liam Miller
                       </button>
                       <button
                         type="button"
@@ -692,7 +691,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         }}
                         className="px-2 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 rounded text-[11px] font-medium text-slate-700"
                       >
-                        Sophia Chen (PIN 2091)
+                        Sophia Chen
                       </button>
                       <button
                         type="button"
@@ -702,7 +701,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         }}
                         className="px-2 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 rounded text-[11px] font-medium text-slate-700"
                       >
-                        Noah Williams (PIN 3314)
+                        Noah Williams
                       </button>
                       <button
                         type="button"
@@ -712,7 +711,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         }}
                         className="px-2 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded text-[11px] font-medium text-amber-800"
                       >
-                        Dr. Reed Staff (PIN 102)
+                        Dr. Evelyn Reed (Staff)
                       </button>
                     </div>
                   </div>
