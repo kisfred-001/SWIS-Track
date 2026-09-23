@@ -51,6 +51,8 @@ export const AttendanceLogs: React.FC = () => {
     return Array.from(new Set(logs.map((l) => l.classroom))).filter(Boolean);
   }, [logs]);
 
+  const [showAllLogs, setShowAllLogs] = useState(false);
+
   // Filter logs (memoized)
   const filteredLogs = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -70,6 +72,10 @@ export const AttendanceLogs: React.FC = () => {
       return matchesDate && matchesType && matchesStatus && matchesClass && log.status !== 'Deleted';
     });
   }, [logs, selectedDate, filterType, filterStatus, filterClass, searchQuery]);
+
+  const displayLogs = useMemo(() => {
+    return showAllLogs ? filteredLogs : filteredLogs.slice(0, 25);
+  }, [filteredLogs, showAllLogs]);
 
   const openEditModal = (log: AttendanceLog) => {
     setSelectedLog(log);
@@ -278,8 +284,92 @@ export const AttendanceLogs: React.FC = () => {
           </div>
         </div>
 
-        {/* Table of Records */}
-        <div className="divide-y divide-slate-100 overflow-x-auto">
+        {/* Mobile Card List (< 640px) */}
+        <div className="block sm:hidden divide-y divide-slate-100 p-2 space-y-2">
+          {displayLogs.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              No attendance logs found matching these filters.
+            </div>
+          ) : (
+            displayLogs.map((log) => (
+              <div
+                key={log.id}
+                className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 space-y-2 text-xs"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900">{log.target_name}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      {log.target_id} · {log.target_type} · {log.classroom}
+                    </div>
+                  </div>
+
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                      log.status === 'Active'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : log.status === 'Pending Edit Approval'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-purple-100 text-purple-800'
+                    }`}
+                  >
+                    {log.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-600 pt-1 border-t border-slate-200/60">
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-3 h-3 text-emerald-600" />
+                    <span>In: <strong>{log.check_in_time}</strong></span>
+                    {log.check_out_time && (
+                      <>
+                        <span className="text-slate-400">·</span>
+                        <span>Out: <strong>{log.check_out_time}</strong></span>
+                      </>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">{log.date}</span>
+                </div>
+
+                {log.pickup_dropoff_party && (
+                  <div className="text-[10px] text-slate-500">
+                    {log.pickup_dropoff_party.type}: <strong className="text-slate-700">{log.pickup_dropoff_party.name}</strong>
+                    {log.early_departure_reason && ` (Early: ${log.early_departure_reason})`}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                  <span className="text-[10px] text-slate-400 truncate">
+                    By: {log.scanned_by_name || log.scanned_by}
+                  </span>
+
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(log)}
+                      className="px-2.5 py-1 text-xs font-semibold bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 rounded-lg transition"
+                    >
+                      {canDirectlyEditLogs ? 'Edit' : 'Request Edit'}
+                    </button>
+                    {canDirectlyEditLogs && (
+                      <button
+                        type="button"
+                        onClick={() => openDeleteModal(log)}
+                        className="p-1 text-slate-400 hover:text-red-600 rounded-lg transition"
+                        title="Delete log"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View (>= 640px) */}
+        <div className="hidden sm:block divide-y divide-slate-100 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
@@ -295,14 +385,14 @@ export const AttendanceLogs: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredLogs.length === 0 ? (
+              {displayLogs.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-10 text-center text-slate-400">
                     No attendance logs found matching these filters.
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => (
+                displayLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/80 transition">
                     {/* Date & Log ID */}
                     <td className="py-3 px-3 whitespace-nowrap">
@@ -438,6 +528,21 @@ export const AttendanceLogs: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Lightweight Pagination Toggle */}
+        {filteredLogs.length > 25 && (
+          <div className="p-3 text-center border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setShowAllLogs(!showAllLogs)}
+              className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition"
+            >
+              {showAllLogs
+                ? 'Show First 25 Records'
+                : `Show All (${filteredLogs.length}) Logs`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Edit / Request Edit Modal */}

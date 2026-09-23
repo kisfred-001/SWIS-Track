@@ -655,36 +655,47 @@ export async function forceSyncOfficialData(): Promise<{
 export async function seedDatabaseIfEmpty(): Promise<boolean> {
   try {
     const studentsSnap = await getDocs(collection(db, 'students'));
-    const isPurged = typeof window !== 'undefined' ? localStorage.getItem('swis_dummy_data_purged_v2') : null;
 
-    // Check if the database has any old AI dummy records or has not been purged
-    let needsFullPurge = false;
-    if (studentsSnap.empty || !isPurged) {
-      needsFullPurge = true;
-    } else {
-      const hasDummyStudent = studentsSnap.docs.some((d) => {
-        const data = d.data() as any;
-        return (
-          data.full_name === 'Liam Miller' ||
-          data.full_name === 'Sophia Patel' ||
-          !data.campus ||
-          !d.id.startsWith('STU-10')
-        );
-      });
-      if (hasDummyStudent || studentsSnap.docs.length !== INITIAL_STUDENTS.length) {
-        needsFullPurge = true;
+    if (studentsSnap.empty) {
+      // 1. Populate official 74 students in safe batches
+      for (let i = 0; i < INITIAL_STUDENTS.length; i += 300) {
+        const batch = writeBatch(db);
+        const chunk = INITIAL_STUDENTS.slice(i, i + 300);
+        chunk.forEach((stu) => {
+          batch.set(doc(db, 'students', stu.student_id), stu);
+        });
+        await batch.commit();
       }
-    }
 
-    if (needsFullPurge) {
-      await purgeAllDummyDataAndCleanSystem();
+      // 2. Populate official staff
+      const staffBatch = writeBatch(db);
+      INITIAL_STAFF.forEach((s) => {
+        staffBatch.set(doc(db, 'staff', s.staff_id), s);
+      });
+      await staffBatch.commit();
+
+      // 3. Sync Campuses
+      const campusBatch = writeBatch(db);
+      INITIAL_CAMPUSES.forEach((c) => {
+        campusBatch.set(doc(db, 'campuses', c.id), c, { merge: true });
+      });
+      await campusBatch.commit();
+
+      // 4. Sync Learning Centers
+      const lcBatch = writeBatch(db);
+      INITIAL_LEARNING_CENTERS.forEach((lc) => {
+        lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
+      });
+      await lcBatch.commit();
+
       return true;
     }
 
-    // Still ensure super user and campuses are initialized
+    // Always ensure super user account exists
     await ensureSuperUserAccount();
     return false;
-  } catch {
+  } catch (err) {
+    console.warn('Database initialization check:', err);
     return false;
   }
 }

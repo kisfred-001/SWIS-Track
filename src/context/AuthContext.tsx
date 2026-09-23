@@ -45,8 +45,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [allStaff, setAllStaff] = useState<Staff[]>(INITIAL_STAFF);
-  // Default to Super User (Fredrick Kariuki - kisfred@gmail.com)
-  const [currentUser, setCurrentUser] = useState<Staff | null>(INITIAL_STAFF[0]);
+  // Always require sign-in on system launch (currentUser starts as null)
+  const [currentUser, setCurrentUser] = useState<Staff | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [idleTimedOut, setIdleTimedOut] = useState<boolean>(false);
 
@@ -107,6 +107,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch {
         // ignore
       }
+    } else {
+      setIdleTimedOut(false);
     }
   }, []);
 
@@ -220,27 +222,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsub();
   }, [currentUser]);
 
-  // Check stored active staff on mount
+  // System Launch: Always require sign in on launch (do not auto-login from stored session)
   useEffect(() => {
-    const savedId = localStorage.getItem('edutrack_active_staff_id');
-    const savedActivity = localStorage.getItem('swis_last_activity');
-    const now = Date.now();
-
-    // Check if previously stored session has already exceeded inactivity timeout
-    const timeoutMs = idleTimeoutMinutes * 60 * 1000;
-    if (savedActivity && now - Number(savedActivity) > timeoutMs) {
-      logout(true);
-      return;
-    }
-
-    if (savedId) {
-      const found = allStaff.find((s) => s.staff_id === savedId);
-      if (found) {
-        setCurrentUser(found);
-        resetIdleTimer();
-      }
-    }
-  }, [allStaff, idleTimeoutMinutes, logout, resetIdleTimer]);
+    localStorage.removeItem('edutrack_active_staff_id');
+    localStorage.removeItem('swis_last_activity');
+    setCurrentUser(null);
+  }, []);
 
   // Activity event listener to reset idle timer
   useEffect(() => {

@@ -484,7 +484,88 @@ export const CampusesView: React.FC = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card List for Students (< 768px) */}
+          <div className="block md:hidden divide-y divide-slate-100 p-2 space-y-2">
+            {filteredStudents.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                No students found in this campus.
+              </div>
+            ) : (
+              filteredStudents.slice(0, 30).map((student) => {
+                const log = todayLogsMap.get(student.student_id);
+                const isPresent = log && !log.check_out_time;
+                const isCheckedOut = log && Boolean(log.check_out_time);
+                const isAbsent = !log;
+
+                return (
+                  <div
+                    key={student.student_id}
+                    className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 space-y-2 text-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900">{student.full_name}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">
+                          ID: {student.student_id} · PIN: {student.pin_code}
+                        </div>
+                      </div>
+
+                      <div>
+                        {isPresent && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            Present
+                          </span>
+                        )}
+                        {isCheckedOut && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
+                            Left
+                          </span>
+                        )}
+                        {isAbsent && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-200 text-slate-600">
+                            Absent
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-slate-600 flex items-center justify-between pt-1 border-t border-slate-200/60">
+                      <span>Center: <strong>{student.learning_center_id}</strong></span>
+                      <span className="text-slate-500">Sup: {student.supervisor_name}</span>
+                    </div>
+
+                    {canScanStudents && (
+                      <button
+                        type="button"
+                        disabled={actionLoadingId === student.student_id}
+                        onClick={() => handleQuickToggleAttendance(student)}
+                        className={`w-full py-2 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1.5 ${
+                          isAbsent
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : isPresent
+                            ? 'bg-sky-600 hover:bg-sky-700 text-white'
+                            : 'bg-slate-200 text-slate-500'
+                        }`}
+                      >
+                        <span>
+                          {actionLoadingId === student.student_id
+                            ? 'Processing...'
+                            : isAbsent
+                            ? 'Quick Check In'
+                            : isPresent
+                            ? 'Quick Check Out'
+                            : 'Completed'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Table View (>= 768px) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-xs">
               <thead className="bg-slate-100 text-slate-700 font-semibold uppercase tracking-wider text-[11px]">
                 <tr>

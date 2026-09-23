@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   Scan,
   Lock,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Staff } from '../types';
 
@@ -57,6 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(sound.isEnabled());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleToggleSound = () => {
     const next = !soundEnabled;
@@ -219,11 +222,195 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Lock className="w-4 h-4" />
               </button>
+
+              {/* Mobile Menu Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="sm:hidden p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 rounded-lg transition"
+                aria-label="Toggle Navigation Menu"
+              >
+                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
-          {/* Navigation Bar Tabs */}
-          <nav className="flex space-x-1 overflow-x-auto py-2 border-t border-slate-800/80 text-xs font-medium scrollbar-none">
+          {/* Responsive Mobile / Tablet Campus Selector Bar (< 1024px) */}
+          <div className="flex lg:hidden items-center justify-between py-2 border-t border-slate-800 text-xs">
+            <div className="flex items-center space-x-1.5 bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700">
+              <School className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <select
+                value={selectedCampus}
+                onChange={(e) => setSelectedCampus(e.target.value)}
+                className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
+              >
+                <option value="All Campuses" className="bg-slate-900">All Campuses</option>
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.name} className="bg-slate-900">
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2 text-[11px]">
+              <span className="text-slate-400">
+                Present: <strong className="text-emerald-400 font-bold">{filteredPremisesSummary.studentsOnPremises}</strong>
+                <span className="text-slate-500">/{filteredPremisesSummary.studentsTotal}</span>
+              </span>
+              <span className="text-slate-600">·</span>
+              <span className="text-slate-400">
+                Staff: <strong className="text-sky-400 font-bold">{filteredPremisesSummary.staffOnPremises}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Mobile Collapsible Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="sm:hidden py-3 border-t border-slate-800 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('dashboard');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                  activeTab === 'dashboard'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  <School className="w-4 h-4 text-blue-400" />
+                  <span>Real-Time Dashboard</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('campuses');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                  activeTab === 'campuses'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  <School className="w-4 h-4 text-indigo-400" />
+                  <span>Campus Modules</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('attendance');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                  activeTab === 'attendance'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <span>Attendance Logs</span>
+                </div>
+              </button>
+
+              {!isSupportStaff && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('approvals');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                    activeTab === 'approvals'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                    <span>Edit Requests</span>
+                  </div>
+                  {pendingRequestsCount > 0 && (
+                    <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {!isSupportStaff && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('roster');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                    activeTab === 'roster'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Users className="w-4 h-4 text-slate-400" />
+                    <span>Roster & Badges</span>
+                  </div>
+                </button>
+              )}
+
+              {canAccessReports && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('reports');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                    activeTab === 'reports'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <UserCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Analytics & Reports</span>
+                  </div>
+                </button>
+              )}
+
+              {canAccessSetup && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('setup');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                    activeTab === 'setup'
+                      ? 'bg-amber-600 text-white font-bold'
+                      : 'text-amber-300 hover:bg-slate-800 hover:text-white border border-amber-500/30'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Administrative Setup</span>
+                  </div>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Navigation Bar Tabs (Scrollable on Tablet & Desktop) */}
+          <nav className="hidden sm:flex space-x-1 overflow-x-auto py-2 border-t border-slate-800/80 text-xs font-medium scrollbar-none">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${

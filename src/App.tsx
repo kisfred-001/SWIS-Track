@@ -18,6 +18,7 @@ import { ScannerModal } from './components/ScannerModal';
 import { UrgentAlertBanner } from './components/UrgentAlertBanner';
 import { IdleLockModal } from './components/IdleLockModal';
 import { InactivityWarningBanner } from './components/InactivityWarningBanner';
+import { LoginScreen } from './components/LoginScreen';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
 
 function AppContent() {
@@ -39,6 +40,11 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  // Always require sign-in on system launch and whenever unauthenticated
+  if (!currentUser) {
+    return <LoginScreen />;
   }
 
   return (
