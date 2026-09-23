@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "Staff": {
+      "collection": "staff",
+      "fields": {
+        "staff_id": { "type": "string", "description": "Unique staff identifier (e.g. STF-101)" },
+        "pin_code": { "type": "string", "description": "Unique 3-digit code" },
+        "full_name": { "type": "string", "description": "Staff full name" },
+        "role": { "type": "string", "description": "Teacher, Admin Assistant, Principal, Director, ICCE Coordinator" },
+        "learning_center_id": { "type": "string", "description": "Assigned classroom / learning center" },
+        "email": { "type": "string", "description": "Email address" },
+        "phone": { "type": "string", "description": "Contact number" },
+        "qr_code_url": { "type": "string", "description": "QR code token / payload" },
+        "created_at": { "type": "string", "description": "Creation timestamp" }
+      }
+    },
+    "Student": {
+      "collection": "students",
+      "fields": {
+        "student_id": { "type": "string", "description": "Unique student identifier (e.g. STU-1001)" },
+        "pin_code": { "type": "string", "description": "Unique 4-digit code" },
+        "full_name": { "type": "string", "description": "Student full name" },
+        "grade": { "type": "string", "description": "Grade level" },
+        "learning_center_id": { "type": "string", "description": "Classroom / Learning Center identifier" },
+        "supervisor_name": { "type": "string", "description": "Main teacher / supervisor" },
+        "monitor_name": { "type": "string", "description": "Assistant teacher / monitor" },
+        "qr_code_url": { "type": "string", "description": "QR code token / payload" },
+        "parent_names": { "type": "string", "description": "Parent or guardian names" },
+        "emergency_contact": { "type": "string", "description": "Emergency telephone number" },
+        "created_at": { "type": "string", "description": "Creation timestamp" }
+      }
+    },
+    "AttendanceLog": {
+      "collection": "attendance_logs",
+      "fields": {
+        "log_id": { "type": "string", "description": "Unique log document ID" },
+        "target_type": { "type": "string", "description": "Student or Teacher" },
+        "target_id": { "type": "string", "description": "student_id or staff_id" },
+        "target_name": { "type": "string", "description": "Name of student or teacher" },
+        "date": { "type": "string", "description": "Date formatted YYYY-MM-DD" },
+        "check_in_time": { "type": "string", "description": "Timestamp or HH:mm string of check in" },
+        "check_out_time": { "type": "string", "description": "Timestamp or HH:mm string of check out, or null" },
+        "scanned_by": { "type": "string", "description": "Staff ID and name of operator" },
+        "pickup_dropoff_party": { "type": "object", "description": "Parent vs Designate details" },
+        "early_departure_reason": { "type": "string", "description": "Reason for early departure" },
+        "status": { "type": "string", "description": "Active, Pending Edit Approval, Edited, or Deleted" },
+        "classroom": { "type": "string", "description": "Learning center or classroom" }
+      }
+    },
+    "EditRequest": {
+      "collection": "edit_requests",
+      "fields": {
+        "request_id": { "type": "string", "description": "Unique edit request ID" },
+        "log_id": { "type": "string", "description": "Reference to attendance log ID" },
+        "requested_by": { "type": "string", "description": "Staff ID and name" },
+        "original_data": { "type": "object", "description": "Snapshot of previous log state" },
+        "proposed_data": { "type": "object", "description": "Proposed changes" },
+        "reason_for_edit": { "type": "string", "description": "Justification from requester" },
+        "status": { "type": "string", "description": "Pending, Approved, Rejected" },
+        "reviewed_by": { "type": "string", "description": "Admin staff ID who reviewed" },
+        "review_comment": { "type": "string", "description": "Feedback or mandatory approval reason" }
+      }
+    }
+  }
+}
