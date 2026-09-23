@@ -15,6 +15,7 @@ import {
   KeyRound,
   CheckCircle2,
   Scan,
+  Lock,
 } from 'lucide-react';
 import { Staff } from '../types';
 
@@ -34,8 +35,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     allStaff,
     switchUser,
     loginWithPin,
+    logout,
     isSuperUser,
     canScanTeachers,
+    idleTimeoutMinutes,
+    setIdleTimeoutMinutes,
   } = useAuth();
   const { premisesSummary, pendingRequestsCount } = useAttendance();
 
@@ -171,6 +175,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
+
+              {/* Secure Lock / Sign Out Button */}
+              <button
+                type="button"
+                onClick={() => logout(false)}
+                className="p-2 bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 border border-slate-700/80 rounded-lg transition"
+                title="Lock Terminal (Auto-Locks after 30 min of inactivity)"
+              >
+                <Lock className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -266,6 +280,87 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* Super User Quick Card */}
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-[11px] font-bold text-purple-900 uppercase tracking-wide">
+                      Super User Account
+                    </span>
+                    <span className="bg-purple-200 text-purple-800 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      ICCE Coordinator
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">
+                    Fredrick Kariuki
+                  </p>
+                  <p className="text-[11px] text-slate-600">
+                    kisfred@gmail.com
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    PIN: <span className="font-mono font-bold text-purple-700">555</span> • Password: <span className="font-mono text-slate-600">P@haneroo@555</span>
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ok = loginWithPin('555');
+                    if (ok) {
+                      setShowSwitchModal(false);
+                      sound.playSuccessChime();
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                >
+                  Sign In As Fredrick
+                </button>
+              </div>
+
+              {/* Inactivity Auto-Logout Security Configuration */}
+              <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-xs">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center space-x-1.5 font-bold text-amber-950">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Inactivity Auto-Logout Policy</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full">
+                    Active: {idleTimeoutMinutes} min
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800 mb-2 leading-relaxed">
+                  Terminal automatically locks and logs out staff after detected inactivity to protect student records.
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-amber-900">Timeout:</span>
+                  {[2, 5, 10, 15, 30].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setIdleTimeoutMinutes(mins)}
+                      className={`px-2 py-1 rounded text-[10px] font-bold transition ${
+                        idleTimeoutMinutes === mins
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'bg-white text-amber-900 border border-amber-300 hover:bg-amber-100'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSwitchModal(false);
+                      logout(true);
+                    }}
+                    className="ml-auto text-[10px] text-rose-700 hover:text-rose-900 font-bold underline"
+                    title="Test immediate inactivity timeout lock"
+                  >
+                    Test Auto-Lock Now
+                  </button>
+                </div>
+              </div>
+
               {/* Quick PIN Input */}
               <form onSubmit={handlePinSubmit} className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-700">
@@ -279,7 +374,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       maxLength={3}
                       value={pinInput}
                       onChange={(e) => setPinInput(e.target.value)}
-                      placeholder="e.g. 101, 102, 201, 301"
+                      placeholder="e.g. 555 (Super User), 101, 102, 201"
                       className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                     />
                   </div>

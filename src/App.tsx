@@ -14,6 +14,8 @@ import { RosterManagement } from './components/RosterManagement';
 import { ReportingView } from './components/ReportingView';
 import { ScannerModal } from './components/ScannerModal';
 import { UrgentAlertBanner } from './components/UrgentAlertBanner';
+import { IdleLockModal } from './components/IdleLockModal';
+import { InactivityWarningBanner } from './components/InactivityWarningBanner';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
 
 function AppContent() {
@@ -86,6 +88,12 @@ function AppContent() {
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
       />
+
+      {/* Security Idle Lock Modal */}
+      <IdleLockModal />
+
+      {/* Inactivity Warning Countdown Toast */}
+      <InactivityWarningBanner />
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 mt-auto py-4 text-xs text-slate-500">

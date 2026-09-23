@@ -1,13 +1,27 @@
-import { collection, getDocs, setDoc, doc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from './config';
 import { Staff, Student, AttendanceLog, EditRequest } from '../types';
 
+export const SUPER_USER_ACCOUNT: Staff = {
+  staff_id: 'STF-001',
+  pin_code: '555',
+  password: 'P@haneroo@555',
+  full_name: 'Fredrick Kariuki',
+  role: 'ICCE Coordinator',
+  learning_center_id: 'All Centers (ICCE Office)',
+  email: 'kisfred@gmail.com',
+  phone: '(555) 019-5555',
+  qr_code_url: 'STF-001',
+  created_at: new Date().toISOString(),
+};
+
 export const INITIAL_STAFF: Staff[] = [
+  SUPER_USER_ACCOUNT,
   {
     staff_id: 'STF-101',
     pin_code: '101',
     full_name: 'Eleanor Vance',
-    role: 'ICCE Coordinator',
+    role: 'Admin Assistant',
     learning_center_id: 'All Centers',
     email: 'eleanor.vance@school.edu',
     phone: '(555) 234-5601',
@@ -178,10 +192,23 @@ export const INITIAL_STUDENTS: Student[] = [
   },
 ];
 
+export async function ensureSuperUserAccount(): Promise<Staff> {
+  try {
+    const superUserRef = doc(db, 'staff', SUPER_USER_ACCOUNT.staff_id);
+    await setDoc(superUserRef, SUPER_USER_ACCOUNT, { merge: true });
+  } catch (err) {
+    console.warn('Could not auto-sync super user to Firestore:', err);
+  }
+  return SUPER_USER_ACCOUNT;
+}
+
 export async function seedDatabaseIfEmpty(): Promise<boolean> {
   try {
+    // Always ensure the Super User account is in Firestore
+    await ensureSuperUserAccount();
+
     const staffSnapshot = await getDocs(collection(db, 'staff'));
-    if (!staffSnapshot.empty) {
+    if (!staffSnapshot.empty && staffSnapshot.size > 1) {
       return false; // already seeded
     }
 

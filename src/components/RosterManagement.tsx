@@ -16,9 +16,13 @@ import {
   UserPlus,
   Briefcase,
   KeyRound,
+  FileSpreadsheet,
+  Upload,
 } from 'lucide-react';
 import { Student, Staff, UserRole } from '../types';
 import { BadgeModal } from './BadgeModal';
+import { BulkUploadModal } from './BulkUploadModal';
+import { IDCardGeneratorModal } from './IDCardGeneratorModal';
 
 export const RosterManagement: React.FC = () => {
   const { students, saveStudent, saveStaff } = useAttendance();
@@ -27,6 +31,13 @@ export const RosterManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'students' | 'staff'>('students');
   const [searchQuery, setSearchQuery] = useState('');
   const [centerFilter, setCenterFilter] = useState('all');
+
+  // Bulk Upload Modal
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+
+  // ID Card Generator & PDF Export Modal
+  const [isIDGeneratorOpen, setIsIDGeneratorOpen] = useState(false);
+  const [idGeneratorDefaultType, setIdGeneratorDefaultType] = useState<'Student' | 'Staff'>('Student');
 
   // Badge Modal
   const [badgeTarget, setBadgeTarget] = useState<{ item: Student | Staff; type: 'Student' | 'Staff' } | null>(null);
@@ -212,31 +223,71 @@ export const RosterManagement: React.FC = () => {
 
             {/* Action buttons based on RBAC */}
             {activeTab === 'students' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setStudentPin(Math.floor(1000 + Math.random() * 9000).toString());
-                  setIsAddStudentOpen(true);
-                }}
-                className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Student</span>
-              </button>
-            ) : (
-              isSuperUser && (
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    setStaffPin(Math.floor(100 + Math.random() * 900).toString());
-                    setIsAddStaffOpen(true);
+                    setIdGeneratorDefaultType('Student');
+                    setIsIDGeneratorOpen(true);
                   }}
-                  className="inline-flex items-center space-x-1 px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+                  className="inline-flex items-center space-x-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-lg text-xs font-semibold shadow-2xs transition"
+                  title="Generate printable student ID cards and PDF sheets"
                 >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>Add Staff (Super User)</span>
+                  <QrCode className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Print ID Cards (PDF)</span>
                 </button>
-              )
+
+                <button
+                  type="button"
+                  onClick={() => setIsBulkUploadOpen(true)}
+                  className="inline-flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-semibold shadow-2xs transition"
+                  title="Bulk upload student CSV for semester rollovers or class updates"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Bulk Import CSV</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStudentPin(Math.floor(1000 + Math.random() * 9000).toString());
+                    setIsAddStudentOpen(true);
+                  }}
+                  className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Student</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdGeneratorDefaultType('Staff');
+                    setIsIDGeneratorOpen(true);
+                  }}
+                  className="inline-flex items-center space-x-1.5 px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg text-xs font-semibold shadow-2xs transition"
+                  title="Generate printable faculty & staff ID credential cards and PDF sheets"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Print Credentials (PDF)</span>
+                </button>
+
+                {isSuperUser && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStaffPin(Math.floor(100 + Math.random() * 900).toString());
+                      setIsAddStaffOpen(true);
+                    }}
+                    className="inline-flex items-center space-x-1 px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Add Staff (Super User)</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -671,6 +722,19 @@ export const RosterManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Bulk CSV Upload Modal */}
+      <BulkUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+      />
+
+      {/* QR Code & Printable ID Card PDF Generator Module */}
+      <IDCardGeneratorModal
+        isOpen={isIDGeneratorOpen}
+        onClose={() => setIsIDGeneratorOpen(false)}
+        defaultType={idGeneratorDefaultType}
+      />
 
       {/* ID Badge Viewer Modal */}
       {badgeTarget && (

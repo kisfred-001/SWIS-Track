@@ -9,6 +9,7 @@ export interface Staff {
   id?: string;
   staff_id: string; // Unique ID, e.g., STF-101
   pin_code: string; // Unique 3-digit code
+  password?: string; // Optional password for email/password authentication
   full_name: string;
   role: UserRole;
   learning_center_id?: string; // e.g. Learning Center Alpha

@@ -1,7 +1,9 @@
-import React, { useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useRef, useState } from 'react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { Student, Staff } from '../types';
-import { School, Printer, X, Download, ShieldCheck } from 'lucide-react';
+import { School, Printer, X, Download, ShieldCheck, Loader2 } from 'lucide-react';
+import { generateSingleCardPDF } from '../utils/pdfGenerator';
+import { sound } from '../utils/sound';
 
 interface BadgeModalProps {
   item: Student | Staff | null;
@@ -11,6 +13,7 @@ interface BadgeModalProps {
 
 export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) => {
   const badgeRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!item) return null;
 
@@ -28,6 +31,24 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) =
   // Print badge
   const handlePrint = () => {
     window.print();
+  };
+
+  // Download single card PDF
+  const handleDownloadPDF = () => {
+    setIsExporting(true);
+    try {
+      const canvas = document.getElementById('badge-single-qr-canvas') as HTMLCanvasElement;
+      const qrDataUrl = canvas ? canvas.toDataURL('image/png') : undefined;
+      const doc = generateSingleCardPDF(item, type, qrDataUrl);
+      const safeName = fullName.replace(/[^a-zA-Z0-9]/g, '_');
+      doc.save(`SWIS_${type}_ID_${safeName}.pdf`);
+      sound.playSuccessChime();
+    } catch (err) {
+      console.error('Failed to download badge PDF:', err);
+      sound.playError();
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -111,15 +132,34 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) =
         </div>
 
         {/* Action Controls */}
-        <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center text-xs">
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Print Badge</span>
-          </button>
+        <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center text-xs gap-2">
+          <div className="flex items-center space-x-1.5">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center space-x-1 px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
+              title="Print Badge directly"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={handleDownloadPDF}
+              className="flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-2xs"
+              title="Download standard CR80 ID Card PDF"
+            >
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>Download PDF</span>
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={onClose}
@@ -127,6 +167,17 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) =
           >
             Done
           </button>
+        </div>
+
+        {/* Hidden Canvas for crisp PDF capture */}
+        <div className="hidden" aria-hidden="true">
+          <QRCodeCanvas
+            id="badge-single-qr-canvas"
+            value={idCode}
+            size={300}
+            level="H"
+            includeMargin={false}
+          />
         </div>
       </div>
     </div>

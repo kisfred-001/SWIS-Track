@@ -10,6 +10,7 @@ import {
   where,
   getDocs,
   limit,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { seedDatabaseIfEmpty } from '../firebase/seed';
@@ -78,6 +79,9 @@ interface AttendanceContextType {
     reviewComment: string
   ) => Promise<{ success: boolean; message: string }>;
   saveStudent: (student: Omit<Student, 'id'>, id?: string) => Promise<{ success: boolean; message: string }>;
+  bulkSaveStudents: (
+    studentList: Array<Omit<Student, 'id'> & { id?: string }>
+  ) => Promise<{ success: boolean; created: number; updated: number; message: string }>;
   saveStaff: (staff: any, id?: string) => Promise<{ success: boolean; message: string }>;
 }
 
@@ -668,6 +672,67 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // Bulk add / update students (for semester / end-of-year transitions)
+  const bulkSaveStudents = async (
+    studentList: Array<Omit<Student, 'id'> & { id?: string }>
+  ) => {
+    try {
+      if (!studentList || studentList.length === 0) {
+        return { success: false, created: 0, updated: 0, message: 'No student records provided.' };
+      }
+
+      const existingIds = new Set(students.map((s) => s.student_id));
+      let createdCount = 0;
+      let updatedCount = 0;
+
+      // Firestore batches support up to 500 operations per batch
+      const batchSize = 450;
+      for (let i = 0; i < studentList.length; i += batchSize) {
+        const slice = studentList.slice(i, i + batchSize);
+        const batch = writeBatch(db);
+
+        slice.forEach((item) => {
+          const studentId = item.id || item.student_id;
+          if (existingIds.has(studentId)) {
+            updatedCount++;
+          } else {
+            createdCount++;
+          }
+          const ref = doc(db, 'students', studentId);
+          batch.set(
+            ref,
+            {
+              ...item,
+              id: studentId,
+              student_id: studentId,
+              updated_at: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+        });
+
+        await batch.commit();
+      }
+
+      sound.playSuccessChime();
+      return {
+        success: true,
+        created: createdCount,
+        updated: updatedCount,
+        message: `Successfully processed ${studentList.length} student records (${createdCount} added, ${updatedCount} updated).`,
+      };
+    } catch (err: any) {
+      console.error('Bulk save error:', err);
+      sound.playError();
+      return {
+        success: false,
+        created: 0,
+        updated: 0,
+        message: err?.message || 'Failed to bulk import students.',
+      };
+    }
+  };
+
   // Add / edit staff
   const saveStaff = async (staffData: any, id?: string) => {
     try {
@@ -704,6 +769,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         deleteLog,
         reviewEditRequest,
         saveStudent,
+        bulkSaveStudents,
         saveStaff,
       }}
     >
