@@ -21,32 +21,36 @@ service cloud.firestore {
     // Campuses Collection: Master institutional campus configs
     match /campuses/{campusId} {
       allow read: if true;
-      allow write: if request.resource.data.name is string &&
-                      request.resource.data.code is string &&
-                      request.resource.data.lead_administrator is string;
+      allow create, update: if request.resource.data.name is string &&
+                               request.resource.data.code is string &&
+                               request.resource.data.lead_administrator is string;
+      allow delete: if true;
     }
 
     // Learning Centers Collection: Classroom & room associations
     match /learning_centers/{learningCenterId} {
       allow read: if true;
-      allow write: if request.resource.data.name is string &&
-                      isValidCampus(request.resource.data.campus);
+      allow create, update: if request.resource.data.name is string &&
+                               isValidCampus(request.resource.data.campus);
+      allow delete: if true;
     }
 
     // Staff Directory
     match /staff/{staffId} {
       allow read: if true;
-      allow write: if request.resource.data.staff_id is string &&
-                      request.resource.data.full_name is string &&
-                      isValidRole(request.resource.data.role);
+      allow create, update: if request.resource.data.staff_id is string &&
+                               request.resource.data.full_name is string &&
+                               isValidRole(request.resource.data.role);
+      allow delete: if true;
     }
 
     // Student Body Roster: Linked to campus & learning center
     match /students/{studentId} {
       allow read: if true;
-      allow write: if request.resource.data.student_id is string &&
-                      request.resource.data.full_name is string &&
-                      isValidCampus(request.resource.data.campus);
+      allow create, update: if request.resource.data.student_id is string &&
+                               request.resource.data.full_name is string &&
+                               isValidCampus(request.resource.data.campus);
+      allow delete: if true;
     }
 
     // Attendance Logs: Real-time gate and classroom logs
@@ -65,16 +69,18 @@ service cloud.firestore {
     // Edit Requests: Audit-logged change proposal workflow
     match /edit_requests/{requestId} {
       allow read: if true;
-      allow write: if request.resource.data.request_id is string &&
-                      request.resource.data.log_id is string &&
-                      request.resource.data.status in ['Pending', 'Approved', 'Rejected'];
+      allow create, update: if request.resource.data.request_id is string &&
+                               request.resource.data.log_id is string &&
+                               request.resource.data.status in ['Pending', 'Approved', 'Rejected'];
+      allow delete: if true;
     }
 
     // Urgent Alerts: Flash notifications for leadership
     match /urgent_alerts/{alertId} {
       allow read: if true;
-      allow write: if request.resource.data.request_id is string &&
-                      request.resource.data.timestamp is string;
+      allow create, update: if request.resource.data.request_id is string &&
+                               request.resource.data.timestamp is string;
+      allow delete: if true;
     }
 
     // Staff FCM Tokens: Mobile/device push notification tokens

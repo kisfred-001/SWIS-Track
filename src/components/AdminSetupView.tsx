@@ -25,6 +25,7 @@ import {
   Mail,
   MapPin,
   Check,
+  Trash2,
 } from 'lucide-react';
 import { Campus, LearningCenter, UserRole } from '../types';
 
@@ -34,9 +35,12 @@ export const AdminSetupView: React.FC = () => {
     learningCenters,
     students,
     logs,
+    editRequests,
+    urgentAlerts,
     saveCampus,
     saveLearningCenter,
     forceResetToOfficialRoster,
+    purgeAllDummyData,
   } = useAttendance();
 
   const {
@@ -70,6 +74,14 @@ export const AdminSetupView: React.FC = () => {
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncStatus, setSyncStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [savingMsg, setSavingMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [cleanLoading, setCleanLoading] = useState(false);
+  const [cleanResult, setCleanResult] = useState<{
+    success: boolean;
+    message: string;
+    deletedLogs?: number;
+    deletedRequests?: number;
+    deletedAlerts?: number;
+  } | null>(null);
 
   // Guard: ONLY accessible to ICCE Coordinator
   if (!canAccessSetup) {
@@ -174,6 +186,37 @@ export const AdminSetupView: React.FC = () => {
       });
     } finally {
       setSyncLoading(false);
+    }
+  };
+
+  // Handle Clean System Data & Purge AI Dummy Data
+  const handleCleanSystemData = async () => {
+    if (
+      !window.confirm(
+        'PERMANENT ACTION: Are you sure you want to clean all system data and purge all AI dummy data?\n\n' +
+        '• Purges all dummy/test attendance logs\n' +
+        '• Purges all dummy/test edit requests\n' +
+        '• Purges all urgent alerts\n' +
+        '• Removes all dummy AI student records and restores strictly the 74 official CSV students\n' +
+        '• Restores institutional staff roles and campus learning centers'
+      )
+    ) {
+      return;
+    }
+    setCleanLoading(true);
+    setCleanResult(null);
+    setSyncStatus(null);
+    try {
+      const res = await purgeAllDummyData();
+      setCleanResult({
+        success: res.success,
+        message: res.message,
+        deletedLogs: res.deletedLogs,
+        deletedRequests: res.deletedRequests,
+        deletedAlerts: res.deletedAlerts,
+      });
+    } finally {
+      setCleanLoading(false);
     }
   };
 
@@ -734,41 +777,153 @@ export const AdminSetupView: React.FC = () => {
       {activeTab === 'database' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Official Database State & Seeding</h3>
+            <h3 className="text-base font-bold text-slate-900">Official Database State & Data Hygiene</h3>
             <p className="text-xs text-slate-500">
-              Manage the master official database records for the entire institution.
+              Manage master institutional data records, purge AI test artifacts, and maintain official system hygiene.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Total Students</span>
-              <div className="text-2xl font-black text-slate-900">{students.length}</div>
-              <div className="text-[10px] text-emerald-600 font-semibold mt-1">Official CSV Roster</div>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-center">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Official Students</span>
+              <div className="text-xl font-black text-slate-900">{students.length}</div>
+              <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">CSV Verified</div>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="text-[10px] text-slate-400 uppercase font-bold">Total Staff</span>
-              <div className="text-2xl font-black text-slate-900">{allStaff.length}</div>
-              <div className="text-[10px] text-indigo-600 font-semibold mt-1">Institutional Personnel</div>
+              <div className="text-xl font-black text-slate-900">{allStaff.length}</div>
+              <div className="text-[10px] text-indigo-600 font-semibold mt-0.5">Authorized</div>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Campuses & Centers</span>
-              <div className="text-2xl font-black text-slate-900">{campuses.length} / {learningCenters.length}</div>
-              <div className="text-[10px] text-purple-600 font-semibold mt-1">Spring & Hope</div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Campuses</span>
+              <div className="text-xl font-black text-slate-900">{campuses.length}</div>
+              <div className="text-[10px] text-purple-600 font-semibold mt-0.5">Spring & Hope</div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Learning Centers</span>
+              <div className="text-xl font-black text-slate-900">{learningCenters.length}</div>
+              <div className="text-[10px] text-purple-600 font-semibold mt-0.5">Assigned</div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Attendance Logs</span>
+              <div className="text-xl font-black text-slate-900">{logs.length}</div>
+              <div className="text-[10px] text-slate-500 font-semibold mt-0.5">Live Records</div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Audit Requests</span>
+              <div className="text-xl font-black text-slate-900">{editRequests.length}</div>
+              <div className="text-[10px] text-amber-600 font-semibold mt-0.5">{urgentAlerts.length} Alerts</div>
             </div>
           </div>
 
+          {/* Feedback Status Alert */}
+          {cleanResult && (
+            <div
+              className={`p-4 rounded-xl border text-xs flex items-start space-x-3 ${
+                cleanResult.success
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50 border-rose-200 text-rose-900'
+              }`}
+            >
+              <CheckCircle2
+                className={`w-5 h-5 shrink-0 mt-0.5 ${
+                  cleanResult.success ? 'text-emerald-600' : 'text-rose-600'
+                }`}
+              />
+              <div className="space-y-1">
+                <div className="font-bold">
+                  {cleanResult.success ? 'System Successfully Purged & Cleaned' : 'Purge Operation Failed'}
+                </div>
+                <p className="text-[11px] leading-relaxed">{cleanResult.message}</p>
+                {cleanResult.success && (
+                  <div className="flex flex-wrap gap-2 pt-1 font-mono text-[10px]">
+                    <span className="px-2 py-0.5 bg-emerald-100 rounded text-emerald-800">
+                      Deleted Logs: {cleanResult.deletedLogs ?? 0}
+                    </span>
+                    <span className="px-2 py-0.5 bg-emerald-100 rounded text-emerald-800">
+                      Deleted Edit Requests: {cleanResult.deletedRequests ?? 0}
+                    </span>
+                    <span className="px-2 py-0.5 bg-emerald-100 rounded text-emerald-800">
+                      Deleted Alerts: {cleanResult.deletedAlerts ?? 0}
+                    </span>
+                    <span className="px-2 py-0.5 bg-emerald-100 rounded text-emerald-800">
+                      Official Students: 74
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {syncStatus && !cleanResult && (
+            <div
+              className={`p-4 rounded-xl border text-xs flex items-center space-x-2 ${
+                syncStatus.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border-rose-200 text-rose-800'
+              }`}
+            >
+              <Check className="w-4 h-4" />
+              <span>{syncStatus.message}</span>
+            </div>
+          )}
+
+          {/* Primary Action 1: Clean System Data & Remove All AI Dummy Data */}
+          <div className="p-5 bg-rose-50/50 border border-rose-200 rounded-xl space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-rose-100 text-rose-700 rounded-lg shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h4 className="text-xs font-bold text-rose-950">
+                    Clean System Data & Remove All AI Dummy Data
+                  </h4>
+                  <span className="px-2 py-0.5 bg-rose-100 text-rose-800 rounded text-[10px] font-bold uppercase tracking-wider">
+                    Full Sanitization
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                  Permanently deletes all AI dummy/test attendance logs, edit requests, urgent alerts, and any non-official student or staff records from Firestore. Restores the exact <strong>74 official students</strong> from the school roster across <strong>Spring Campus</strong> and <strong>Hope Campus</strong>.
+                </p>
+                <div className="mt-2 text-[10px] text-slate-500 space-y-0.5">
+                  <div>✓ Deletes all records in <code className="bg-white px-1 py-0.5 rounded border text-rose-700">attendance_logs</code></div>
+                  <div>✓ Deletes all records in <code className="bg-white px-1 py-0.5 rounded border text-rose-700">edit_requests</code></div>
+                  <div>✓ Deletes all records in <code className="bg-white px-1 py-0.5 rounded border text-rose-700">urgent_alerts</code></div>
+                  <div>✓ Re-establishes strictly the official 74 CSV students in <code className="bg-white px-1 py-0.5 rounded border text-emerald-700">students</code></div>
+                  <div>✓ Re-establishes authorized institutional leadership and faculty in <code className="bg-white px-1 py-0.5 rounded border text-indigo-700">staff</code></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleCleanSystemData}
+                disabled={cleanLoading || syncLoading}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50 flex items-center space-x-2 cursor-pointer"
+              >
+                <Trash2 className={`w-4 h-4 ${cleanLoading ? 'animate-spin' : ''}`} />
+                <span>{cleanLoading ? 'Cleaning System & Purging Dummy Data...' : 'Clean System Data & Remove All AI Dummy Data'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Primary Action 2: Sync Official School CSV Data */}
           <div className="p-5 bg-indigo-50/50 border border-indigo-200 rounded-xl space-y-3">
             <div className="flex items-start space-x-3">
               <RefreshCw className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-bold text-indigo-900">
-                  Restore & Purge: Re-Sync Official School CSV Data
+                  Re-Sync Official School CSV Roster
                 </h4>
                 <p className="text-[11px] text-slate-600 mt-0.5">
-                  Overwrites any old test or dummy data with the exact 74 students from the school roster, links all learning centers to Spring Campus and Hope Campus, and restores official staff members.
+                  Synchronizes official students, learning centers, and administrative credentials without touching active operational data.
                 </p>
               </div>
             </div>
@@ -777,11 +932,11 @@ export const AdminSetupView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleForceSync}
-                disabled={syncLoading}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50 flex items-center space-x-2"
+                disabled={syncLoading || cleanLoading}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50 flex items-center space-x-2 cursor-pointer"
               >
                 <RefreshCw className={`w-4 h-4 ${syncLoading ? 'animate-spin' : ''}`} />
-                <span>{syncLoading ? 'Executing Roster Sync...' : 'Execute Official Data Sync Now'}</span>
+                <span>{syncLoading ? 'Executing Roster Sync...' : 'Sync Official Roster Now'}</span>
               </button>
             </div>
           </div>

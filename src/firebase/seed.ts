@@ -506,9 +506,134 @@ export async function ensureSuperUserAccount(): Promise<Staff> {
 }
 
 /**
+ * Helper to delete all documents in a collection in safe batches (max 300 per batch).
+ */
+export async function deleteCollectionDocs(collectionName: string): Promise<number> {
+  try {
+    const snap = await getDocs(collection(db, collectionName));
+    if (snap.empty) return 0;
+
+    let count = 0;
+    const docs = snap.docs;
+    for (let i = 0; i < docs.length; i += 300) {
+      const batch = writeBatch(db);
+      const chunk = docs.slice(i, i + 300);
+      chunk.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      count += chunk.length;
+    }
+    return count;
+  } catch (err) {
+    console.warn(`Error deleting documents from ${collectionName}:`, err);
+    return 0;
+  }
+}
+
+/**
+ * Completely purges all AI dummy data and system artifacts:
+ * 1. Purges all attendance logs (attendance_logs).
+ * 2. Purges all edit requests (edit_requests).
+ * 3. Purges all urgent alerts (urgent_alerts).
+ * 4. Completely wipes the students collection of dummy records and inserts the 74 official CSV students.
+ * 5. Wipes any rogue staff records and syncs official institutional leadership and faculty.
+ * 6. Sets pristine campus and learning center structures.
+ */
+export async function purgeAllDummyDataAndCleanSystem(): Promise<{
+  success: boolean;
+  message: string;
+  deletedLogs: number;
+  deletedRequests: number;
+  deletedAlerts: number;
+  studentsCount: number;
+  staffCount: number;
+}> {
+  try {
+    // 1. Purge attendance_logs (removes any test/dummy check-in or check-out logs)
+    const deletedLogs = await deleteCollectionDocs('attendance_logs');
+
+    // 2. Purge edit_requests (removes any test/dummy audit requests)
+    const deletedRequests = await deleteCollectionDocs('edit_requests');
+
+    // 3. Purge urgent_alerts (removes any test alerts)
+    const deletedAlerts = await deleteCollectionDocs('urgent_alerts');
+
+    // 4. Wipe students collection completely to ensure no dummy AI students linger
+    await deleteCollectionDocs('students');
+
+    // 5. Populate official 74 students in safe batches
+    for (let i = 0; i < INITIAL_STUDENTS.length; i += 300) {
+      const batch = writeBatch(db);
+      const chunk = INITIAL_STUDENTS.slice(i, i + 300);
+      chunk.forEach((stu) => {
+        batch.set(doc(db, 'students', stu.student_id), stu);
+      });
+      await batch.commit();
+    }
+
+    // 6. Purge non-official staff records and sync official staff
+    const staffSnap = await getDocs(collection(db, 'staff'));
+    const officialStaffIds = new Set(INITIAL_STAFF.map((s) => s.staff_id));
+    const rogueStaffDocs = staffSnap.docs.filter((d) => !officialStaffIds.has(d.id));
+    if (rogueStaffDocs.length > 0) {
+      for (let i = 0; i < rogueStaffDocs.length; i += 300) {
+        const batch = writeBatch(db);
+        rogueStaffDocs.slice(i, i + 300).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
+    // Write official staff
+    const staffBatch = writeBatch(db);
+    INITIAL_STAFF.forEach((stf) => {
+      staffBatch.set(doc(db, 'staff', stf.staff_id), stf, { merge: true });
+    });
+    await staffBatch.commit();
+
+    // 7. Sync Campuses
+    const campusBatch = writeBatch(db);
+    INITIAL_CAMPUSES.forEach((c) => {
+      campusBatch.set(doc(db, 'campuses', c.id), c, { merge: true });
+    });
+    await campusBatch.commit();
+
+    // 8. Sync Learning Centers
+    const lcBatch = writeBatch(db);
+    INITIAL_LEARNING_CENTERS.forEach((lc) => {
+      lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
+    });
+    await lcBatch.commit();
+
+    try {
+      localStorage.setItem('swis_dummy_data_purged_v2', new Date().toISOString());
+    } catch {
+      // ignore
+    }
+
+    return {
+      success: true,
+      message: `System successfully cleaned: ${deletedLogs} logs, ${deletedRequests} edit requests, and ${deletedAlerts} alerts purged. Exactly ${INITIAL_STUDENTS.length} official students and ${INITIAL_STAFF.length} staff members established.`,
+      deletedLogs,
+      deletedRequests,
+      deletedAlerts,
+      studentsCount: INITIAL_STUDENTS.length,
+      staffCount: INITIAL_STAFF.length,
+    };
+  } catch (error: any) {
+    console.error('Error cleaning system data:', error);
+    return {
+      success: false,
+      message: error?.message || 'Failed to purge dummy data',
+      deletedLogs: 0,
+      deletedRequests: 0,
+      deletedAlerts: 0,
+      studentsCount: 0,
+      staffCount: 0,
+    };
+  }
+}
+
+/**
  * Force synchronization of the entire official school roster to Firestore.
- * This completely clears out old AI dummy records and establishes the 74 CSV students,
- * campuses, learning centers, and administrative accounts.
  */
 export async function forceSyncOfficialData(): Promise<{
   success: boolean;
@@ -517,65 +642,42 @@ export async function forceSyncOfficialData(): Promise<{
   campusesCount: number;
   learningCentersCount: number;
 }> {
-  try {
-    const batch = writeBatch(db);
-
-    // 1. Sync Campuses
-    for (const c of INITIAL_CAMPUSES) {
-      batch.set(doc(db, 'campuses', c.id), c, { merge: true });
-    }
-
-    // 2. Sync Learning Centers
-    for (const lc of INITIAL_LEARNING_CENTERS) {
-      batch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
-    }
-
-    // 3. Sync Official Staff
-    for (const stf of INITIAL_STAFF) {
-      batch.set(doc(db, 'staff', stf.staff_id), stf, { merge: true });
-    }
-
-    // 4. Sync Official Students (74 from user's CSV)
-    for (const stu of INITIAL_STUDENTS) {
-      batch.set(doc(db, 'students', stu.student_id), stu, { merge: true });
-    }
-
-    await batch.commit();
-
-    return {
-      success: true,
-      studentsCount: INITIAL_STUDENTS.length,
-      staffCount: INITIAL_STAFF.length,
-      campusesCount: INITIAL_CAMPUSES.length,
-      learningCentersCount: INITIAL_LEARNING_CENTERS.length,
-    };
-  } catch {
-    return {
-      success: false,
-      studentsCount: 0,
-      staffCount: 0,
-      campusesCount: 0,
-      learningCentersCount: 0,
-    };
-  }
+  const purgeRes = await purgeAllDummyDataAndCleanSystem();
+  return {
+    success: purgeRes.success,
+    studentsCount: purgeRes.studentsCount,
+    staffCount: purgeRes.staffCount,
+    campusesCount: INITIAL_CAMPUSES.length,
+    learningCentersCount: INITIAL_LEARNING_CENTERS.length,
+  };
 }
 
 export async function seedDatabaseIfEmpty(): Promise<boolean> {
   try {
     const studentsSnap = await getDocs(collection(db, 'students'));
-    // If students already exist, check if old dummy data (e.g. Liam Miller) is present
-    let needsFullSync = false;
-    if (studentsSnap.empty) {
-      needsFullSync = true;
+    const isPurged = typeof window !== 'undefined' ? localStorage.getItem('swis_dummy_data_purged_v2') : null;
+
+    // Check if the database has any old AI dummy records or has not been purged
+    let needsFullPurge = false;
+    if (studentsSnap.empty || !isPurged) {
+      needsFullPurge = true;
     } else {
-      const firstDoc = studentsSnap.docs[0]?.data() as any;
-      if (firstDoc?.full_name === 'Liam Miller' || !firstDoc?.campus) {
-        needsFullSync = true;
+      const hasDummyStudent = studentsSnap.docs.some((d) => {
+        const data = d.data() as any;
+        return (
+          data.full_name === 'Liam Miller' ||
+          data.full_name === 'Sophia Patel' ||
+          !data.campus ||
+          !d.id.startsWith('STU-10')
+        );
+      });
+      if (hasDummyStudent || studentsSnap.docs.length !== INITIAL_STUDENTS.length) {
+        needsFullPurge = true;
       }
     }
 
-    if (needsFullSync) {
-      await forceSyncOfficialData();
+    if (needsFullPurge) {
+      await purgeAllDummyDataAndCleanSystem();
       return true;
     }
 

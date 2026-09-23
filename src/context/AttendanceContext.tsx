@@ -19,6 +19,7 @@ import {
   INITIAL_CAMPUSES,
   INITIAL_LEARNING_CENTERS,
   forceSyncOfficialData,
+  purgeAllDummyDataAndCleanSystem,
 } from '../firebase/seed';
 import {
   AttendanceLog,
@@ -99,6 +100,15 @@ interface AttendanceContextType {
   saveCampus: (campus: Campus) => Promise<{ success: boolean; message: string }>;
   saveLearningCenter: (lc: LearningCenter) => Promise<{ success: boolean; message: string }>;
   forceResetToOfficialRoster: () => Promise<{ success: boolean; message: string }>;
+  purgeAllDummyData: () => Promise<{
+    success: boolean;
+    message: string;
+    deletedLogs: number;
+    deletedRequests: number;
+    deletedAlerts: number;
+    studentsCount: number;
+    staffCount: number;
+  }>;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
@@ -950,27 +960,43 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // Re-sync / Purge dummy data and restore official roster
-  const forceResetToOfficialRoster = async () => {
+  // Purge all AI dummy data and clean system
+  const purgeAllDummyData = async () => {
     try {
       setLoading(true);
-      const res = await forceSyncOfficialData();
+      const res = await purgeAllDummyDataAndCleanSystem();
       if (res.success) {
+        setLogs([]);
+        setEditRequests([]);
+        setUrgentAlerts([]);
+        setStudents(INITIAL_STUDENTS);
+        setCampuses(INITIAL_CAMPUSES);
+        setLearningCenters(INITIAL_LEARNING_CENTERS);
         sound.playSuccessChime();
-        return {
-          success: true,
-          message: `Official roster restored! Synced ${res.studentsCount} students from CSV and ${res.staffCount} official staff members across ${res.campusesCount} campuses.`,
-        };
+        return res;
       } else {
         sound.playError();
-        return { success: false, message: 'Official roster synchronization failed.' };
+        return res;
       }
     } catch (err: any) {
       sound.playError();
-      return { success: false, message: err?.message || 'Failed to sync official roster.' };
+      return {
+        success: false,
+        message: err?.message || 'Purge failed',
+        deletedLogs: 0,
+        deletedRequests: 0,
+        deletedAlerts: 0,
+        studentsCount: 0,
+        staffCount: 0,
+      };
     } finally {
       setLoading(false);
     }
+  };
+
+  // Re-sync / Purge dummy data and restore official roster
+  const forceResetToOfficialRoster = async () => {
+    return purgeAllDummyData();
   };
 
   const attendanceContextValue = useMemo<AttendanceContextType>(
@@ -1004,6 +1030,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       saveCampus,
       saveLearningCenter,
       forceResetToOfficialRoster,
+      purgeAllDummyData,
     }),
     [
       students,
@@ -1033,6 +1060,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       saveCampus,
       saveLearningCenter,
       forceResetToOfficialRoster,
+      purgeAllDummyData,
     ]
   );
 
