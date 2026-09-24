@@ -87,5 +87,16 @@ service cloud.firestore {
     match /staff_fcm_tokens/{tokenId} {
       allow read, write: if true;
     }
+
+    // System Settings: School branding, logos, configurations
+    match /system_settings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Health / Connection verification
+    match /test/{docId} {
+      allow read, write: if true;
+    }
   }
 }

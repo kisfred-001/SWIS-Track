@@ -280,6 +280,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Subscribe to all attendance logs with error fallback
   useEffect(() => {
+    let fallbackUnsub: (() => void) | null = null;
     const q = query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'));
     const unsubLogs = onSnapshot(
       q,
@@ -288,14 +289,27 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setLogs(list);
       },
       () => {
-        // Soft fallback
+        // Fallback to simple unordered query if index is pending
+        fallbackUnsub = onSnapshot(
+          collection(db, 'attendance_logs'),
+          (fallbackSnap) => {
+            const list = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
+            list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            setLogs(list);
+          },
+          () => {}
+        );
       }
     );
-    return () => unsubLogs();
+    return () => {
+      unsubLogs();
+      if (fallbackUnsub) fallbackUnsub();
+    };
   }, []);
 
   // Subscribe to edit requests with error fallback
   useEffect(() => {
+    let fallbackUnsub: (() => void) | null = null;
     const q = query(collection(db, 'edit_requests'), orderBy('created_at', 'desc'));
     const unsubReqs = onSnapshot(
       q,
@@ -304,14 +318,27 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setEditRequests(list);
       },
       () => {
-        // Soft fallback
+        // Fallback to simple unordered query if index is pending
+        fallbackUnsub = onSnapshot(
+          collection(db, 'edit_requests'),
+          (fallbackSnap) => {
+            const list = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as EditRequest[];
+            list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            setEditRequests(list);
+          },
+          () => {}
+        );
       }
     );
-    return () => unsubReqs();
+    return () => {
+      unsubReqs();
+      if (fallbackUnsub) fallbackUnsub();
+    };
   }, []);
 
   // Subscribe to urgent alerts (FCM channel for Principals & Directors) with error fallback
   useEffect(() => {
+    let fallbackUnsub: (() => void) | null = null;
     const q = query(collection(db, 'urgent_alerts'), orderBy('timestamp', 'desc'), limit(15));
     let initialLoad = true;
     const unsubAlerts = onSnapshot(
@@ -331,10 +358,21 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         initialLoad = false;
       },
       () => {
-        // Soft fallback
+        fallbackUnsub = onSnapshot(
+          collection(db, 'urgent_alerts'),
+          (fallbackSnap) => {
+            const list = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as UrgentAlert[];
+            list.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+            setUrgentAlerts(list.slice(0, 15));
+          },
+          () => {}
+        );
       }
     );
-    return () => unsubAlerts();
+    return () => {
+      unsubAlerts();
+      if (fallbackUnsub) fallbackUnsub();
+    };
   }, [canApproveEditRequests]);
 
   // Compute active (not dismissed) urgent alerts for current user (memoized)

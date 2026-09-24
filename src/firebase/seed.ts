@@ -665,16 +665,43 @@ export async function syncOfficialStaffAndCenters(): Promise<void> {
         let batchNeedsCommit = false;
         chunk.forEach((d) => {
           const data = d.data();
-          const center = (data.learning_center_id || '').trim();
-          const campus = (data.campus || '').trim();
+          let center = (data.learning_center_id || '').trim();
+          let campus = (data.campus || '').trim();
+          const updates: Record<string, any> = {};
+          let needsUpdate = false;
+
+          // Normalize center names
+          if (center === 'Blooms and Archie') {
+            center = 'Bloom and Archie';
+            updates.learning_center_id = 'Bloom and Archie';
+            needsUpdate = true;
+          }
+
+          // Ensure campus mapping
+          if ((center === 'Bloom and Archie' || center === 'Bethany' || center === 'Antioch' || center === 'Azusa') && campus !== 'Hope Campus') {
+            campus = 'Hope Campus';
+            updates.campus = 'Hope Campus';
+            needsUpdate = true;
+          } else if ((center === 'Kayil' || center === 'Doxa' || center === 'Splendor') && campus !== 'Spring Campus') {
+            campus = 'Spring Campus';
+            updates.campus = 'Spring Campus';
+            needsUpdate = true;
+          }
+
           const targetSupervisor = getSupervisorForCenter(campus, center);
           const targetMonitor = getMonitorForCenter(campus, center);
 
-          if (data.supervisor_name !== targetSupervisor || data.monitor_name !== targetMonitor) {
-            studentBatch.update(d.ref, {
-              supervisor_name: targetSupervisor,
-              monitor_name: targetMonitor,
-            });
+          if (data.supervisor_name !== targetSupervisor) {
+            updates.supervisor_name = targetSupervisor;
+            needsUpdate = true;
+          }
+          if (data.monitor_name !== targetMonitor) {
+            updates.monitor_name = targetMonitor;
+            needsUpdate = true;
+          }
+
+          if (needsUpdate) {
+            studentBatch.update(d.ref, updates);
             batchNeedsCommit = true;
           }
         });

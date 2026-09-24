@@ -106,6 +106,8 @@ export const AdminSetupView: React.FC = () => {
     deletedLogs?: number;
     deletedRequests?: number;
     deletedAlerts?: number;
+    studentsCount?: number;
+    staffCount?: number;
   } | null>(null);
 
   // Filter learning centers to strictly enforce single Bethany at Hope Campus
@@ -307,6 +309,8 @@ export const AdminSetupView: React.FC = () => {
         deletedLogs: res.deletedLogs,
         deletedRequests: res.deletedRequests,
         deletedAlerts: res.deletedAlerts,
+        studentsCount: res.studentsCount,
+        staffCount: res.staffCount,
       });
     } finally {
       setCleanLoading(false);
@@ -1257,7 +1261,7 @@ export const AdminSetupView: React.FC = () => {
                       Deleted Alerts: {cleanResult.deletedAlerts ?? 0}
                     </span>
                     <span className="px-2 py-0.5 bg-emerald-100 rounded text-emerald-800">
-                      Official Students: 74
+                      Official Students: {cleanResult.studentsCount ?? students.length}
                     </span>
                   </div>
                 )}

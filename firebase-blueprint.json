@@ -107,6 +107,48 @@
         "timestamp": { "type": "string", "description": "ISO timestamp of dispatch" },
         "dismissed_by": { "type": "array", "description": "Array of staff IDs who dismissed the alert banner" }
       }
+    },
+    "SystemSetting": {
+      "collection": "system_settings",
+      "fields": {
+        "id": { "type": "string", "description": "Unique setting identifier (e.g. branding)" },
+        "logo_url": { "type": "string", "description": "URL or base64 data for custom school crest/logo" },
+        "updated_at": { "type": "string", "description": "Timestamp of update" }
+      }
+    }
+  },
+  "firestore": {
+    "/campuses/{campusId}": {
+      "schema": "Campus",
+      "description": "Master institutional campus records"
+    },
+    "/learning_centers/{learningCenterId}": {
+      "schema": "LearningCenter",
+      "description": "Learning centers and room assignments"
+    },
+    "/staff/{staffId}": {
+      "schema": "Staff",
+      "description": "Staff roster and access credentials"
+    },
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Student roster and guardian details"
+    },
+    "/attendance_logs/{logId}": {
+      "schema": "AttendanceLog",
+      "description": "Check-in and check-out attendance records"
+    },
+    "/edit_requests/{requestId}": {
+      "schema": "EditRequest",
+      "description": "Audit-logged change proposal workflow"
+    },
+    "/urgent_alerts/{alertId}": {
+      "schema": "UrgentAlert",
+      "description": "Flash notifications for leadership"
+    },
+    "/system_settings/{settingId}": {
+      "schema": "SystemSetting",
+      "description": "Institutional branding and system settings"
     }
   }
 }
