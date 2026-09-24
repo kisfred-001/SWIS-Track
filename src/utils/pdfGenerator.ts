@@ -5,6 +5,7 @@ export interface CardItem {
   item: Student | Staff;
   type: 'Student' | 'Staff';
   qrDataUrl?: string;
+  customLogoUrl?: string;
 }
 
 /**
@@ -13,7 +14,8 @@ export interface CardItem {
 export const generateSingleCardPDF = (
   item: Student | Staff,
   type: 'Student' | 'Staff',
-  qrDataUrl?: string
+  qrDataUrl?: string,
+  customLogoUrl?: string
 ): jsPDF => {
   const isStudent = type === 'Student';
   const student = isStudent ? (item as Student) : null;
@@ -79,7 +81,19 @@ export const generateSingleCardPDF = (
 
   doc.setFontSize(5);
   doc.setFont('helvetica', 'normal');
-  doc.text('2026–2027', cardWidth - 5, 5, { align: 'right' });
+  doc.text('2026–2027', cardWidth - 14, 5, { align: 'right' });
+
+  // Optional Branded Logo in header
+  const logoToUse = customLogoUrl || (typeof window !== 'undefined' ? localStorage.getItem('swis_custom_logo') : null);
+  if (logoToUse) {
+    try {
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(cardWidth - 12, 1.8, 8.5, 8.5, 1, 1, 'F');
+      doc.addImage(logoToUse, 'PNG', cardWidth - 11.5, 2.3, 7.5, 7.5);
+    } catch {
+      // safe fallback
+    }
+  }
 
   // QR Code on Left
   const qrSize = 25;
@@ -314,7 +328,19 @@ function drawSingleCardOnSheet(
 
   doc.setFontSize(5.5);
   doc.setFont('helvetica', 'normal');
-  doc.text('2026–2027', x + w - 3.5, y + 5.5, { align: 'right' });
+  doc.text('2026–2027', x + w - 16, y + 5.5, { align: 'right' });
+
+  // Optional Branded Logo in header
+  const sheetLogoToUse = cardItem.customLogoUrl || (typeof window !== 'undefined' ? localStorage.getItem('swis_custom_logo') : null);
+  if (sheetLogoToUse) {
+    try {
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(x + w - 14, y + 1.8, 10, 10, 1, 1, 'F');
+      doc.addImage(sheetLogoToUse, 'PNG', x + w - 13.5, y + 2.3, 9, 9);
+    } catch {
+      // safe fallback
+    }
+  }
 
   // 4. Content Area
   // Left Column: QR Code

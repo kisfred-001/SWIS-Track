@@ -260,7 +260,7 @@ export const INITIAL_CAMPUSES: Campus[] = [
     phone: '+256 700 123 456',
     email: 'spring.campus@swis.ac.ug',
     lead_administrator: 'Mrs. Irene Lulika',
-    learning_centers: ['Kayil', 'Splendor', 'Doxa', 'Bethany', 'Antioch'],
+    learning_centers: ['Kayil', 'Splendor', 'Doxa', 'Antioch'],
     total_capacity: 150,
     opening_time: '07:30 AM',
     closing_time: '04:30 PM',
@@ -314,16 +314,6 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     description: 'Spring Campus Senior Learning Center',
   },
   {
-    id: 'spring-bethany',
-    name: 'Bethany',
-    campus: 'Spring Campus',
-    supervisor_name: 'Mrs. Eunice Mutebe',
-    monitor_name: 'Ms. Faith Nabirye',
-    room_number: 'Room S-104',
-    capacity: 20,
-    description: 'Spring Campus Foundation & PACE Center (Supervised by Mrs. Eunice Mutebe)',
-  },
-  {
     id: 'spring-antioch',
     name: 'Antioch',
     campus: 'Spring Campus',
@@ -341,7 +331,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     monitor_name: 'Ms. Faith Nabirye',
     room_number: 'Room H-101',
     capacity: 25,
-    description: 'Hope Campus Foundation & Primary PACE Center (Supervised by Mrs. Eunice Mutebe)',
+    description: 'Hope Campus Foundation & Primary PACE Center (Supervised by Mrs. Eunice Mutebe - Only Bethany Center in SWIS)',
   },
   {
     id: 'hope-azusa',
@@ -445,7 +435,7 @@ export const RAW_STUDENT_DATA = [
   { name: 'Romanove Nguya', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
   { name: 'David Nkeza', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
   { name: 'Edrin Baraza', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
-  { name: 'Ariana Akoli', campus: 'Spring Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
+  { name: 'Ariana Akoli', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
   { name: 'Nissi Mwiza', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
   { name: 'Jireh Nziza', campus: 'Spring Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
   { name: 'Zoe Jubilee Mutoni', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
@@ -646,6 +636,11 @@ export async function purgeAllDummyDataAndCleanSystem(): Promise<{
 
     // 8. Sync Learning Centers
     const lcBatch = writeBatch(db);
+    try {
+      lcBatch.delete(doc(db, 'learning_centers', 'spring-bethany'));
+    } catch {
+      // ignore
+    }
     INITIAL_LEARNING_CENTERS.forEach((lc) => {
       lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
     });
@@ -731,6 +726,11 @@ export async function seedDatabaseIfEmpty(): Promise<boolean> {
 
       // 4. Sync Learning Centers
       const lcBatch = writeBatch(db);
+      try {
+        lcBatch.delete(doc(db, 'learning_centers', 'spring-bethany'));
+      } catch {
+        // ignore
+      }
       INITIAL_LEARNING_CENTERS.forEach((lc) => {
         lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
       });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -26,8 +26,16 @@ import {
   MapPin,
   Check,
   Trash2,
+  Image as ImageIcon,
+  Upload,
+  RotateCcw,
+  Eye,
+  FileCheck,
+  Info,
+  ExternalLink,
 } from 'lucide-react';
 import { Campus, LearningCenter, UserRole } from '../types';
+import { SchoolLogo } from './SchoolLogo';
 
 export const AdminSetupView: React.FC = () => {
   const {
@@ -41,6 +49,8 @@ export const AdminSetupView: React.FC = () => {
     saveLearningCenter,
     forceResetToOfficialRoster,
     purgeAllDummyData,
+    systemLogo,
+    updateSystemLogo,
   } = useAttendance();
 
   const {
@@ -52,7 +62,22 @@ export const AdminSetupView: React.FC = () => {
     setIdleTimeoutMinutes,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'campuses' | 'learning_centers' | 'rbac' | 'security' | 'database'>('campuses');
+  const [activeTab, setActiveTab] = useState<'branding' | 'campuses' | 'learning_centers' | 'rbac' | 'security' | 'database'>('branding');
+
+  // Branding & Logo State
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(systemLogo);
+  const [logoUrlInput, setLogoUrlInput] = useState('');
+  const [logoFileError, setLogoFileError] = useState('');
+  const [logoSaving, setLogoSaving] = useState(false);
+  const [logoSuccessMsg, setLogoSuccessMsg] = useState('');
+  const [logoMode, setLogoMode] = useState<'upload' | 'url'>('upload');
+
+  // Sync logo preview if systemLogo updates from remote
+  useEffect(() => {
+    if (systemLogo && !logoPreviewUrl) {
+      setLogoPreviewUrl(systemLogo);
+    }
+  }, [systemLogo]);
 
   // Edit Campus Modal state
   const [editingCampus, setEditingCampus] = useState<Campus | null>(null);
@@ -82,6 +107,74 @@ export const AdminSetupView: React.FC = () => {
     deletedRequests?: number;
     deletedAlerts?: number;
   } | null>(null);
+
+  // Filter learning centers to strictly enforce single Bethany at Hope Campus
+  const validLearningCenters = learningCenters.filter(
+    (lc) => !(lc.name === 'Bethany' && lc.campus !== 'Hope Campus') && lc.id !== 'spring-bethany'
+  );
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFileError('');
+
+    if (!file.type.startsWith('image/')) {
+      setLogoFileError('Please select a valid image file (PNG, JPG, SVG, WebP).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoFileError('Image file size must be less than 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoPreviewUrl(reader.result as string);
+    };
+    reader.onerror = () => {
+      setLogoFileError('Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleApplyLogoUrl = () => {
+    if (!logoUrlInput.trim()) {
+      setLogoFileError('Please enter a valid image URL.');
+      return;
+    }
+    setLogoFileError('');
+    setLogoPreviewUrl(logoUrlInput.trim());
+  };
+
+  const handleSaveSystemLogo = async () => {
+    if (!logoPreviewUrl) {
+      setLogoFileError('Please choose or enter an image before saving.');
+      return;
+    }
+    setLogoSaving(true);
+    setLogoFileError('');
+    const res = await updateSystemLogo(logoPreviewUrl);
+    setLogoSaving(false);
+    if (res.success) {
+      setLogoSuccessMsg(res.message);
+      setTimeout(() => setLogoSuccessMsg(''), 4500);
+    } else {
+      setLogoFileError(res.message);
+    }
+  };
+
+  const handleResetSystemLogo = async () => {
+    if (!window.confirm('Reset system logo to default branding?')) {
+      return;
+    }
+    setLogoSaving(true);
+    const res = await updateSystemLogo(null);
+    setLogoPreviewUrl(null);
+    setLogoUrlInput('');
+    setLogoSaving(false);
+    setLogoSuccessMsg(res.message);
+    setTimeout(() => setLogoSuccessMsg(''), 4500);
+  };
 
   // Guard: ONLY accessible to ICCE Coordinator
   if (!canAccessSetup) {
@@ -325,6 +418,22 @@ export const AdminSetupView: React.FC = () => {
       <div className="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto text-xs font-semibold">
         <button
           type="button"
+          onClick={() => setActiveTab('branding')}
+          className={`px-3.5 py-2 rounded-lg transition whitespace-nowrap flex items-center space-x-1.5 ${
+            activeTab === 'branding'
+              ? 'bg-[#8B1E2F] text-white shadow-xs font-bold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>School Logo & Branding</span>
+          {systemLogo && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          )}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('campuses')}
           className={`px-3.5 py-2 rounded-lg transition whitespace-nowrap flex items-center space-x-1.5 ${
             activeTab === 'campuses'
@@ -346,7 +455,7 @@ export const AdminSetupView: React.FC = () => {
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>Learning Centers Master ({learningCenters.length})</span>
+          <span>Learning Centers Master ({validLearningCenters.length})</span>
         </button>
 
         <button
@@ -388,6 +497,282 @@ export const AdminSetupView: React.FC = () => {
           <span>Official Data Synchronization</span>
         </button>
       </div>
+
+      {/* Tab: School Logo & System Branding */}
+      {activeTab === 'branding' && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-100 text-[#8B1E2F]">
+                  Identity &amp; Media
+                </span>
+                {systemLogo ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                    <Check className="w-3 h-3 mr-1 text-emerald-600" /> Custom Logo Active
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                    Default Crest Active
+                  </span>
+                )}
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Official School Logo &amp; Identity</h3>
+              <p className="text-xs text-slate-500 max-w-2xl mt-0.5">
+                Upload the high-resolution official logo of Spirit &amp; Word International School. Your logo is automatically synchronized across the top navigation bar, student ID badges, staff credentials, and PDF exports.
+              </p>
+            </div>
+
+            {systemLogo && (
+              <button
+                type="button"
+                onClick={handleResetSystemLogo}
+                disabled={logoSaving}
+                className="px-3 py-1.5 border border-red-200 text-red-700 hover:bg-red-50 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset to Default Logo</span>
+              </button>
+            )}
+          </div>
+
+          {/* Feedback messages */}
+          {logoSuccessMsg && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 flex items-center space-x-2 font-medium">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{logoSuccessMsg}</span>
+            </div>
+          )}
+
+          {logoFileError && (
+            <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-xl text-xs text-rose-900 flex items-center space-x-2 font-medium">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{logoFileError}</span>
+            </div>
+          )}
+
+          {/* Upload and Configuration Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left 6 cols: Upload / Source controls */}
+            <div className="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <span className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Upload className="w-4 h-4 text-indigo-600" />
+                  <span>Logo Source</span>
+                </span>
+
+                <div className="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setLogoMode('upload')}
+                    className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                      logoMode === 'upload' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    File Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLogoMode('url')}
+                    className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                      logoMode === 'url' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Image URL
+                  </button>
+                </div>
+              </div>
+
+              {logoMode === 'upload' ? (
+                <div className="space-y-3">
+                  <label className="border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/70 hover:bg-indigo-50/30 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition group">
+                    <div className="p-3 bg-white rounded-full shadow-xs group-hover:scale-105 transition mb-2">
+                      <Upload className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-800">
+                      Click to browse or drop official school logo
+                    </span>
+                    <span className="text-[11px] text-slate-500 mt-1">
+                      PNG, JPG, SVG, WebP up to 5MB (Square 1:1 or circular PNG recommended)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    💡 <strong>Pro Tip:</strong> For highest print quality on Student ID Cards and Badges, use a square transparent PNG (e.g. 500×500 px or larger) showing the official school crest or emblem.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Direct Image URL
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="url"
+                        value={logoUrlInput}
+                        onChange={(e) => setLogoUrlInput(e.target.value)}
+                        placeholder="https://example.com/assets/swis-logo.png"
+                        className="flex-1 px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyLogoUrl}
+                        className="px-3 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition"
+                      >
+                        Preview URL
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Enter the full https:// URL of the hosted logo image.
+                  </p>
+                </div>
+              )}
+
+              {/* Apply / Save Button */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-500">
+                  {logoPreviewUrl ? 'Logo ready for application.' : 'Select an image file to preview.'}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleSaveSystemLogo}
+                  disabled={!logoPreviewUrl || logoSaving}
+                  className="px-4 py-2.5 bg-[#8B1E2F] hover:bg-[#721825] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center space-x-2"
+                >
+                  {logoSaving ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving Logo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Apply &amp; Save School Logo</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Right 6 cols: Live Multi-Surface Preview */}
+            <div className="lg:col-span-6 space-y-4">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                <span className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Eye className="w-4 h-4 text-emerald-600" />
+                  <span>Live Multi-Surface Previews</span>
+                </span>
+                <p className="text-[11px] text-slate-500">
+                  Verify how your uploaded logo appears in different sections of the application:
+                </p>
+
+                {/* Surface 1: Dark Navigation Bar Surface */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Surface 1: Main Dark Navigation Bar
+                  </span>
+                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-white p-1 rounded-xl shadow-md shrink-0">
+                        {logoPreviewUrl ? (
+                          <img
+                            src={logoPreviewUrl}
+                            alt="Logo Preview"
+                            className="w-10 h-10 object-contain rounded"
+                          />
+                        ) : (
+                          <SchoolLogo variant="emblem" size="md" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-sm text-white font-serif">Spirit &amp; Word</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-emerald-500/20 text-emerald-300">
+                            Live Campus
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-amber-300 italic">
+                          The Quick, The Sharp and The Clever
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Surface 2: Student ID Card Maroon Header */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Surface 2: Official Student ID Card Header
+                  </span>
+                  <div className="bg-[#8B1E2F] p-3 rounded-xl text-white flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="bg-white p-1 rounded-lg shrink-0 shadow-xs">
+                        {logoPreviewUrl ? (
+                          <img
+                            src={logoPreviewUrl}
+                            alt="ID Preview"
+                            className="w-9 h-9 object-contain rounded"
+                          />
+                        ) : (
+                          <SchoolLogo variant="emblem" size="sm" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-serif font-black tracking-wider text-[11px] uppercase text-white leading-tight">
+                          SPIRIT &amp; WORD INT. SCHOOL
+                        </h4>
+                        <p className="font-serif text-[7.5px] tracking-widest uppercase text-amber-200 font-semibold">
+                          The Quick, The Sharp and The Clever
+                        </p>
+                        <p className="text-[7px] text-slate-100 font-sans uppercase font-bold tracking-wider mt-0.5">
+                          OFFICIAL STUDENT ID • 2026-2027
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Surface 3: Letterhead / Dashboard Header Banner */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Surface 3: Light Branded Banner (Dashboard &amp; Reports)
+                  </span>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center space-x-3">
+                    <div className="bg-white p-1.5 rounded-xl border border-slate-200 shadow-2xs shrink-0">
+                      {logoPreviewUrl ? (
+                        <img
+                          src={logoPreviewUrl}
+                          alt="Banner Preview"
+                          className="w-11 h-11 object-contain rounded"
+                        />
+                      ) : (
+                        <SchoolLogo variant="emblem" size="md" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-serif font-extrabold text-[#8B1E2F] text-sm uppercase leading-tight">
+                        SPIRIT &amp; WORD INTERNATIONAL SCHOOL
+                      </h4>
+                      <div className="h-[1.5px] w-full bg-[#8B1E2F] my-0.5" />
+                      <p className="text-[10px] text-slate-700 italic">
+                        The Quick, The Sharp and The Clever
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab 1: Campuses Setup */}
       {activeTab === 'campuses' && (
@@ -481,11 +866,19 @@ export const AdminSetupView: React.FC = () => {
           <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
-                Master Learning Centers Directory ({learningCenters.length} Centers)
+                Master Learning Centers Directory ({validLearningCenters.length} Centers)
               </h3>
               <p className="text-xs text-slate-500">
                 Assign supervisors, monitors, and room numbers. Monitors and Supervisors have equal rights in the system.
               </p>
+            </div>
+          </div>
+
+          {/* Institutional Policy Banner */}
+          <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 text-amber-900 text-xs flex items-center space-x-2.5">
+            <Info className="w-4 h-4 text-amber-700 shrink-0" />
+            <div className="leading-snug">
+              <strong>Institutional Rule:</strong> There is only <strong>one Bethany Learning Center</strong> across Spirit &amp; Word International School, located exclusively in the <strong>Hope Campus</strong> (Supervised by Mrs. Eunice Mutebe). All other centers are led by Center Monitors.
             </div>
           </div>
 
@@ -503,7 +896,7 @@ export const AdminSetupView: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {learningCenters.map((lc) => {
+                {validLearningCenters.map((lc) => {
                   const enrolledCount = students.filter(
                     (s) => s.campus === lc.campus && s.learning_center_id === lc.name
                   ).length;
@@ -526,7 +919,15 @@ export const AdminSetupView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        {lc.supervisor_name}
+                        {lc.name === 'Bethany' && lc.supervisor_name ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                            {lc.supervisor_name}
+                          </span>
+                        ) : lc.supervisor_name ? (
+                          lc.supervisor_name
+                        ) : (
+                          <span className="text-slate-400 italic">None (Monitor Led)</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-700">
                         {lc.monitor_name}
@@ -1050,15 +1451,36 @@ export const AdminSetupView: React.FC = () => {
             </div>
 
             <div className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Assigned Supervisor</label>
-                <input
-                  type="text"
-                  value={lcSupervisor}
-                  onChange={(e) => setLcSupervisor(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
+              {editingLC.name === 'Bethany' ? (
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1 flex items-center justify-between">
+                    <span>Assigned Supervisor (Bethany Exclusive)</span>
+                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      Supervised Center
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={lcSupervisor}
+                    onChange={(e) => setLcSupervisor(e.target.value)}
+                    placeholder="Mrs. Eunice Mutebe"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 font-medium"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Bethany Learning Center at Hope Campus is the only learning center with an assigned supervisor.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                  <div className="flex items-center space-x-1.5 text-slate-800 font-bold text-[11px]">
+                    <Info className="w-3.5 h-3.5 text-slate-600" />
+                    <span>Supervisor Policy</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Only Bethany Learning Center (Hope Campus) operates with a Supervisor. This center operates under its Center Monitor.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">Assigned Monitor</label>

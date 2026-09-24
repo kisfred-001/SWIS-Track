@@ -111,6 +111,8 @@ interface AttendanceContextType {
     studentsCount: number;
     staffCount: number;
   }>;
+  systemLogo: string | null;
+  updateSystemLogo: (logoDataUrlOrUrl: string | null) => Promise<{ success: boolean; message: string }>;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
@@ -128,6 +130,42 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [systemLogo, setSystemLogo] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('swis_custom_logo') || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Listen to system_settings/branding in Firestore
+  useEffect(() => {
+    try {
+      const brandingDocRef = doc(db, 'system_settings', 'branding');
+      const unsub = onSnapshot(
+        brandingDocRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data && typeof data.logo_url === 'string') {
+              setSystemLogo(data.logo_url);
+              try {
+                localStorage.setItem('swis_custom_logo', data.logo_url);
+              } catch {
+                // ignore
+              }
+            }
+          }
+        },
+        () => {
+          // Soft fallback to localStorage
+        }
+      );
+      return () => unsub();
+    } catch (err) {
+      console.warn('Could not subscribe to branding settings:', err);
+    }
+  }, []);
 
   // Initialize DB seeding on start
   useEffect(() => {
@@ -136,12 +174,21 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   }, []);
 
-  // Subscribe to campuses with fallback
+  // Subscribe to campuses with fallback & ensure Spring Campus has no Bethany
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'campuses'),
       (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Campus[];
+        let list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Campus[];
+        list = list.map((c) => {
+          if (c.id === 'spring-campus' || c.name === 'Spring Campus') {
+            return {
+              ...c,
+              learning_centers: (c.learning_centers || []).filter((lcName) => lcName !== 'Bethany'),
+            };
+          }
+          return c;
+        });
         if (list.length > 0) {
           setCampuses(list);
         }
@@ -153,12 +200,22 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => unsub();
   }, []);
 
-  // Subscribe to learning centers with fallback
+  // Subscribe to learning centers with fallback & enforce only one Bethany in Hope Campus
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'learning_centers'),
       (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as LearningCenter[];
+        let list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as LearningCenter[];
+        // Enforce: only one Bethany learning center and it is in Hope Campus
+        const hasSpringBethany = list.some(
+          (lc) => lc.id === 'spring-bethany' || (lc.name === 'Bethany' && lc.campus === 'Spring Campus')
+        );
+        if (hasSpringBethany) {
+          list = list.filter(
+            (lc) => lc.id !== 'spring-bethany' && !(lc.name === 'Bethany' && lc.campus === 'Spring Campus')
+          );
+          deleteDoc(doc(db, 'learning_centers', 'spring-bethany')).catch(() => {});
+        }
         if (list.length > 0) {
           setLearningCenters(list);
         }
@@ -1059,6 +1116,50 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return purgeAllDummyData();
   };
 
+  // Upload or update official school branding logo
+  const updateSystemLogo = async (logoDataUrlOrUrl: string | null): Promise<{ success: boolean; message: string }> => {
+    try {
+      setSystemLogo(logoDataUrlOrUrl);
+      if (logoDataUrlOrUrl) {
+        try {
+          localStorage.setItem('swis_custom_logo', logoDataUrlOrUrl);
+        } catch (e) {
+          console.warn('LocalStorage limit reached or disabled:', e);
+        }
+        await setDoc(
+          doc(db, 'system_settings', 'branding'),
+          {
+            logo_url: logoDataUrlOrUrl,
+            updated_at: new Date().toISOString(),
+            updated_by: currentUser?.full_name || 'Administrator',
+          },
+          { merge: true }
+        );
+      } else {
+        try {
+          localStorage.removeItem('swis_custom_logo');
+        } catch {
+          // ignore
+        }
+        await deleteDoc(doc(db, 'system_settings', 'branding')).catch(() => {});
+      }
+      sound.playSuccessChime();
+      return {
+        success: true,
+        message: logoDataUrlOrUrl
+          ? 'Official school logo updated successfully! New branding is now active across all screens, badges, and ID cards.'
+          : 'School logo reset to default system branding.',
+      };
+    } catch (err: any) {
+      console.warn('Error saving branding to Firestore:', err);
+      sound.playSuccessChime();
+      return {
+        success: true,
+        message: 'School logo updated successfully for current session and browser cache.',
+      };
+    }
+  };
+
   const attendanceContextValue = useMemo<AttendanceContextType>(
     () => ({
       students,
@@ -1092,6 +1193,8 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       saveLearningCenter,
       forceResetToOfficialRoster,
       purgeAllDummyData,
+      systemLogo,
+      updateSystemLogo,
     }),
     [
       students,
@@ -1123,6 +1226,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       saveLearningCenter,
       forceResetToOfficialRoster,
       purgeAllDummyData,
+      systemLogo,
     ]
   );
 

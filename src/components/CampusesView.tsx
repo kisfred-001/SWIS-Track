@@ -72,7 +72,12 @@ export const CampusesView: React.FC = () => {
   // Learning centers belonging to this campus
   const campusLearningCenters = useMemo(() => {
     if (!activeCampus) return [];
-    return learningCenters.filter((lc) => lc.campus === activeCampus.name);
+    return learningCenters.filter(
+      (lc) =>
+        lc.campus === activeCampus.name &&
+        !(lc.name === 'Bethany' && lc.campus !== 'Hope Campus') &&
+        lc.id !== 'spring-bethany'
+    );
   }, [learningCenters, activeCampus]);
 
   // Staff assigned to this campus (or All Campuses)
