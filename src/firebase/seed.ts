@@ -45,13 +45,26 @@ export const INITIAL_STAFF: Staff[] = [
   {
     staff_id: 'STF-006',
     pin_code: '105',
-    full_name: 'Miss. Anette Mugaga', // j). Support Staff - Miss. Anette Mugaga
+    full_name: 'Miss. Anette Mugala', // Support Staff - Miss. Anette Mugala (Hope Campus)
     role: 'Support Staff',
-    campus: 'All Campuses',
+    campus: 'Hope Campus',
     learning_center_id: 'Campus Check-In / Gates',
-    email: 'anette.mugaga@swis.ac.ug',
+    email: 'anette.mugala@swis.ac.ug',
     phone: '+256 772 105 006',
     qr_code_url: 'STF-006',
+    created_at: new Date().toISOString(),
+  },
+  // g). Bloom and Archie - Mrs. Julie Mayanja (Supervisor)
+  {
+    staff_id: 'STF-107',
+    pin_code: '207',
+    full_name: 'Mrs. Julie Mayanja',
+    role: 'Supervisor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Bloom and Archie',
+    email: 'julie.mayanja@swis.ac.ug',
+    phone: '+256 772 207 107',
+    qr_code_url: 'STF-107',
     created_at: new Date().toISOString(),
   },
   // d). Bethany - Mrs. Eunice Mutebe (Supervisor) and Monitor is Miss. Joan Nandhego
@@ -170,8 +183,8 @@ export const INITIAL_CAMPUSES: Campus[] = [
     phone: '+256 700 789 012',
     email: 'hope.campus@swis.ac.ug',
     lead_administrator: 'Mrs. Khasoma',
-    learning_centers: ['Bethany', 'Antioch', 'Azusa'],
-    total_capacity: 150,
+    learning_centers: ['Bethany', 'Antioch', 'Azusa', 'Bloom and Archie'],
+    total_capacity: 175,
     opening_time: '07:30 AM',
     closing_time: '04:30 PM',
     created_at: new Date().toISOString(),
@@ -239,6 +252,16 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     capacity: 25,
     description: 'Hope Campus Intermediate Learning Center (Supervisor: Mr. Shafic Musika)',
   },
+  {
+    id: 'hope-bloom-and-archie',
+    name: 'Bloom and Archie',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mrs. Julie Mayanja',
+    monitor_name: '',
+    room_number: 'Room H-104',
+    capacity: 25,
+    description: 'Hope Campus Early Childhood & Foundation Center (Supervisor: Mrs. Julie Mayanja)',
+  },
 ];
 
 // List of removed monitors to actively purge
@@ -259,15 +282,14 @@ export const REMOVED_STAFF_NAMES_OR_IDS = new Set([
   'Kevin Tumusiime',
   'Ms. Gloria Akello',
   'Gloria Akello',
-  'Mrs. Juliet Mayanja',
-  'Juliet Mayanja',
+  'Miss. Anette Mugaga',
+  'Anette Mugaga',
   'STF-301',
   'STF-302',
   'STF-303',
   'STF-304',
   'STF-305',
   'STF-306',
-  'STF-307',
 ]);
 
 // Helper to look up assigned supervisor for a learning center
@@ -278,6 +300,7 @@ export function getSupervisorForCenter(campus: string, center: string): string {
   if (center === 'Bethany') return 'Mrs. Eunice Mutebe';
   if (center === 'Antioch') return 'Mrs. Doreen Mugaga';
   if (center === 'Azusa') return 'Mr. Shafic Musika';
+  if (center === 'Bloom and Archie' || center === 'Blooms and Archie') return 'Mrs. Julie Mayanja';
   return '';
 }
 

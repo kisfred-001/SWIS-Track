@@ -320,7 +320,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isSupervisorOrMonitor = isSupervisor || isMonitor;
 
   // Strict RBAC requirements:
-  // 1. All staff can scan students in/out. Support staff (Mrs. Anette Mugala) ONLY has rights to sign in and out students.
+  // 1. All staff can scan students in/out. Support staff (Miss. Anette Mugala, situated at Hope Campus) ONLY has rights to sign in and out students.
   // 2. Supervisor and Monitor have the EXACT same rights pertaining to the system.
   // 3. Administrative accounts (Mrs. Irene Lulika, Mr. Jaxon Lulika, Mrs. Khasoma Susan, Mrs. Juliet Arinaitwe) have admin rights.
   // 4. ICCE Coordinator (Mr. Fredrick Kariuki) has highest level administrative account and EXCLUSIVELY accesses setup module.

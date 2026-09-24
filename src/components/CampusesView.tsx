@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -38,12 +38,24 @@ export const CampusesView: React.FC = () => {
 
   // Active campus selection within this module
   const [activeCampusId, setActiveCampusId] = useState<string>(() => {
+    if (currentUser?.campus && currentUser.campus !== 'All Campuses') {
+      const match = campuses.find((c) => c.name === currentUser.campus);
+      if (match) return match.id;
+    }
     if (selectedCampus && selectedCampus !== 'All Campuses') {
       const match = campuses.find((c) => c.name === selectedCampus);
       if (match) return match.id;
     }
     return campuses[0]?.id || 'spring-campus';
   });
+
+  // Automatically align with current user's campus (e.g. Miss. Anette Mugala at Hope Campus)
+  useEffect(() => {
+    if (currentUser?.campus && currentUser.campus !== 'All Campuses') {
+      const match = campuses.find((c) => c.name === currentUser.campus);
+      if (match) setActiveCampusId(match.id);
+    }
+  }, [currentUser?.campus, campuses]);
 
   const [activeSubTab, setActiveSubTab] = useState<'overview' | 'learning_centers' | 'students' | 'staff' | 'logs'>('overview');
   const [selectedCenterFilter, setSelectedCenterFilter] = useState<string>('all');

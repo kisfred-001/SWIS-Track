@@ -878,7 +878,7 @@ export const AdminSetupView: React.FC = () => {
           <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 text-amber-900 text-xs flex items-center space-x-2.5">
             <Info className="w-4 h-4 text-amber-700 shrink-0" />
             <div className="leading-snug">
-              <strong>Official Staff &amp; Center Structure:</strong> Each learning center is led by an assigned <strong>Supervisor</strong> (Kayil: Mrs. Irene Oryem, Doxa: Mr. David Kimbugwe, Splendor: Mr. Arthur Mutebi, Bethany: Mrs. Eunice Mutebe, Antioch: Mrs. Doreen Mugaga, Azusa: Mr. Shafic Musika). There is only one monitor in the school: <strong>Mrs. Joan Nandhego</strong> for Bethany Learning Center.
+              <strong>Official Staff &amp; Center Structure:</strong> Each learning center is led by an assigned <strong>Supervisor</strong> (Kayil: Mrs. Irene Oryem, Doxa: Mr. David Kimbugwe, Splendor: Mr. Arthur Mutebi, Bethany: Mrs. Eunice Mutebe, Antioch: Mrs. Doreen Mugaga, Azusa: Mr. Shafic Musika, Bloom and Archie: Mrs. Julie Mayanja). There is only one monitor in the school: <strong>Mrs. Joan Nandhego</strong> for Bethany Learning Center.
             </div>
           </div>
 
@@ -1006,10 +1006,10 @@ export const AdminSetupView: React.FC = () => {
 
               <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Support Personnel</span>
-                <div className="font-extrabold text-amber-900">Miss. Anette Mugaga</div>
-                <div className="text-amber-700 font-semibold">Support Staff</div>
+                <div className="font-extrabold text-amber-900">Miss. Anette Mugala</div>
+                <div className="text-amber-700 font-semibold">Support Staff (Hope Campus)</div>
                 <div className="text-[11px] text-slate-600 pt-1">
-                  Strictly limited to student sign in and out only. No report access, no roster edits.
+                  Strictly limited to student sign in and out only at Hope Campus. No report access, no roster edits.
                 </div>
               </div>
             </div>
@@ -1119,7 +1119,7 @@ export const AdminSetupView: React.FC = () => {
                   </tr>
 
                   <tr className="bg-amber-50/30">
-                    <td className="px-4 py-2.5 font-semibold text-amber-900">Support Staff (Miss. Anette Mugaga)</td>
+                    <td className="px-4 py-2.5 font-semibold text-amber-900">Support Staff (Miss. Anette Mugala • Hope Campus)</td>
                     <td className="px-3 py-2.5 text-center text-emerald-600 font-bold"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-slate-300">—</td>
                     <td className="px-3 py-2.5 text-center text-slate-300">—</td>

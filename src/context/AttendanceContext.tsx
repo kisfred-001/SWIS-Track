@@ -227,6 +227,9 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (lc.name === 'Splendor') return { ...lc, supervisor_name: 'Mr. Arthur Mutebi', monitor_name: '' };
           if (lc.name === 'Antioch') return { ...lc, supervisor_name: 'Mrs. Doreen Mugaga', monitor_name: '' };
           if (lc.name === 'Azusa') return { ...lc, supervisor_name: 'Mr. Shafic Musika', monitor_name: '' };
+          if (lc.name === 'Bloom and Archie' || lc.name === 'Blooms and Archie') {
+            return { ...lc, supervisor_name: 'Mrs. Julie Mayanja', monitor_name: '' };
+          }
           return lc;
         });
 
@@ -242,6 +245,13 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
     return () => unsub();
   }, []);
+
+  // Automatically align selectedCampus when campus-assigned staff (like Miss. Anette Mugala at Hope Campus) logs in
+  useEffect(() => {
+    if (currentUser?.campus && currentUser.campus !== 'All Campuses') {
+      setSelectedCampus(currentUser.campus);
+    }
+  }, [currentUser?.campus]);
 
   // Initialize FCM registration for current staff user
   useEffect(() => {

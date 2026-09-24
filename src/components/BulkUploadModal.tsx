@@ -282,6 +282,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
       else if (rawCenter.toLowerCase().includes('splendor')) rawCenter = 'Splendor';
       else if (rawCenter.toLowerCase().includes('antioch')) rawCenter = 'Antioch';
       else if (rawCenter.toLowerCase().includes('azusa')) rawCenter = 'Azusa';
+      else if (rawCenter.toLowerCase().includes('bloom') || rawCenter.toLowerCase().includes('archie')) rawCenter = 'Bloom and Archie';
       else rawCenter = 'Kayil';
 
       // Official supervisors by learning center
@@ -298,6 +299,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
           ? 'Mrs. Doreen Mugaga'
           : rawCenter === 'Azusa'
           ? 'Mr. Shafic Musika'
+          : (rawCenter === 'Bloom and Archie' || rawCenter === 'Blooms and Archie')
+          ? 'Mrs. Julie Mayanja'
           : '';
 
       if (supervisorIdx !== -1 && cols[supervisorIdx]) {
@@ -327,7 +330,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
 
       // Bethany is strictly Hope Campus
       let rawCampus =
-        rawCenter === 'Bethany' || rawCenter === 'Antioch' || rawCenter === 'Azusa'
+        rawCenter === 'Bethany' || rawCenter === 'Antioch' || rawCenter === 'Azusa' || rawCenter === 'Bloom and Archie'
           ? 'Hope Campus'
           : 'Spring Campus';
 

@@ -697,10 +697,18 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Miss. Anette Mugaga</strong> (Support Staff)
+                      <strong className="text-slate-800">Miss. Anette Mugala</strong> (Support Staff • Hope)
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 105
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Julie Mayanja</strong> (Bloom & Archie Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 207
                     </span>
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">

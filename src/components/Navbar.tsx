@@ -79,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       setShowSwitchModal(false);
       sound.playSuccessChime();
     } else {
-      setPinError('Invalid 3-digit PIN. (E.g. 555 for Fredrick, 101 for Irene, 102 for Jaxon, 103 for Susan, 104 for Juliet, 401 for Anette).');
+      setPinError('Invalid 3-digit PIN. (E.g. 555 for Fredrick, 103 for Khasoma, 104 for Julie Arinaitwe, 105 for Miss. Anette Mugala, 207 for Mrs. Julie Mayanja).');
       sound.playError();
     }
   };

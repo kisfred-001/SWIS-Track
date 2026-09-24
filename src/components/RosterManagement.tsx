@@ -842,7 +842,7 @@ export const RosterManagement: React.FC = () => {
                   <option value="Doxa">Doxa</option>
                   <option value="Antioch">Antioch</option>
                   <option value="Azusa">Azusa</option>
-                  <option value="Blooms and Archie">Blooms and Archie</option>
+                  <option value="Bloom and Archie">Bloom and Archie</option>
                 </select>
               </div>
 

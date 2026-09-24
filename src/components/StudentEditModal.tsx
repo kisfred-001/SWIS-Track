@@ -253,6 +253,8 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
         ? 'Mrs. Doreen Mugaga'
         : learningCenterId === 'Azusa'
         ? 'Mr. Shafic Musika'
+        : (learningCenterId === 'Bloom and Archie' || learningCenterId === 'Blooms and Archie')
+        ? 'Mrs. Julie Mayanja'
         : '';
 
     // Mrs. Joan Nandhego is the ONLY monitor in SWIS, assigned exclusively to Bethany
@@ -569,6 +571,10 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                         setCampus('Hope Campus');
                         setEnrollmentType('Day');
                         setMonitorName('');
+                      } else if (val === 'Bloom and Archie' || val === 'Blooms and Archie') {
+                        setCampus('Hope Campus');
+                        setEnrollmentType('Day');
+                        setMonitorName('');
                       } else if (val === 'Kayil') {
                         setCampus('Spring Campus');
                         setMonitorName('');
@@ -587,12 +593,14 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                         <option value="Kayil">Kayil (Supervisor: Mrs. Irene Oryem)</option>
                         <option value="Doxa">Doxa (Supervisor: Mr. David Kimbugwe)</option>
                         <option value="Splendor">Splendor (Supervisor: Mr. Arthur Mutebi)</option>
+                        <option value="Bloom and Archie">Bloom and Archie (Supervisor: Mrs. Julie Mayanja)</option>
                       </>
                     ) : (
                       <>
                         <option value="Bethany">Bethany (Supervisor: Mrs. Eunice Mutebe • Monitor: Mrs. Joan Nandhego)</option>
                         <option value="Antioch">Antioch (Supervisor: Mrs. Doreen Mugaga)</option>
                         <option value="Azusa">Azusa (Supervisor: Mr. Shafic Musika)</option>
+                        <option value="Bloom and Archie">Bloom and Archie (Supervisor: Mrs. Julie Mayanja)</option>
                       </>
                     )}
                   </select>
@@ -617,6 +625,8 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                         ? 'Mrs. Doreen Mugaga'
                         : learningCenterId === 'Azusa'
                         ? 'Mr. Shafic Musika'
+                        : (learningCenterId === 'Bloom and Archie' || learningCenterId === 'Blooms and Archie')
+                        ? 'Mrs. Julie Mayanja'
                         : 'Assigned Supervisor'}
                     </span>
                     <span className="text-[10px] bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold shrink-0">
