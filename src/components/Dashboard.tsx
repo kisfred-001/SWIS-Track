@@ -18,8 +18,10 @@ import {
   ChevronRight,
   Sparkles,
   School,
+  Bed,
 } from 'lucide-react';
 import { Student, Staff, AttendanceLog } from '../types';
+import { getSchoolSchedule } from '../utils/schedule';
 
 interface DashboardProps {
   onOpenScanner: () => void;
@@ -95,7 +97,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         item.student.full_name.toLowerCase().includes(query) ||
         item.student.student_id.toLowerCase().includes(query) ||
         item.student.pin_code.includes(query) ||
-        item.student.supervisor_name.toLowerCase().includes(query);
+        (item.student.supervisor_name || '').toLowerCase().includes(query);
 
       const matchesClass =
         selectedClassroom === 'all' || item.student.learning_center_id === selectedClassroom;
@@ -156,8 +158,33 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return showAllRecords ? filteredStaff : filteredStaff.slice(0, 25);
   }, [filteredStaff, showAllRecords]);
 
+  const schoolSchedule = getSchoolSchedule();
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* School Schedule & Operating Hours Bar */}
+      <div className="bg-slate-900 text-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-xs text-xs">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-2 rounded-lg bg-[#8B1E2F] text-white">
+            <Clock className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-100 flex items-center space-x-2">
+              <span>School Schedule: Mon–Thu 7:00 AM – 4:30 PM • Fri 7:00 AM – 2:00 PM</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Springs Campus Boarding: Resident drop-off Monday 7:00 AM • Friday dismissal 2:00 PM
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2 self-end sm:self-auto">
+          <span className="text-[10px] sm:text-xs font-mono px-2.5 py-1 rounded-full font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+            {schoolSchedule.statusBadgeText}
+          </span>
+        </div>
+      </div>
+
       {/* Streamlined Core Stat Cards (Lightweight & Responsive 2x2 on Mobile, 4-col on Desktop) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* Students Present */}

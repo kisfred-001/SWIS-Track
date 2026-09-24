@@ -18,8 +18,10 @@ import {
   Info,
   LogOut,
   LogIn,
+  Bed,
 } from 'lucide-react';
 import { PickupDropoffParty, Student, Staff } from '../types';
+import { getSchoolSchedule, isEarlyDepartureTime, getBoardingScheduleStatus } from '../utils/schedule';
 
 interface ScannerModalProps {
   isOpen: boolean;
@@ -205,11 +207,10 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
         setPartyRelationship('Parent / Guardian');
         setPartyPhone(student.emergency_contact || '');
         setNotes('');
-        // Check if current time is before normal dismissal (e.g. before 3:00 PM / 15:00)
-        const curHour = new Date().getHours();
-        const isEarly = curHour < 15;
+        // Check if current time is before normal dismissal via official school schedule
+        const isEarly = isEarlyDepartureTime();
         setIsEarlyDeparture(isEarly);
-        setEarlyDepartureReason(isEarly ? 'Early dismissal authorized by parent' : '');
+        setEarlyDepartureReason(isEarly ? 'Early dismissal prior to official school close' : '');
       }
 
       setIdentifiedTarget({
@@ -309,7 +310,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
         {/* Modal Header */}
         <div className="bg-slate-900 text-white p-4 sm:p-5 flex justify-between items-center border-b border-slate-800">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-[#8B1E2F] flex items-center justify-center shadow-sm">
               <Camera className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -326,6 +327,19 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* School Schedule Operating Hours Banner */}
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between text-[11px] text-amber-900">
+          <div className="flex items-center space-x-1.5">
+            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="font-semibold">
+              School Hours: Mon–Thu 7:00 AM – 4:30 PM • Fri 7:00 AM – 2:00 PM
+            </span>
+          </div>
+          <span className="font-mono text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
+            {getSchoolSchedule().statusBadgeText}
+          </span>
         </div>
 
         {/* Success Alert Banner */}
@@ -419,6 +433,50 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
               {/* Specific Options for Student Scanning */}
               {identifiedTarget.targetType === 'Student' && (
                 <div className="space-y-3.5 text-xs">
+                  {/* Boarding Section Information Notice */}
+                  {identifiedTarget.student?.enrollment_type === 'Boarding' && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-purple-900 space-y-1">
+                      <div className="flex items-center space-x-1.5 font-bold">
+                        <Bed className="w-4 h-4 text-purple-600" />
+                        <span>Springs Campus Boarding Section (Mon–Fri)</span>
+                      </div>
+                      <p className="text-[11px] text-purple-800">
+                        {getBoardingScheduleStatus().message}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Registered Designated Pickup Quick Selection */}
+                  {identifiedTarget.student?.designated_pickups &&
+                    identifiedTarget.student.designated_pickups.length > 0 && (
+                      <div className="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1.5">
+                        <div className="font-semibold text-blue-900 text-[11px] flex items-center justify-between">
+                          <span>Security Registered Designated Persons:</span>
+                          <span className="text-[10px] bg-blue-200 text-blue-800 px-1.5 py-0.2 rounded font-mono font-bold">
+                            {identifiedTarget.student.designated_pickups.length} Registered
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {identifiedTarget.student.designated_pickups.map((p) => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setPartyType('Designate');
+                                setPartyName(p.name);
+                                setPartyRelationship(p.relationship);
+                                setPartyPhone(p.phone);
+                                setNotes(p.notes || '');
+                              }}
+                              className="px-2 py-1 bg-white border border-blue-300 hover:bg-blue-100 text-blue-900 rounded-lg text-[10px] font-medium transition shadow-2xs text-left"
+                            >
+                              <strong>{p.name}</strong> ({p.relationship})
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
                       {identifiedTarget.actionType === 'check_in'

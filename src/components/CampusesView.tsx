@@ -137,7 +137,7 @@ export const CampusesView: React.FC = () => {
         s.full_name.toLowerCase().includes(q) ||
         s.student_id.toLowerCase().includes(q) ||
         s.pin_code.includes(q) ||
-        s.supervisor_name.toLowerCase().includes(q);
+        (s.supervisor_name || '').toLowerCase().includes(q);
       return matchesCenter && matchesSearch;
     });
   }, [campusStudents, selectedCenterFilter, studentSearchQuery]);
@@ -400,11 +400,13 @@ export const CampusesView: React.FC = () => {
                   <div className="bg-slate-50 rounded-lg p-2.5 text-xs space-y-1.5 border border-slate-100">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">Supervisor:</span>
-                      <strong className="text-slate-800">{lc.supervisor_name}</strong>
+                      <strong className="text-slate-800">
+                        {lc.supervisor_name || <span className="text-slate-400 font-normal">None (Bethany only)</span>}
+                      </strong>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">Monitor:</span>
-                      <strong className="text-slate-800">{lc.monitor_name}</strong>
+                      <strong className="text-slate-800">{lc.monitor_name || '—'}</strong>
                     </div>
                   </div>
 
@@ -531,7 +533,9 @@ export const CampusesView: React.FC = () => {
 
                     <div className="text-[11px] text-slate-600 flex items-center justify-between pt-1 border-t border-slate-200/60">
                       <span>Center: <strong>{student.learning_center_id}</strong></span>
-                      <span className="text-slate-500">Sup: {student.supervisor_name}</span>
+                      <span className="text-slate-500">
+                        {student.supervisor_name ? `Sup: ${student.supervisor_name}` : 'No Sup.'}
+                      </span>
                     </div>
 
                     {canScanStudents && (
@@ -588,14 +592,21 @@ export const CampusesView: React.FC = () => {
                   return (
                     <tr key={student.student_id} className="hover:bg-slate-50 transition">
                       <td className="px-4 py-3">
-                        <div className="font-bold text-slate-900">{student.full_name}</div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-bold text-slate-900">{student.full_name}</span>
+                          {student.enrollment_type === 'Boarding' && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                              Boarding (Mon-Fri)
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-slate-500 font-mono">{student.student_id}</div>
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">
                         {student.learning_center_id}
                       </td>
                       <td className="px-4 py-3 text-slate-700">
-                        {student.supervisor_name}
+                        {student.supervisor_name || <span className="text-slate-400 italic">None</span>}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
                         {student.monitor_name}

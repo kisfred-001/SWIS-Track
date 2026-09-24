@@ -47,29 +47,39 @@ export const generateSingleCardPDF = (
   doc.roundedRect(1, 1, cardWidth - 2, cardHeight - 2, 2.5, 2.5, 'S');
 
   // Header Bar
+  // 1. Header background in School Maroon / Burgundy
   if (isStudent) {
-    doc.setFillColor(30, 58, 138); // blue-900
+    doc.setFillColor(139, 30, 47); // Maroon #8B1E2F
   } else {
-    doc.setFillColor(76, 29, 149); // purple-900
+    doc.setFillColor(88, 28, 135); // Purple #581C87
   }
   doc.rect(1, 1, cardWidth - 2, 11, 'F');
 
   // Header Text
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'bold');
-  doc.text('SWIS ACADEMY', 4, 5.5);
+  doc.setFontSize(6.8);
+  doc.setFont('times', 'bold');
+  doc.text('SPIRIT & WORD INT. SCHOOL', 4, 5);
 
-  doc.setFontSize(5.5);
-  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(4.8);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(254, 240, 138); // Yellow-200
+  doc.text('The Quick, The Sharp and The Clever', 4, 8);
+
+  doc.setFontSize(4.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
   doc.text(
-    isStudent ? 'OFFICIAL STUDENT ID' : 'FACULTY & STAFF CREDENTIAL',
+    isStudent
+      ? (student?.enrollment_type === 'Boarding' ? 'OFFICIAL ID • BOARDING SECTION' : 'OFFICIAL STUDENT ID')
+      : 'FACULTY & STAFF CREDENTIAL',
     4,
-    9.5
+    10.5
   );
 
-  doc.setFontSize(5.5);
-  doc.text('2026–2027', cardWidth - 5, 5.5, { align: 'right' });
+  doc.setFontSize(5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('2026–2027', cardWidth - 5, 5, { align: 'right' });
 
   // QR Code on Left
   const qrSize = 25;
@@ -146,7 +156,9 @@ export const generateSingleCardPDF = (
   doc.setFontSize(4.8);
   doc.setFont('helvetica', 'normal');
   const footerText = isStudent
-    ? `Supervisor: ${student!.supervisor_name || 'N/A'} • SWIS Track Premises Security`
+    ? (student?.supervisor_name
+        ? `Supervisor: ${student.supervisor_name} • SWIS Security`
+        : `SWIS Official ID • ${student?.campus || 'Spirit & Word'}`)
     : `Official Personnel • Property of SWIS Academy`;
   doc.text(footerText, cardWidth / 2, curY, { align: 'center' });
 
@@ -272,7 +284,7 @@ function drawSingleCardOnSheet(
 
   // 3. Top Banner
   if (isStudent) {
-    doc.setFillColor(30, 58, 138); // blue-900
+    doc.setFillColor(139, 30, 47); // Maroon #8B1E2F
   } else {
     doc.setFillColor(88, 28, 135); // purple-900
   }
@@ -280,20 +292,29 @@ function drawSingleCardOnSheet(
 
   // Header Text
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'bold');
-  doc.text('SWIS ACADEMY', x + 3.5, y + 6);
+  doc.setFontSize(7.5);
+  doc.setFont('times', 'bold');
+  doc.text('SPIRIT & WORD INT. SCHOOL', x + 3.5, y + 5.5);
 
-  doc.setFontSize(6);
-  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(254, 240, 138); // Yellow-200
+  doc.text('The Quick, The Sharp and The Clever', x + 3.5, y + 9);
+
+  doc.setFontSize(4.8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
   doc.text(
-    isStudent ? 'OFFICIAL STUDENT ID' : 'FACULTY & STAFF CREDENTIAL',
+    isStudent
+      ? (student?.enrollment_type === 'Boarding' ? 'OFFICIAL ID • BOARDING SECTION' : 'OFFICIAL STUDENT ID')
+      : 'FACULTY & STAFF CREDENTIAL',
     x + 3.5,
-    y + 10.5
+    y + 12
   );
 
-  doc.setFontSize(6);
-  doc.text('VALID 2026–2027', x + w - 3.5, y + 6, { align: 'right' });
+  doc.setFontSize(5.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('2026–2027', x + w - 3.5, y + 5.5, { align: 'right' });
 
   // 4. Content Area
   // Left Column: QR Code
@@ -373,7 +394,11 @@ function drawSingleCardOnSheet(
   doc.setTextColor(100, 116, 139);
 
   if (isStudent) {
-    doc.text(`Supervisor: ${student!.supervisor_name}`, x + 3.5, y + 60);
+    if (student?.supervisor_name) {
+      doc.text(`Supervisor: ${student.supervisor_name}`, x + 3.5, y + 60);
+    } else {
+      doc.text(`Monitor: ${student?.monitor_name || 'Assigned Staff'}`, x + 3.5, y + 60);
+    }
     doc.text(`Emergency: ${student!.emergency_contact || 'Campus Office'}`, x + 3.5, y + 64.5);
     doc.text(`Parents: ${student!.parent_names || 'N/A'}`, x + 3.5, y + 69);
   } else {

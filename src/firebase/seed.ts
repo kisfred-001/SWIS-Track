@@ -78,31 +78,7 @@ export const INITIAL_STAFF: Staff[] = [
     qr_code_url: 'STF-006',
     created_at: new Date().toISOString(),
   },
-  // Supervisors
-  {
-    staff_id: 'STF-101',
-    pin_code: '201',
-    full_name: 'Mrs. Irene Oryem',
-    role: 'Supervisor',
-    campus: 'Spring Campus',
-    learning_center_id: 'Kayil',
-    email: 'irene.oryem@swis.ac.ug',
-    phone: '+256 772 201 101',
-    qr_code_url: 'STF-101',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-102',
-    pin_code: '202',
-    full_name: 'Mr. Arthur Mutebi',
-    role: 'Supervisor',
-    campus: 'Spring Campus',
-    learning_center_id: 'Splendor',
-    email: 'arthur.mutebi@swis.ac.ug',
-    phone: '+256 772 202 102',
-    qr_code_url: 'STF-102',
-    created_at: new Date().toISOString(),
-  },
+  // Supervisors (ONLY Bethany Learning Center has a supervisor)
   {
     staff_id: 'STF-103',
     pin_code: '203',
@@ -115,11 +91,36 @@ export const INITIAL_STAFF: Staff[] = [
     qr_code_url: 'STF-103',
     created_at: new Date().toISOString(),
   },
+  // Academic Monitors & Learning Center Staff
+  {
+    staff_id: 'STF-101',
+    pin_code: '201',
+    full_name: 'Mrs. Irene Oryem',
+    role: 'Monitor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Kayil',
+    email: 'irene.oryem@swis.ac.ug',
+    phone: '+256 772 201 101',
+    qr_code_url: 'STF-101',
+    created_at: new Date().toISOString(),
+  },
+  {
+    staff_id: 'STF-102',
+    pin_code: '202',
+    full_name: 'Mr. Arthur Mutebi',
+    role: 'Monitor',
+    campus: 'Spring Campus',
+    learning_center_id: 'Splendor',
+    email: 'arthur.mutebi@swis.ac.ug',
+    phone: '+256 772 202 102',
+    qr_code_url: 'STF-102',
+    created_at: new Date().toISOString(),
+  },
   {
     staff_id: 'STF-104',
     pin_code: '204',
     full_name: 'Mr. Shafic Musika',
-    role: 'Supervisor',
+    role: 'Monitor',
     campus: 'Hope Campus',
     learning_center_id: 'Azusa',
     email: 'shafic.musika@swis.ac.ug',
@@ -131,7 +132,7 @@ export const INITIAL_STAFF: Staff[] = [
     staff_id: 'STF-105',
     pin_code: '205',
     full_name: 'Mrs. Doreen Mugaga',
-    role: 'Supervisor',
+    role: 'Monitor',
     campus: 'Hope Campus',
     learning_center_id: 'Antioch',
     email: 'doreen.mugaga@swis.ac.ug',
@@ -143,7 +144,7 @@ export const INITIAL_STAFF: Staff[] = [
     staff_id: 'STF-106',
     pin_code: '206',
     full_name: 'Mr. David Kimbugwe',
-    role: 'Supervisor',
+    role: 'Monitor',
     campus: 'Spring Campus',
     learning_center_id: 'Doxa',
     email: 'david.kimbugwe@swis.ac.ug',
@@ -155,7 +156,7 @@ export const INITIAL_STAFF: Staff[] = [
     staff_id: 'STF-107',
     pin_code: '207',
     full_name: 'Mrs. Juliet Mayanja',
-    role: 'Supervisor',
+    role: 'Monitor',
     campus: 'Hope Campus',
     learning_center_id: 'Blooms and Archie',
     email: 'juliet.mayanja@swis.ac.ug',
@@ -286,7 +287,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'spring-kayil',
     name: 'Kayil',
     campus: 'Spring Campus',
-    supervisor_name: 'Mrs. Irene Oryem',
+    supervisor_name: '',
     monitor_name: 'Ms. Gloria Akello',
     room_number: 'Room S-101',
     capacity: 25,
@@ -296,7 +297,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'spring-splendor',
     name: 'Splendor',
     campus: 'Spring Campus',
-    supervisor_name: 'Mr. Arthur Mutebi',
+    supervisor_name: '',
     monitor_name: 'Mr. Brian Ochieng',
     room_number: 'Room S-102',
     capacity: 25,
@@ -306,7 +307,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'spring-doxa',
     name: 'Doxa',
     campus: 'Spring Campus',
-    supervisor_name: 'Mr. David Kimbugwe',
+    supervisor_name: '',
     monitor_name: 'Mr. Kevin Tumusiime',
     room_number: 'Room S-103',
     capacity: 25,
@@ -320,13 +321,13 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     monitor_name: 'Ms. Faith Nabirye',
     room_number: 'Room S-104',
     capacity: 20,
-    description: 'Spring Campus Foundation & PACE Center',
+    description: 'Spring Campus Foundation & PACE Center (Supervised by Mrs. Eunice Mutebe)',
   },
   {
     id: 'spring-antioch',
     name: 'Antioch',
     campus: 'Spring Campus',
-    supervisor_name: 'Mrs. Doreen Mugaga',
+    supervisor_name: '',
     monitor_name: 'Ms. Joy Kemigisha',
     room_number: 'Room S-105',
     capacity: 20,
@@ -340,13 +341,13 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     monitor_name: 'Ms. Faith Nabirye',
     room_number: 'Room H-101',
     capacity: 25,
-    description: 'Hope Campus Foundation & Primary PACE Center',
+    description: 'Hope Campus Foundation & Primary PACE Center (Supervised by Mrs. Eunice Mutebe)',
   },
   {
     id: 'hope-azusa',
     name: 'Azusa',
     campus: 'Hope Campus',
-    supervisor_name: 'Mr. Shafic Musika',
+    supervisor_name: '',
     monitor_name: 'Mr. Paul Ssekandi',
     room_number: 'Room H-102',
     capacity: 25,
@@ -356,7 +357,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'hope-antioch',
     name: 'Antioch',
     campus: 'Hope Campus',
-    supervisor_name: 'Mrs. Doreen Mugaga',
+    supervisor_name: '',
     monitor_name: 'Ms. Joy Kemigisha',
     room_number: 'Room H-103',
     capacity: 25,
@@ -366,7 +367,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'hope-blooms',
     name: 'Blooms and Archie',
     campus: 'Hope Campus',
-    supervisor_name: 'Mrs. Juliet Mayanja',
+    supervisor_name: '',
     monitor_name: 'Ms. Patricia Namubiru',
     room_number: 'Room H-104',
     capacity: 20,
@@ -376,7 +377,7 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'hope-splendor',
     name: 'Splendor',
     campus: 'Hope Campus',
-    supervisor_name: 'Mr. Arthur Mutebi',
+    supervisor_name: '',
     monitor_name: 'Mr. Brian Ochieng',
     room_number: 'Room H-105',
     capacity: 20,
@@ -479,17 +480,64 @@ export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => 
   const student_id = `STU-${num}`;
   // Deterministic 4-digit PIN for each student
   const pin_code = String(1100 + ((index * 37 + 13) % 8800)).padStart(4, '0');
+  const lastName = row.name.split(' ').slice(-1)[0];
+  const fatherPhone = `+256 772 ${String(100 + index).padStart(3, '0')} ${String(200 + index).padStart(3, '0')}`;
+  const motherPhone = `+256 701 ${String(150 + index).padStart(3, '0')} ${String(250 + index).padStart(3, '0')}`;
+
+  // Springs Campus boarding option: some students are Boarding, others Day
+  const isSprings = row.campus === 'Spring Campus';
+  const enrollment_type: 'Day' | 'Boarding' = isSprings && (index % 3 === 0 || index % 5 === 0) ? 'Boarding' : 'Day';
+
+  // Bethany Learning Center has a supervisor and not any other learning center
+  const supervisor_name = row.center === 'Bethany' ? 'Mrs. Eunice Mutebe' : '';
+
+  // Sample designated drop-off / pick-up persons other than parents
+  const designated_pickups = [
+    {
+      id: `des-${num}-1`,
+      name: `${lastName} Family Driver (Robert)`,
+      relationship: 'School Van / Family Driver',
+      phone: `+256 752 ${String(300 + index).padStart(3, '0')} 111`,
+      id_number: `NIN-CM${String(88000 + index)}`,
+      notes: 'Authorized for daily drop-off & pick-up. Car Reg UBD 412X.',
+    },
+    ...(index % 2 === 0
+      ? [
+          {
+            id: `des-${num}-2`,
+            name: `Aunt Sarah ${lastName}`,
+            relationship: 'Aunt / Guardian',
+            phone: `+256 782 ${String(400 + index).padStart(3, '0')} 222`,
+            id_number: `NIN-CF${String(99000 + index)}`,
+            notes: 'Authorized emergency alternate pickup.',
+          },
+        ]
+      : []),
+  ];
+
   return {
     student_id,
     pin_code,
     full_name: row.name,
     campus: row.campus,
     learning_center_id: row.center,
-    supervisor_name: row.supervisor,
+    supervisor_name,
     monitor_name: getMonitorForCenter(row.campus, row.center),
     grade: `${row.campus.split(' ')[0]} • ${row.center}`,
-    parent_names: `${row.name.split(' ').slice(-1)[0]} Family`,
-    emergency_contact: `+256 700 ${String(100 + index).padStart(3, '0')} ${String(200 + index).padStart(3, '0')}`,
+    enrollment_type,
+    parent_names: `Mr. David & Mrs. Grace ${lastName}`,
+    emergency_contact: fatherPhone,
+    parent_info: {
+      father_name: `Mr. David ${lastName}`,
+      father_phone: fatherPhone,
+      father_email: `david.${lastName.toLowerCase()}@example.com`,
+      mother_name: `Mrs. Grace ${lastName}`,
+      mother_phone: motherPhone,
+      mother_email: `grace.${lastName.toLowerCase()}@example.com`,
+      home_address: `Plot ${index + 12}, Kampala Road, Uganda`,
+      emergency_phone: fatherPhone,
+    },
+    designated_pickups,
     qr_code_url: student_id,
     created_at: new Date().toISOString(),
   };

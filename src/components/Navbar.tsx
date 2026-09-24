@@ -20,6 +20,8 @@ import {
   X,
 } from 'lucide-react';
 import { Staff } from '../types';
+import { SchoolLogo } from './SchoolLogo';
+import { getSchoolSchedule } from '../utils/schedule';
 
 interface NavbarProps {
   onOpenScanner: () => void;
@@ -112,21 +114,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center justify-between h-16">
             {/* Brand Logo & Name */}
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
-                <School className="w-6 h-6 text-white" />
-              </div>
+              <SchoolLogo variant="emblem" size="md" className="bg-white p-1 rounded-xl shadow-md shrink-0" />
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-                    SWIS Track
+                  <span className="font-bold text-base sm:text-lg tracking-tight text-white font-serif">
+                    Spirit &amp; Word
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
                     Live Campus
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 hidden sm:block">
-                  School Attendance Management System
+                <p className="text-[10px] text-amber-300/90 italic hidden sm:block">
+                  The Quick, The Sharp and The Clever
                 </p>
               </div>
             </div>

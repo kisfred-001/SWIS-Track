@@ -28,6 +28,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { sound } from '../utils/sound';
+import { SchoolLogo } from './SchoolLogo';
+import { Bed, Sun, User } from 'lucide-react';
 
 interface IDCardGeneratorModalProps {
   isOpen: boolean;
@@ -454,48 +456,75 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
             <div className="flex-1 bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-300/80 shadow-inner min-h-[300px]">
               {previewItem ? (
                 <div className="w-full max-w-sm bg-white rounded-2xl border-2 border-slate-300 shadow-xl overflow-hidden transition-all duration-200 transform hover:scale-[1.01]">
-                  {/* Card Header */}
+                  {/* Card Header with Official School Logo */}
                   <div
                     className={`p-3 text-white flex items-center justify-between ${
                       previewItem.type === 'Student'
-                        ? 'bg-gradient-to-r from-blue-800 via-blue-900 to-indigo-900'
-                        : 'bg-gradient-to-r from-purple-800 via-indigo-900 to-slate-900'
+                        ? 'bg-[#8B1E2F]'
+                        : 'bg-purple-900'
                     }`}
                   >
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">
-                        SWIS Academy
-                      </p>
-                      <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                        {previewItem.type === 'Student'
-                          ? 'Official Student ID'
-                          : 'Faculty & Staff Credential'}
-                      </h4>
+                    <div className="flex items-center space-x-2.5">
+                      <SchoolLogo variant="emblem" size="sm" className="bg-white p-0.5 rounded shadow-xs" />
+                      <div>
+                        <h4 className="font-serif font-black text-xs uppercase tracking-wide leading-none">
+                          SPIRIT &amp; WORD INT. SCHOOL
+                        </h4>
+                        <p className="text-[8.5px] italic text-amber-200 mt-0.5 font-sans">
+                          The Quick, The Sharp and The Clever
+                        </p>
+                      </div>
                     </div>
                     <span className="text-[9px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">
-                      2026–2027
+                      2026–27
                     </span>
+                  </div>
+
+                  {/* Card Sub-banner */}
+                  <div className="bg-slate-900 text-white px-3.5 py-1 text-[10px] font-bold flex items-center justify-between">
+                    <span className="uppercase tracking-wider">
+                      {previewItem.type === 'Student'
+                        ? (previewItem.item as Student).enrollment_type === 'Boarding'
+                          ? 'BOARDING SECTION STUDENT ID'
+                          : 'OFFICIAL STUDENT ID'
+                        : 'FACULTY & STAFF CREDENTIAL'}
+                    </span>
+                    {previewItem.type === 'Student' && (previewItem.item as Student).enrollment_type === 'Boarding' && (
+                      <span className="bg-purple-600 text-white text-[8.5px] px-1.5 py-0.2 rounded font-bold">
+                        Mon-Fri
+                      </span>
+                    )}
                   </div>
 
                   {/* Card Main Body */}
                   <div className="p-4 space-y-3.5">
                     <div className="flex items-start space-x-3.5">
-                      {/* Live QR Canvas Display */}
-                      <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-sm shrink-0 flex flex-col items-center">
-                        <QRCodeCanvas
-                          id={`preview-qr-canvas`}
-                          value={
-                            previewItem.type === 'Student'
-                              ? (previewItem.item as Student).student_id
-                              : (previewItem.item as Staff).staff_id
-                          }
-                          size={110}
-                          level="H"
-                          includeMargin={false}
-                        />
-                        <span className="text-[8px] font-mono text-slate-400 mt-1 uppercase font-semibold">
-                          Scan at Kiosk
-                        </span>
+                      {/* Live QR Canvas Display and Optional Photo */}
+                      <div className="flex flex-col items-center space-y-2 shrink-0">
+                        {previewItem.type === 'Student' && (previewItem.item as Student).photo_url ? (
+                          <img
+                            src={(previewItem.item as Student).photo_url}
+                            alt={previewItem.item.full_name}
+                            className="w-16 h-16 rounded-xl object-cover border-2 border-slate-300 shadow-xs"
+                          />
+                        ) : null}
+
+                        <div className="p-1.5 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                          <QRCodeCanvas
+                            id={`preview-qr-canvas`}
+                            value={
+                              previewItem.type === 'Student'
+                                ? (previewItem.item as Student).student_id
+                                : (previewItem.item as Staff).staff_id
+                            }
+                            size={90}
+                            level="H"
+                            includeMargin={false}
+                          />
+                          <span className="text-[8px] font-mono text-slate-400 mt-1 uppercase font-semibold">
+                            Scan at Kiosk
+                          </span>
+                        </div>
                       </div>
 
                       {/* Credentials */}
@@ -503,7 +532,7 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
                         <h3 className="font-extrabold text-sm text-slate-900 leading-snug">
                           {previewItem.item.full_name}
                         </h3>
-                        <p className="text-xs font-bold text-blue-700">
+                        <p className="text-xs font-bold text-[#8B1E2F]">
                           {previewItem.type === 'Student'
                             ? (previewItem.item as Student).grade
                             : (previewItem.item as Staff).role}
@@ -530,7 +559,7 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
                             <span className="text-[8px] uppercase tracking-wider text-slate-400 font-bold block">
                               Security PIN
                             </span>
-                            <span className="font-mono font-extrabold text-xs text-blue-700">
+                            <span className="font-mono font-extrabold text-xs text-[#8B1E2F]">
                               {previewItem.item.pin_code}
                             </span>
                           </div>
@@ -543,7 +572,11 @@ export const IDCardGeneratorModal: React.FC<IDCardGeneratorModalProps> = ({
                       {previewItem.type === 'Student' ? (
                         <>
                           <span>
-                            Supervisor: <strong>{(previewItem.item as Student).supervisor_name}</strong>
+                            {(previewItem.item as Student).supervisor_name ? (
+                              <>Supervisor: <strong>{(previewItem.item as Student).supervisor_name}</strong></>
+                            ) : (
+                              <>Monitor: <strong>{(previewItem.item as Student).monitor_name || 'Staff'}</strong></>
+                            )}
                           </span>
                           <span className="truncate max-w-[120px]">
                             {(previewItem.item as Student).emergency_contact}

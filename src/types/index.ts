@@ -28,11 +28,32 @@ export interface LearningCenter {
   id: string;
   name: string;
   campus: string; // 'Spring Campus' | 'Hope Campus'
-  supervisor_name: string;
+  supervisor_name?: string; // ONLY Bethany has a supervisor
   monitor_name: string;
   room_number?: string;
   capacity?: number;
   description?: string;
+}
+
+export interface DesignatedPickupPerson {
+  id: string;
+  name: string;
+  relationship: string; // e.g., 'Driver', 'Aunt', 'Uncle', 'Grandparent', 'Family Friend', 'Guardian'
+  phone: string;
+  id_number?: string; // National ID, Driver's License or Passport #
+  notes?: string;
+  photo_url?: string;
+}
+
+export interface ParentContactInfo {
+  father_name?: string;
+  father_phone?: string;
+  father_email?: string;
+  mother_name?: string;
+  mother_phone?: string;
+  mother_email?: string;
+  home_address?: string;
+  emergency_phone?: string;
 }
 
 export interface Staff {
@@ -57,13 +78,18 @@ export interface Student {
   full_name: string;
   campus: string; // 'Spring Campus' | 'Hope Campus'
   learning_center_id: string; // Classroom or Center e.g. Kayil, Splendor, Doxa, Bethany, Antioch, Azusa, Blooms and Archie
-  supervisor_name: string; // Main teacher / supervisor
-  monitor_name: string; // Assistant teacher / monitor
+  supervisor_name?: string; // ONLY for Bethany Learning Center ('Mrs. Eunice Mutebe')
+  monitor_name?: string; // Assistant teacher / monitor
   grade?: string;
+  enrollment_type?: 'Day' | 'Boarding'; // Springs Campus boarding option (Mon-Fri)
+  photo_url?: string; // Uploaded profile picture
+  parent_info?: ParentContactInfo;
   parent_names?: string;
   emergency_contact?: string;
+  designated_pickups?: DesignatedPickupPerson[]; // Authorized drop-off / pick-up persons other than parents
   qr_code_url?: string;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface PickupDropoffParty {

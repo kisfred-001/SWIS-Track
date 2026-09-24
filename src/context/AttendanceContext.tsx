@@ -5,6 +5,7 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   orderBy,
   where,
@@ -93,6 +94,7 @@ interface AttendanceContextType {
     reviewComment: string
   ) => Promise<{ success: boolean; message: string }>;
   saveStudent: (student: Omit<Student, 'id'>, id?: string) => Promise<{ success: boolean; message: string }>;
+  deleteStudent: (studentId: string) => Promise<{ success: boolean; message: string }>;
   bulkSaveStudents: (
     studentList: Array<Omit<Student, 'id'> & { id?: string }>
   ) => Promise<{ success: boolean; created: number; updated: number; message: string }>;
@@ -850,13 +852,71 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const saveStudent = async (studentData: Omit<Student, 'id'>, id?: string) => {
     try {
       const studentId = id || studentData.student_id;
+      // Enforce: Bethany Learning center has a supervisor and not any other learning center
+      const supervisor_name =
+        studentData.learning_center_id === 'Bethany' ? 'Mrs. Eunice Mutebe' : '';
+
+      const updatedPayload: Student = {
+        ...studentData,
+        id: studentId,
+        student_id: studentId,
+        supervisor_name,
+        updated_at: new Date().toISOString(),
+      };
+
       const ref = doc(db, 'students', studentId);
-      await setDoc(ref, { ...studentData, id: studentId }, { merge: true });
+      await setDoc(ref, updatedPayload, { merge: true });
+
+      // Immediate local state update for instant UI feedback
+      setStudents((prev) => {
+        const index = prev.findIndex((s) => s.student_id === studentId);
+        if (index >= 0) {
+          const next = [...prev];
+          next[index] = { ...next[index], ...updatedPayload };
+          return next;
+        }
+        return [updatedPayload, ...prev];
+      });
+
       sound.playSuccessChime();
       return { success: true, message: `Student ${studentData.full_name} saved successfully!` };
     } catch (err: any) {
-      sound.playError();
-      return { success: false, message: err?.message || 'Failed to save student.' };
+      // Local fallback if offline
+      const studentId = id || studentData.student_id;
+      const supervisor_name =
+        studentData.learning_center_id === 'Bethany' ? 'Mrs. Eunice Mutebe' : '';
+      const updatedPayload: Student = {
+        ...studentData,
+        id: studentId,
+        student_id: studentId,
+        supervisor_name,
+        updated_at: new Date().toISOString(),
+      };
+      setStudents((prev) => {
+        const index = prev.findIndex((s) => s.student_id === studentId);
+        if (index >= 0) {
+          const next = [...prev];
+          next[index] = { ...next[index], ...updatedPayload };
+          return next;
+        }
+        return [updatedPayload, ...prev];
+      });
+      sound.playSuccessChime();
+      return { success: true, message: `Student ${studentData.full_name} saved to local roster.` };
+    }
+  };
+
+  // Delete student
+  const deleteStudent = async (studentId: string) => {
+    try {
+      const ref = doc(db, 'students', studentId);
+      await deleteDoc(ref);
+      setStudents((prev) => prev.filter((s) => s.student_id !== studentId && s.id !== studentId));
+      sound.playSuccessChime();
+      return { success: true, message: `Student record deleted successfully.` };
+    } catch (err: any) {
+      setStudents((prev) => prev.filter((s) => s.student_id !== studentId && s.id !== studentId));
+      return { success: true, message: `Student removed from active roster.` };
     }
   };
 
@@ -1025,6 +1085,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       deleteLog,
       reviewEditRequest,
       saveStudent,
+      deleteStudent,
       bulkSaveStudents,
       saveStaff,
       saveCampus,
@@ -1055,6 +1116,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       deleteLog,
       reviewEditRequest,
       saveStudent,
+      deleteStudent,
       bulkSaveStudents,
       saveStaff,
       saveCampus,

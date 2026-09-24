@@ -543,7 +543,7 @@ export const AdminSetupView: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setEditingLC(lc);
-                            setLcSupervisor(lc.supervisor_name);
+                            setLcSupervisor(lc.supervisor_name || '');
                             setLcMonitor(lc.monitor_name);
                             setLcRoom(lc.room_number || '');
                             setLcCapacity(lc.capacity || 25);

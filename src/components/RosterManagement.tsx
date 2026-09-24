@@ -11,23 +11,31 @@ import {
   CheckCircle2,
   AlertCircle,
   Shield,
-  Sparkles,
   Phone,
   UserPlus,
   Briefcase,
   KeyRound,
   FileSpreadsheet,
-  Upload,
+  Bed,
+  Sun,
+  Edit,
+  Eye,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { Student, Staff, UserRole } from '../types';
 import { BadgeModal } from './BadgeModal';
 import { BulkUploadModal } from './BulkUploadModal';
 import { IDCardGeneratorModal } from './IDCardGeneratorModal';
+import { StudentEditModal } from './StudentEditModal';
+import { StudentProfileModal } from './StudentProfileModal';
+import { SchoolLogo } from './SchoolLogo';
 
 export const RosterManagement: React.FC = () => {
   const {
     students,
     saveStudent,
+    deleteStudent,
     saveStaff,
     campuses,
     learningCenters,
@@ -39,6 +47,7 @@ export const RosterManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'students' | 'staff'>('students');
   const [searchQuery, setSearchQuery] = useState('');
   const [centerFilter, setCenterFilter] = useState('all');
+  const [sectionFilter, setSectionFilter] = useState<'all' | 'Day' | 'Boarding'>('all');
 
   // Bulk Upload Modal
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
@@ -50,23 +59,18 @@ export const RosterManagement: React.FC = () => {
   // Badge Modal
   const [badgeTarget, setBadgeTarget] = useState<{ item: Student | Staff; type: 'Student' | 'Staff' } | null>(null);
 
-  // Add Student Modal
-  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
-  const [studentName, setStudentName] = useState('');
-  const [studentCampus, setStudentCampus] = useState('Spring Campus');
-  const [studentGrade, setStudentGrade] = useState('Grade 4');
-  const [studentCenter, setStudentCenter] = useState('Kayil');
-  const [studentSupervisor, setStudentSupervisor] = useState('Mrs. Rachel');
-  const [studentMonitor, setStudentMonitor] = useState('Mr. Benson');
-  const [studentParents, setStudentParents] = useState('');
-  const [studentEmergency, setStudentEmergency] = useState('');
-  const [studentPin, setStudentPin] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
+  // Student Edit / Add Modal
+  const [isStudentEditOpen, setIsStudentEditOpen] = useState(false);
+  const [studentToEdit, setStudentToEdit] = useState<Student | null>(null);
+
+  // Student Profile Viewer Modal
+  const [selectedStudentProfile, setSelectedStudentProfile] = useState<Student | null>(null);
 
   // Add Staff Modal (ICCE Coordinator Super User)
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [staffName, setStaffName] = useState('');
   const [staffEmail, setStaffEmail] = useState('');
-  const [staffRole, setStaffRole] = useState<UserRole>('Supervisor');
+  const [staffRole, setStaffRole] = useState<UserRole>('Monitor');
   const [staffCenter, setStaffCenter] = useState('Kayil');
   const [staffPhone, setStaffPhone] = useState('');
   const [staffPin, setStaffPin] = useState(() => Math.floor(100 + Math.random() * 900).toString());
@@ -92,22 +96,29 @@ export const RosterManagement: React.FC = () => {
         selectedCampus === 'All Campuses' || s.campus === selectedCampus;
       const matchesCenter =
         centerFilter === 'all' || s.learning_center_id === centerFilter;
+      const matchesSection =
+        sectionFilter === 'all' ||
+        (sectionFilter === 'Boarding' ? s.enrollment_type === 'Boarding' : s.enrollment_type !== 'Boarding');
+
       const matchesSearch =
         !q ||
         s.full_name.toLowerCase().includes(q) ||
         s.student_id.toLowerCase().includes(q) ||
         s.pin_code.includes(q) ||
         (s.grade || '').toLowerCase().includes(q) ||
-        s.supervisor_name.toLowerCase().includes(q);
+        (s.supervisor_name || '').toLowerCase().includes(q) ||
+        (s.parent_names || '').toLowerCase().includes(q) ||
+        (s.emergency_contact || '').includes(q);
 
       return (
         matchesCampus &&
         matchesCenter &&
+        matchesSection &&
         matchesSearch &&
         (teacherCenter ? s.learning_center_id === teacherCenter : true)
       );
     });
-  }, [students, selectedCampus, centerFilter, searchQuery, teacherCenter]);
+  }, [students, selectedCampus, centerFilter, sectionFilter, searchQuery, teacherCenter]);
 
   // Filter staff (memoized)
   const filteredStaff = useMemo(() => {
@@ -122,42 +133,6 @@ export const RosterManagement: React.FC = () => {
       return matchesSearch;
     });
   }, [allStaff, searchQuery]);
-
-  const handleCreateStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!studentName.trim()) {
-      setFormMsg({ type: 'error', text: 'Student full name is required.' });
-      return;
-    }
-
-    const newId = `STU-${Date.now().toString().slice(-4)}`;
-    const res = await saveStudent({
-      student_id: newId,
-      pin_code: studentPin,
-      full_name: studentName.trim(),
-      campus: studentCampus || 'Spring Campus',
-      grade: studentGrade,
-      learning_center_id: studentCenter,
-      supervisor_name: studentSupervisor,
-      monitor_name: studentMonitor,
-      parent_names: studentParents.trim() || 'Parent / Guardian',
-      emergency_contact: studentEmergency.trim() || '(555) 000-0000',
-      qr_code_url: newId,
-      created_at: new Date().toISOString(),
-    });
-
-    if (res.success) {
-      setFormMsg({ type: 'success', text: `Student ${studentName} registered with PIN ${studentPin}!` });
-      setIsAddStudentOpen(false);
-      setStudentName('');
-      setStudentParents('');
-      setStudentEmergency('');
-      setStudentPin(Math.floor(1000 + Math.random() * 9000).toString());
-      setTimeout(() => setFormMsg(null), 5000);
-    } else {
-      setFormMsg({ type: 'error', text: res.message });
-    }
-  };
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +149,7 @@ export const RosterManagement: React.FC = () => {
       email: staffEmail.trim(),
       role: staffRole,
       learning_center_id: staffCenter,
-      phone: staffPhone.trim() || '(555) 000-0000',
+      phone: staffPhone.trim() || '+256 700 000 000',
       qr_code_url: newStaffId,
       created_at: new Date().toISOString(),
     });
@@ -215,17 +190,20 @@ export const RosterManagement: React.FC = () => {
       {/* Main Roster Container */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm space-y-4">
         {/* Header Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div>
-            <h2 className="font-bold text-base text-slate-900 flex items-center space-x-2">
-              <span>School Roster & ID Badges</span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Manage student enrollment and faculty profiles, generate digital QR badges and PIN credentials.
-            </p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center space-x-3">
+            <SchoolLogo variant="emblem" size="md" className="hidden sm:inline-flex" />
+            <div>
+              <h2 className="font-bold text-base text-slate-900 flex items-center space-x-2">
+                <span>Student Information &amp; Faculty Roster</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Manage student profiles, photographs, parent contacts, designated pickups, and ID credentials.
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Tab switch */}
             <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
               <button
@@ -252,7 +230,7 @@ export const RosterManagement: React.FC = () => {
               </button>
             </div>
 
-            {/* Action buttons based on RBAC */}
+            {/* Action buttons based on active tab */}
             {activeTab === 'students' ? (
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -262,7 +240,7 @@ export const RosterManagement: React.FC = () => {
                     setIsIDGeneratorOpen(true);
                   }}
                   className="inline-flex items-center space-x-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-lg text-xs font-semibold shadow-2xs transition"
-                  title="Generate printable student ID cards and PDF sheets"
+                  title="Generate printable student ID cards with official logo"
                 >
                   <QrCode className="w-3.5 h-3.5 text-indigo-600" />
                   <span>Print ID Cards (PDF)</span>
@@ -272,7 +250,7 @@ export const RosterManagement: React.FC = () => {
                   type="button"
                   onClick={() => setIsBulkUploadOpen(true)}
                   className="inline-flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-semibold shadow-2xs transition"
-                  title="Bulk upload student CSV for semester rollovers or class updates"
+                  title="Bulk upload student CSV"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600" />
                   <span>Bulk Import CSV</span>
@@ -281,13 +259,13 @@ export const RosterManagement: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setStudentPin(Math.floor(1000 + Math.random() * 9000).toString());
-                    setIsAddStudentOpen(true);
+                    setStudentToEdit(null);
+                    setIsStudentEditOpen(true);
                   }}
-                  className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#8B1E2F] hover:bg-[#6D1422] text-white rounded-lg text-xs font-bold shadow-sm transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Student</span>
+                  <span>Enroll New Student</span>
                 </button>
               </div>
             ) : (
@@ -299,7 +277,6 @@ export const RosterManagement: React.FC = () => {
                     setIsIDGeneratorOpen(true);
                   }}
                   className="inline-flex items-center space-x-1.5 px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg text-xs font-semibold shadow-2xs transition"
-                  title="Generate printable faculty & staff ID credential cards and PDF sheets"
                 >
                   <QrCode className="w-3.5 h-3.5 text-purple-600" />
                   <span>Print Credentials (PDF)</span>
@@ -335,7 +312,7 @@ export const RosterManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Filters Toolbar */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -345,134 +322,331 @@ export const RosterManagement: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 activeTab === 'students'
-                  ? 'Search student name, PIN, grade, ID...'
+                  ? 'Search student name, ID, PIN, parent, emergency phone...'
                   : 'Search staff name, role, ID, PIN...'
               }
-              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none"
             />
           </div>
 
           {activeTab === 'students' && (
-            <select
-              value={selectedCampus}
-              onChange={(e) => setSelectedCampus(e.target.value)}
-              className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
-              <option value="All Campuses">All Campuses</option>
-              {campuses.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          )}
+            <>
+              {/* Campus Selector */}
+              <select
+                value={selectedCampus}
+                onChange={(e) => setSelectedCampus(e.target.value)}
+                className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-bold focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none"
+              >
+                <option value="All Campuses">All Campuses</option>
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
 
-          {activeTab === 'students' && !teacherCenter && (
-            <select
-              value={centerFilter}
-              onChange={(e) => setCenterFilter(e.target.value)}
-              className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
-              <option value="all">All Learning Centers</option>
-              {centers.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              {/* Day vs Boarding Section Filter */}
+              <select
+                value={sectionFilter}
+                onChange={(e) => setSectionFilter(e.target.value as any)}
+                className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none"
+              >
+                <option value="all">All Sections (Day &amp; Boarding)</option>
+                <option value="Day">Day Students Only</option>
+                <option value="Boarding">Boarding Section Only (Springs)</option>
+              </select>
+
+              {/* Learning Center Filter */}
+              {!teacherCenter && (
+                <select
+                  value={centerFilter}
+                  onChange={(e) => setCenterFilter(e.target.value)}
+                  className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-700 focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none"
+                >
+                  <option value="all">All Learning Centers</option>
+                  {centers.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </>
           )}
         </div>
 
-        {/* Students Table */}
+        {/* Students Roster View */}
         {activeTab === 'students' && (
-          <div className="divide-y divide-slate-100 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-                  <th className="py-2.5 px-3">Student Name & ID</th>
-                  <th className="py-2.5 px-3">Grade & Center</th>
-                  <th className="py-2.5 px-3">4-Digit PIN</th>
-                  <th className="py-2.5 px-3">Class Supervisor</th>
-                  <th className="py-2.5 px-3">Parent & Contact</th>
-                  <th className="py-2.5 px-3 text-right">Badge & QR</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400">
-                      No students found.
-                    </td>
+          <div className="space-y-3">
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto border border-slate-200 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                    <th className="py-2.5 px-3">Student &amp; Photo</th>
+                    <th className="py-2.5 px-3">Campus &amp; Section</th>
+                    <th className="py-2.5 px-3">Learning Center</th>
+                    <th className="py-2.5 px-3">Supervisor</th>
+                    <th className="py-2.5 px-3">Parents &amp; Pickups</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
-                ) : (
-                  filteredStudents.map((s) => (
-                    <tr key={s.student_id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3 px-3">
-                        <div className="font-bold text-slate-900">{s.full_name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">
-                          ID: {s.student_id}
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        No students matching current search or filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStudents.map((s) => {
+                      const isBethany = s.learning_center_id === 'Bethany';
+                      const isBoarding = s.enrollment_type === 'Boarding';
+                      const pickupCount = s.designated_pickups?.length || 0;
+
+                      return (
+                        <tr key={s.student_id} className="hover:bg-slate-50/80 transition">
+                          <td className="py-3 px-3">
+                            <div className="flex items-center space-x-2.5">
+                              {s.photo_url ? (
+                                <img
+                                  src={s.photo_url}
+                                  alt={s.full_name}
+                                  className="w-9 h-9 rounded-xl object-cover border border-slate-300 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
+                                  {s.full_name.charAt(0)}
+                                </div>
+                              )}
+                              <div>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedStudentProfile(s)}
+                                  className="font-bold text-slate-900 hover:text-[#8B1E2F] hover:underline text-left block"
+                                >
+                                  {s.full_name}
+                                </button>
+                                <div className="text-[10px] text-slate-500 font-mono">
+                                  ID: {s.student_id} • PIN: <span className="font-bold text-blue-700">{s.pin_code}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-3">
+                            <div className="font-semibold text-slate-800">{s.campus}</div>
+                            {isBoarding ? (
+                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200 mt-0.5">
+                                <Bed className="w-2.5 h-2.5" />
+                                <span>Boarding (Mon-Fri)</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 text-amber-800 border border-amber-200 mt-0.5">
+                                <Sun className="w-2.5 h-2.5" />
+                                <span>Day Section</span>
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-3">
+                            <div className="font-bold text-slate-800">{s.learning_center_id}</div>
+                            <div className="text-[10px] text-slate-400">Monitor: {s.monitor_name || '—'}</div>
+                          </td>
+
+                          <td className="py-3 px-3">
+                            {isBethany ? (
+                              <div>
+                                <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                  Mrs. Eunice Mutebe
+                                </span>
+                                <div className="text-[9px] text-emerald-700 mt-0.5 font-medium">
+                                  Official Supervisor
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-slate-400 italic text-[11px]">
+                                None (Bethany only)
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-3">
+                            <div className="text-slate-800 font-medium">{s.parent_names || 'Parent'}</div>
+                            <div className="text-[10px] text-slate-500 flex items-center space-x-1">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              <span>{s.emergency_contact}</span>
+                            </div>
+                            {pickupCount > 0 && (
+                              <div className="text-[9px] text-indigo-700 font-semibold mt-0.5">
+                                {pickupCount} Designated {pickupCount === 1 ? 'Person' : 'Persons'}
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-3 text-right">
+                            <div className="flex items-center justify-end space-x-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedStudentProfile(s)}
+                                className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+                                title="View Security Dossier & Contacts"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setStudentToEdit(s);
+                                  setIsStudentEditOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition"
+                                title="Edit Student Info"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setBadgeTarget({ item: s, type: 'Student' })}
+                                className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-[#8B1E2F] hover:bg-[#8B1E2F]/10 text-[#8B1E2F] font-semibold transition text-[11px]"
+                              >
+                                <QrCode className="w-3.5 h-3.5" />
+                                <span>Badge</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View (< 768px) */}
+            <div className="grid grid-cols-1 gap-3 md:hidden">
+              {filteredStudents.length === 0 ? (
+                <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl">
+                  No students found matching current filters.
+                </div>
+              ) : (
+                filteredStudents.map((s) => {
+                  const isBethany = s.learning_center_id === 'Bethany';
+                  const isBoarding = s.enrollment_type === 'Boarding';
+                  const pickupCount = s.designated_pickups?.length || 0;
+
+                  return (
+                    <div
+                      key={s.student_id}
+                      className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5 text-xs shadow-2xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center space-x-2.5">
+                          {s.photo_url ? (
+                            <img
+                              src={s.photo_url}
+                              alt={s.full_name}
+                              className="w-10 h-10 rounded-xl object-cover border border-slate-300 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500 font-bold shrink-0">
+                              {s.full_name.charAt(0)}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-bold text-slate-900 text-sm">{s.full_name}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">
+                              ID: {s.student_id} • PIN: <span className="font-bold text-blue-700">{s.pin_code}</span>
+                            </div>
+                          </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="font-semibold text-slate-800">{s.learning_center_id}</span>
-                          <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                              s.campus === 'Spring Campus'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-sky-100 text-sky-800'
-                            }`}
-                          >
-                            {s.campus || 'Campus'}
-                          </span>
+
+                        <div>
+                          {isBoarding ? (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                              Boarding
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-amber-100 text-amber-900 border border-amber-200">
+                              Day
+                            </span>
+                          )}
                         </div>
-                        <div className="text-[10px] text-slate-400">{s.grade}</div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                          {s.pin_code}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="text-slate-800 font-medium">{s.supervisor_name}</div>
-                        <div className="text-[10px] text-slate-400">Monitor: {s.monitor_name}</div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="text-slate-800 font-medium">{s.parent_names}</div>
-                        <div className="text-[10px] text-slate-400 flex items-center space-x-1">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span>{s.emergency_contact}</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-slate-200/80">
+                        <div>
+                          <span className="text-slate-400">Campus:</span>{' '}
+                          <strong className="text-slate-700">{s.campus}</strong>
                         </div>
-                      </td>
-                      <td className="py-3 px-3 text-right">
+                        <div>
+                          <span className="text-slate-400">Center:</span>{' '}
+                          <strong className="text-slate-700">{s.learning_center_id}</strong>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-400">Supervisor:</span>{' '}
+                          {isBethany ? (
+                            <strong className="text-emerald-800">Mrs. Eunice Mutebe</strong>
+                          ) : (
+                            <span className="text-slate-400 italic">None (Bethany Only)</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-1 text-[11px] text-slate-600 flex items-center justify-between border-t border-slate-200/60">
+                        <span>Parents: {s.parent_names}</span>
+                        {pickupCount > 0 && (
+                          <span className="text-indigo-600 font-semibold">{pickupCount} Authorized</span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStudentProfile(s)}
+                          className="py-1.5 rounded-lg border border-slate-300 text-slate-700 font-semibold text-center hover:bg-slate-100"
+                        >
+                          Profile
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStudentToEdit(s);
+                            setIsStudentEditOpen(true);
+                          }}
+                          className="py-1.5 rounded-lg border border-blue-300 text-blue-700 font-semibold text-center hover:bg-blue-50"
+                        >
+                          Edit
+                        </button>
                         <button
                           type="button"
                           onClick={() => setBadgeTarget({ item: s, type: 'Student' })}
-                          className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-blue-600 font-semibold transition text-[11px]"
+                          className="py-1.5 rounded-lg bg-[#8B1E2F] text-white font-semibold text-center hover:bg-[#6D1422]"
                         >
-                          <QrCode className="w-3.5 h-3.5" />
-                          <span>View Badge</span>
+                          Badge
                         </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
         {/* Staff Table */}
         {activeTab === 'staff' && (
-          <div className="divide-y divide-slate-100 overflow-x-auto">
+          <div className="divide-y divide-slate-100 overflow-x-auto border border-slate-200 rounded-xl">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-                  <th className="py-2.5 px-3">Staff Name & ID</th>
+                <tr className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                  <th className="py-2.5 px-3">Staff Name &amp; ID</th>
                   <th className="py-2.5 px-3">Role</th>
                   <th className="py-2.5 px-3">3-Digit PIN</th>
                   <th className="py-2.5 px-3">Assigned Center / Dept</th>
-                  <th className="py-2.5 px-3">Email & Contact</th>
+                  <th className="py-2.5 px-3">Email &amp; Contact</th>
                   <th className="py-2.5 px-3 text-right">Credential Badge</th>
                 </tr>
               </thead>
@@ -486,17 +660,26 @@ export const RosterManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-3">
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          st.role === 'Supervisor'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : st.role === 'Administrator' || st.role === 'Principal' || st.role === 'Director'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
                         {st.role}
                       </span>
                     </td>
                     <td className="py-3 px-3">
-                      <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                      <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
                         {st.pin_code}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-slate-700">
-                      {st.learning_center_id || 'Main Administration'}
+                    <td className="py-3 px-3">
+                      <div className="font-semibold text-slate-800">{st.learning_center_id || 'Campus Wide'}</div>
+                      <div className="text-[10px] text-slate-400">{st.campus || 'All Campuses'}</div>
                     </td>
                     <td className="py-3 px-3">
                       <div className="text-slate-800">{st.email}</div>
@@ -520,162 +703,60 @@ export const RosterManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Add Student Modal */}
-      {isAddStudentOpen && (
+      {/* Student Edit & Add Modal */}
+      <StudentEditModal
+        isOpen={isStudentEditOpen}
+        onClose={() => {
+          setIsStudentEditOpen(false);
+          setStudentToEdit(null);
+        }}
+        student={studentToEdit}
+        onSave={async (payload, existingId) => {
+          const res = await saveStudent(payload, existingId);
+          if (res.success) {
+            setFormMsg({ type: 'success', text: res.message });
+            setTimeout(() => setFormMsg(null), 5000);
+          }
+          return res;
+        }}
+        campuses={campuses}
+        learningCenters={learningCenters}
+      />
+
+      {/* Student Profile Viewer Modal */}
+      <StudentProfileModal
+        isOpen={Boolean(selectedStudentProfile)}
+        onClose={() => setSelectedStudentProfile(null)}
+        student={selectedStudentProfile}
+        onEdit={(st) => {
+          setSelectedStudentProfile(null);
+          setStudentToEdit(st);
+          setIsStudentEditOpen(true);
+        }}
+        onPrintBadge={(st) => {
+          setSelectedStudentProfile(null);
+          setBadgeTarget({ item: st, type: 'Student' });
+        }}
+        onDelete={async (studentId) => {
+          const res = await deleteStudent(studentId);
+          setFormMsg({ type: 'success', text: res.message });
+          setTimeout(() => setFormMsg(null), 5000);
+        }}
+      />
+
+      {/* Add Staff Modal (ICCE Coordinator Super User) */}
+      {isAddStaffOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 my-auto">
-            <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
+            <div className="bg-purple-600 text-white p-4 flex justify-between items-center">
               <h3 className="font-bold text-sm flex items-center space-x-2">
-                <GraduationCap className="w-4 h-4" />
-                <span>Enroll New Student</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsAddStudentOpen(false)}
-                className="text-blue-100 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateStudent} className="p-5 space-y-3 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Full Name:</label>
-                <input
-                  type="text"
-                  required
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="e.g. Mason Alexander"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Grade:</label>
-                  <select
-                    value={studentGrade}
-                    onChange={(e) => setStudentGrade(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-                  >
-                    <option value="Kindergarten">Kindergarten</option>
-                    <option value="Grade 1">Grade 1</option>
-                    <option value="Grade 2">Grade 2</option>
-                    <option value="Grade 3">Grade 3</option>
-                    <option value="Grade 4">Grade 4</option>
-                    <option value="Grade 5">Grade 5</option>
-                    <option value="Grade 6">Grade 6</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Auto-Generated 4-Digit PIN:
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                    <input
-                      type="text"
-                      maxLength={4}
-                      value={studentPin}
-                      onChange={(e) => setStudentPin(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Learning Center / Classroom:
-                </label>
-                <select
-                  value={studentCenter}
-                  onChange={(e) => setStudentCenter(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-                >
-                  <option value="Learning Center Alpha">Learning Center Alpha</option>
-                  <option value="Learning Center Beta">Learning Center Beta</option>
-                  <option value="Learning Center Gamma">Learning Center Gamma</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Supervisor (Main Teacher):</label>
-                  <input
-                    type="text"
-                    value={studentSupervisor}
-                    onChange={(e) => setStudentSupervisor(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Monitor (Assistant):</label>
-                  <input
-                    type="text"
-                    value={studentMonitor}
-                    onChange={(e) => setStudentMonitor(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Parent / Guardian Names:</label>
-                <input
-                  type="text"
-                  value={studentParents}
-                  onChange={(e) => setStudentParents(e.target.value)}
-                  placeholder="e.g. Thomas & Laura Alexander"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Emergency Telephone:</label>
-                <input
-                  type="text"
-                  value={studentEmergency}
-                  onChange={(e) => setStudentEmergency(e.target.value)}
-                  placeholder="e.g. (555) 392-1823"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsAddStudentOpen(false)}
-                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold shadow-sm"
-                >
-                  Enroll Student
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Add Staff Modal (Super User ICCE Coordinator) */}
-      {isAddStaffOpen && isSuperUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 my-auto">
-            <div className="bg-purple-900 text-white p-4 flex justify-between items-center">
-              <h3 className="font-bold text-sm flex items-center space-x-2">
-                <Shield className="w-4 h-4 text-purple-300" />
-                <span>Super User: Register Staff Member</span>
+                <UserPlus className="w-4 h-4" />
+                <span>Create Staff Account</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsAddStaffOpen(false)}
-                className="text-purple-200 hover:text-white"
+                className="text-purple-100 hover:text-white"
               >
                 ✕
               </button>
@@ -683,13 +764,13 @@ export const RosterManagement: React.FC = () => {
 
             <form onSubmit={handleCreateStaff} className="p-5 space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Staff Full Name:</label>
+                <label className="block font-semibold text-slate-700 mb-1">Full Name:</label>
                 <input
                   type="text"
                   required
                   value={staffName}
                   onChange={(e) => setStaffName(e.target.value)}
-                  placeholder="e.g. Jessica Sterling"
+                  placeholder="e.g. Mrs. Sarah Kigozi"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 />
               </div>
@@ -701,52 +782,58 @@ export const RosterManagement: React.FC = () => {
                   required
                   value={staffEmail}
                   onChange={(e) => setStaffEmail(e.target.value)}
-                  placeholder="e.g. jessica.sterling@school.edu"
+                  placeholder="sarah.kigozi@swis.ac.ug"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Assigned Role:</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Role:</label>
                   <select
                     value={staffRole}
                     onChange={(e) => setStaffRole(e.target.value as UserRole)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none bg-white"
                   >
+                    <option value="Monitor">Monitor (Assistant)</option>
                     <option value="Teacher">Teacher</option>
-                    <option value="Admin Assistant">Admin Assistant</option>
-                    <option value="Principal">Principal</option>
-                    <option value="Director">Director</option>
-                    <option value="ICCE Coordinator">ICCE Coordinator</option>
+                    <option value="Supervisor">Supervisor (Bethany)</option>
+                    <option value="GateOfficer">Gate Security Officer</option>
+                    <option value="OfficeAdmin">Office Admin</option>
+                    <option value="Administrator">Administrator</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Unique 3-Digit Staff PIN:
-                  </label>
+                  <label className="block font-semibold text-slate-700 mb-1">3-Digit PIN:</label>
                   <input
                     type="text"
                     maxLength={3}
                     value={staffPin}
                     onChange={(e) => setStaffPin(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-purple-800 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-purple-700 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Department / Classroom:
+                  Assigned Learning Center:
                 </label>
-                <input
-                  type="text"
+                <select
                   value={staffCenter}
                   onChange={(e) => setStaffCenter(e.target.value)}
-                  placeholder="e.g. Learning Center Gamma"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none bg-white"
+                >
+                  <option value="Main Office">Main Office / Administration</option>
+                  <option value="Security Gate">Security Gate</option>
+                  <option value="Bethany">Bethany</option>
+                  <option value="Kayil">Kayil</option>
+                  <option value="Splendor">Splendor</option>
+                  <option value="Doxa">Doxa</option>
+                  <option value="Antioch">Antioch</option>
+                  <option value="Azusa">Azusa</option>
+                  <option value="Blooms and Archie">Blooms and Archie</option>
+                </select>
               </div>
 
               <div>
@@ -755,7 +842,7 @@ export const RosterManagement: React.FC = () => {
                   type="text"
                   value={staffPhone}
                   onChange={(e) => setStaffPhone(e.target.value)}
-                  placeholder="e.g. (555) 234-5678"
+                  placeholder="+256 772 000 000"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 />
               </div>
@@ -770,9 +857,9 @@ export const RosterManagement: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-lg font-semibold shadow-sm"
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold"
                 >
-                  Create Staff Account
+                  Create Account
                 </button>
               </div>
             </form>
@@ -780,25 +867,29 @@ export const RosterManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Bulk CSV Upload Modal */}
-      <BulkUploadModal
-        isOpen={isBulkUploadOpen}
-        onClose={() => setIsBulkUploadOpen(false)}
-      />
-
-      {/* QR Code & Printable ID Card PDF Generator Module */}
-      <IDCardGeneratorModal
-        isOpen={isIDGeneratorOpen}
-        onClose={() => setIsIDGeneratorOpen(false)}
-        defaultType={idGeneratorDefaultType}
-      />
-
-      {/* ID Badge Viewer Modal */}
+      {/* Digital Badge Modal */}
       {badgeTarget && (
         <BadgeModal
+          onClose={() => setBadgeTarget(null)}
           item={badgeTarget.item}
           type={badgeTarget.type}
-          onClose={() => setBadgeTarget(null)}
+        />
+      )}
+
+      {/* Bulk Upload Modal */}
+      {isBulkUploadOpen && (
+        <BulkUploadModal
+          isOpen={isBulkUploadOpen}
+          onClose={() => setIsBulkUploadOpen(false)}
+        />
+      )}
+
+      {/* ID Card Generator & PDF Export Modal */}
+      {isIDGeneratorOpen && (
+        <IDCardGeneratorModal
+          isOpen={isIDGeneratorOpen}
+          onClose={() => setIsIDGeneratorOpen(false)}
+          defaultType={idGeneratorDefaultType}
         />
       )}
     </div>
