@@ -143,13 +143,14 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ item, type, onClose }) =
               </div>
             </div>
 
-            {/* Supervisor note for students (Bethany only) */}
+            {/* Supervisor & Monitor note for students */}
             {isStudent && (
               <p className="text-[10px] text-slate-500 mt-2">
-                {student?.supervisor_name ? (
+                {student?.supervisor_name && (
                   <>Supervisor: <strong>{student.supervisor_name}</strong></>
-                ) : (
-                  <>Monitor: <strong>{student?.monitor_name || 'Staff'}</strong></>
+                )}
+                {student?.monitor_name && (
+                  <> · Monitor: <strong>{student.monitor_name}</strong></>
                 )}
               </p>
             )}

@@ -878,7 +878,7 @@ export const AdminSetupView: React.FC = () => {
           <div className="p-3.5 bg-amber-50/90 border-b border-amber-200 text-amber-900 text-xs flex items-center space-x-2.5">
             <Info className="w-4 h-4 text-amber-700 shrink-0" />
             <div className="leading-snug">
-              <strong>Institutional Rule:</strong> There is only <strong>one Bethany Learning Center</strong> across Spirit &amp; Word International School, located exclusively in the <strong>Hope Campus</strong> (Supervised by Mrs. Eunice Mutebe). All other centers are led by Center Monitors.
+              <strong>Official Staff &amp; Center Structure:</strong> Each learning center is led by an assigned <strong>Supervisor</strong> (Kayil: Mrs. Irene Oryem, Doxa: Mr. David Kimbugwe, Splendor: Mr. Arthur Mutebi, Bethany: Mrs. Eunice Mutebe, Antioch: Mrs. Doreen Mugaga, Azusa: Mr. Shafic Musika). There is only one monitor in the school: <strong>Mrs. Joan Nandhego</strong> for Bethany Learning Center.
             </div>
           </div>
 
@@ -919,18 +919,22 @@ export const AdminSetupView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        {lc.name === 'Bethany' && lc.supervisor_name ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                        {lc.supervisor_name ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             {lc.supervisor_name}
                           </span>
-                        ) : lc.supervisor_name ? (
-                          lc.supervisor_name
                         ) : (
-                          <span className="text-slate-400 italic">None (Monitor Led)</span>
+                          <span className="text-slate-400 italic">None</span>
                         )}
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-700">
-                        {lc.monitor_name}
+                        {lc.monitor_name ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            {lc.monitor_name}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic">None</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center font-mono text-slate-600">
                         {lc.room_number || '—'}
@@ -945,7 +949,7 @@ export const AdminSetupView: React.FC = () => {
                           onClick={() => {
                             setEditingLC(lc);
                             setLcSupervisor(lc.supervisor_name || '');
-                            setLcMonitor(lc.monitor_name);
+                            setLcMonitor(lc.monitor_name || '');
                             setLcRoom(lc.room_number || '');
                             setLcCapacity(lc.capacity || 25);
                           }}
@@ -993,7 +997,7 @@ export const AdminSetupView: React.FC = () => {
 
               <div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700">Administration</span>
-                <div className="font-extrabold text-sky-900">Mrs. Khasoma Susan & Mrs. Juliet Arinaitwe</div>
+                <div className="font-extrabold text-sky-900">Mrs. Khasoma & Mrs. Julie Arinaitwe</div>
                 <div className="text-sky-700 font-semibold">Administrator & Admin Assistant</div>
                 <div className="text-[11px] text-slate-600 pt-1">
                   Administrative rights: Manage student rosters, teacher sign in/out, approvals.
@@ -1002,7 +1006,7 @@ export const AdminSetupView: React.FC = () => {
 
               <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Support Personnel</span>
-                <div className="font-extrabold text-amber-900">Mrs. Anette Mugala</div>
+                <div className="font-extrabold text-amber-900">Miss. Anette Mugaga</div>
                 <div className="text-amber-700 font-semibold">Support Staff</div>
                 <div className="text-[11px] text-slate-600 pt-1">
                   Strictly limited to student sign in and out only. No report access, no roster edits.
@@ -1071,7 +1075,7 @@ export const AdminSetupView: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="px-4 py-2.5 font-bold text-slate-800">Administrator (Mrs. Khasoma Susan)</td>
+                    <td className="px-4 py-2.5 font-bold text-slate-800">Administrator (Mrs. Khasoma)</td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
@@ -1082,7 +1086,7 @@ export const AdminSetupView: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="px-4 py-2.5 font-bold text-slate-800">Administrative Assistant (Mrs. Juliet Arinaitwe)</td>
+                    <td className="px-4 py-2.5 font-bold text-slate-800">Administrative Assistant (Mrs. Julie Arinaitwe)</td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
@@ -1115,7 +1119,7 @@ export const AdminSetupView: React.FC = () => {
                   </tr>
 
                   <tr className="bg-amber-50/30">
-                    <td className="px-4 py-2.5 font-semibold text-amber-900">Support Staff (Mrs. Anette Mugala)</td>
+                    <td className="px-4 py-2.5 font-semibold text-amber-900">Support Staff (Miss. Anette Mugaga)</td>
                     <td className="px-3 py-2.5 text-center text-emerald-600 font-bold"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-slate-300">—</td>
                     <td className="px-3 py-2.5 text-center text-slate-300">—</td>
@@ -1451,46 +1455,52 @@ export const AdminSetupView: React.FC = () => {
             </div>
 
             <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1 flex items-center justify-between">
+                  <span>Assigned Supervisor</span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    Supervisor
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={lcSupervisor}
+                  onChange={(e) => setLcSupervisor(e.target.value)}
+                  placeholder="Supervisor Name"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 font-medium"
+                />
+              </div>
+
               {editingLC.name === 'Bethany' ? (
                 <div>
                   <label className="block text-slate-700 font-semibold mb-1 flex items-center justify-between">
-                    <span>Assigned Supervisor (Bethany Exclusive)</span>
-                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      Supervised Center
+                    <span>Assigned Monitor (Bethany Exclusive)</span>
+                    <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                      Monitor
                     </span>
                   </label>
                   <input
                     type="text"
-                    value={lcSupervisor}
-                    onChange={(e) => setLcSupervisor(e.target.value)}
-                    placeholder="Mrs. Eunice Mutebe"
+                    value={lcMonitor}
+                    onChange={(e) => setLcMonitor(e.target.value)}
+                    placeholder="Mrs. Joan Nandhego"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500 font-medium"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">
-                    Bethany Learning Center at Hope Campus is the only learning center with an assigned supervisor.
+                    Mrs. Joan Nandhego is the official and only monitor in the school, assigned to Bethany Learning Center.
                   </p>
                 </div>
               ) : (
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                   <div className="flex items-center space-x-1.5 text-slate-800 font-bold text-[11px]">
                     <Info className="w-3.5 h-3.5 text-slate-600" />
-                    <span>Supervisor Policy</span>
+                    <span>Monitor Policy</span>
                   </div>
                   <p className="text-[11px] text-slate-500">
-                    Only Bethany Learning Center (Hope Campus) operates with a Supervisor. This center operates under its Center Monitor.
+                    Bethany Learning Center is the only center with an assigned Monitor (Mrs. Joan Nandhego). This center is supervised by Mrs. Eunice Mutebe.
                   </p>
                 </div>
               )}
-
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">Assigned Monitor</label>
-                <input
-                  type="text"
-                  value={lcMonitor}
-                  onChange={(e) => setLcMonitor(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>

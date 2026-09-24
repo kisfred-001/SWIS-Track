@@ -89,36 +89,36 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
     const sampleRows = [
       [
         'STU-1001',
-        'Liam Henderson',
-        'Grade 5',
-        'Learning Center Alpha',
-        'David Miller',
-        'Amanda Cruz',
-        'Sarah & James Henderson',
-        '(555) 234-5678',
+        'Ariana Akoli',
+        'Hope • Bethany',
+        'Bethany',
+        'Mrs. Eunice Mutebe',
+        'Mrs. Joan Nandhego',
+        'Mr. & Mrs. Akoli',
+        '+256 700 123 456',
         '1001',
       ],
       [
         'STU-1002',
-        'Sophia Martinez',
-        'Grade 4',
-        'Learning Center Beta',
-        'Rachel Vance',
-        'David Miller',
-        'Carlos & Elena Martinez',
-        '(555) 345-6789',
+        'Jerome Gad Amani',
+        'Spring • Kayil',
+        'Kayil',
+        'Mrs. Irene Oryem',
+        '',
+        'Mr. & Mrs. Amani',
+        '+256 700 234 567',
         '1002',
       ],
       [
+        'STU-1003',
+        'Nissi Mwiza',
+        'Spring • Doxa',
+        'Doxa',
+        'Mr. David Kimbugwe',
         '',
-        'Lucas Walker',
-        'Grade 3',
-        'Learning Center Gamma',
-        'David Miller',
-        'Amanda Cruz',
-        'Thomas Walker',
-        '(555) 901-2345',
-        '',
+        'Mr. & Mrs. Mwiza',
+        '+256 700 345 678',
+        '1003',
       ],
     ];
 
@@ -270,15 +270,46 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
 
       let rawId = idIdx !== -1 && cols[idIdx] ? cols[idIdx].trim().toUpperCase() : '';
       const rawGrade = gradeIdx !== -1 && cols[gradeIdx] ? cols[gradeIdx].trim() : 'Grade 1';
-      const rawCenter =
+      let rawCenter =
         centerIdx !== -1 && cols[centerIdx]
           ? cols[centerIdx].trim()
-          : (isTeacherOnly && currentUser?.learning_center_id) || 'Learning Center Alpha';
-      const rawSupervisor =
-        supervisorIdx !== -1 && cols[supervisorIdx]
-          ? cols[supervisorIdx].trim()
-          : currentUser?.full_name || 'Staff Supervisor';
-      const rawMonitor = monitorIdx !== -1 && cols[monitorIdx] ? cols[monitorIdx].trim() : 'Class Monitor';
+          : (isTeacherOnly && currentUser?.learning_center_id) || 'Kayil';
+
+      // Map obsolete or variations of center names
+      if (rawCenter.toLowerCase().includes('bethany')) rawCenter = 'Bethany';
+      else if (rawCenter.toLowerCase().includes('kayil')) rawCenter = 'Kayil';
+      else if (rawCenter.toLowerCase().includes('doxa')) rawCenter = 'Doxa';
+      else if (rawCenter.toLowerCase().includes('splendor')) rawCenter = 'Splendor';
+      else if (rawCenter.toLowerCase().includes('antioch')) rawCenter = 'Antioch';
+      else if (rawCenter.toLowerCase().includes('azusa')) rawCenter = 'Azusa';
+      else rawCenter = 'Kayil';
+
+      // Official supervisors by learning center
+      let rawSupervisor =
+        rawCenter === 'Kayil'
+          ? 'Mrs. Irene Oryem'
+          : rawCenter === 'Doxa'
+          ? 'Mr. David Kimbugwe'
+          : rawCenter === 'Splendor'
+          ? 'Mr. Arthur Mutebi'
+          : rawCenter === 'Bethany'
+          ? 'Mrs. Eunice Mutebe'
+          : rawCenter === 'Antioch'
+          ? 'Mrs. Doreen Mugaga'
+          : rawCenter === 'Azusa'
+          ? 'Mr. Shafic Musika'
+          : '';
+
+      if (supervisorIdx !== -1 && cols[supervisorIdx]) {
+        rawSupervisor = cols[supervisorIdx].trim() || rawSupervisor;
+      }
+
+      // Mrs. Joan Nandhego is the ONLY monitor in SWIS, assigned exclusively to Bethany
+      let rawMonitor = rawCenter === 'Bethany' ? 'Mrs. Joan Nandhego' : '';
+      if (monitorIdx !== -1 && cols[monitorIdx] && rawCenter === 'Bethany') {
+        rawMonitor = cols[monitorIdx].trim() || rawMonitor;
+      }
+
       const rawParents = parentsIdx !== -1 && cols[parentsIdx] ? cols[parentsIdx].trim() : 'Parents';
       const rawEmergency = emergencyIdx !== -1 && cols[emergencyIdx] ? cols[emergencyIdx].trim() : '';
       let rawPin = pinIdx !== -1 && cols[pinIdx] ? cols[pinIdx].trim() : '';
@@ -294,11 +325,11 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
 
       const isExisting = !!currentRecord;
 
+      // Bethany is strictly Hope Campus
       let rawCampus =
-        campusIdx !== -1 && cols[campusIdx]
-          ? cols[campusIdx].trim()
-          : currentRecord?.campus ||
-            (['Kayil', 'Splendor', 'Doxa'].includes(rawCenter) ? 'Spring Campus' : 'Hope Campus');
+        rawCenter === 'Bethany' || rawCenter === 'Antioch' || rawCenter === 'Azusa'
+          ? 'Hope Campus'
+          : 'Spring Campus';
 
       // Assign student_id if empty
       if (!rawId) {

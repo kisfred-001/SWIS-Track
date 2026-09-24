@@ -17,39 +17,15 @@ export const SUPER_USER_ACCOUNT: Staff = {
 };
 
 export const INITIAL_STAFF: Staff[] = [
-  SUPER_USER_ACCOUNT,
-  {
-    staff_id: 'STF-002',
-    pin_code: '101',
-    full_name: 'Mrs. Irene Lulika',
-    role: 'Principal',
-    campus: 'All Campuses',
-    learning_center_id: 'Principal Office',
-    email: 'irene.lulika@swis.ac.ug',
-    phone: '+256 772 101 002',
-    qr_code_url: 'STF-002',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-003',
-    pin_code: '102',
-    full_name: 'Mr. Jaxon Lulika',
-    role: 'Director',
-    campus: 'All Campuses',
-    learning_center_id: 'Board & Directorate',
-    email: 'jaxon.lulika@swis.ac.ug',
-    phone: '+256 772 102 003',
-    qr_code_url: 'STF-003',
-    created_at: new Date().toISOString(),
-  },
+  SUPER_USER_ACCOUNT, // g). ICCE Coordinator - Mr. Fredrick Kariuki
   {
     staff_id: 'STF-004',
     pin_code: '103',
-    full_name: 'Mrs. Khasoma Susan',
+    full_name: 'Mrs. Khasoma', // h). Administrator - Mrs. Khasoma
     role: 'Administrator',
     campus: 'All Campuses',
     learning_center_id: 'Central Administration',
-    email: 'khasoma.susan@swis.ac.ug',
+    email: 'khasoma@swis.ac.ug',
     phone: '+256 772 103 004',
     qr_code_url: 'STF-004',
     created_at: new Date().toISOString(),
@@ -57,11 +33,11 @@ export const INITIAL_STAFF: Staff[] = [
   {
     staff_id: 'STF-005',
     pin_code: '104',
-    full_name: 'Mrs. Juliet Arinaitwe',
+    full_name: 'Mrs. Julie Arinaitwe', // i). Administrative Assistant - Mrs. Julie Arinaitwe
     role: 'Administrative Assistant',
     campus: 'All Campuses',
     learning_center_id: 'Registry & Admissions',
-    email: 'juliet.arinaitwe@swis.ac.ug',
+    email: 'julie.arinaitwe@swis.ac.ug',
     phone: '+256 772 104 005',
     qr_code_url: 'STF-005',
     created_at: new Date().toISOString(),
@@ -69,16 +45,16 @@ export const INITIAL_STAFF: Staff[] = [
   {
     staff_id: 'STF-006',
     pin_code: '105',
-    full_name: 'Mrs. Anette Mugala',
+    full_name: 'Miss. Anette Mugaga', // j). Support Staff - Miss. Anette Mugaga
     role: 'Support Staff',
     campus: 'All Campuses',
     learning_center_id: 'Campus Check-In / Gates',
-    email: 'anette.mugala@swis.ac.ug',
+    email: 'anette.mugaga@swis.ac.ug',
     phone: '+256 772 105 006',
     qr_code_url: 'STF-006',
     created_at: new Date().toISOString(),
   },
-  // Supervisors (ONLY Bethany Learning Center has a supervisor)
+  // d). Bethany - Mrs. Eunice Mutebe (Supervisor) and Monitor is Miss. Joan Nandhego
   {
     staff_id: 'STF-103',
     pin_code: '203',
@@ -91,12 +67,25 @@ export const INITIAL_STAFF: Staff[] = [
     qr_code_url: 'STF-103',
     created_at: new Date().toISOString(),
   },
-  // Academic Monitors & Learning Center Staff
+  // Only Monitor in SWIS: Mrs. Joan Nandhego (Bethany Learning Center)
+  {
+    staff_id: 'STF-108',
+    pin_code: '208',
+    full_name: 'Mrs. Joan Nandhego',
+    role: 'Monitor',
+    campus: 'Hope Campus',
+    learning_center_id: 'Bethany',
+    email: 'joan.nandhego@swis.ac.ug',
+    phone: '+256 772 208 108',
+    qr_code_url: 'STF-108',
+    created_at: new Date().toISOString(),
+  },
+  // a). Kayil - Mrs. Irene Oryem (Supervisor)
   {
     staff_id: 'STF-101',
     pin_code: '201',
     full_name: 'Mrs. Irene Oryem',
-    role: 'Monitor',
+    role: 'Supervisor',
     campus: 'Spring Campus',
     learning_center_id: 'Kayil',
     email: 'irene.oryem@swis.ac.ug',
@@ -104,47 +93,12 @@ export const INITIAL_STAFF: Staff[] = [
     qr_code_url: 'STF-101',
     created_at: new Date().toISOString(),
   },
-  {
-    staff_id: 'STF-102',
-    pin_code: '202',
-    full_name: 'Mr. Arthur Mutebi',
-    role: 'Monitor',
-    campus: 'Spring Campus',
-    learning_center_id: 'Splendor',
-    email: 'arthur.mutebi@swis.ac.ug',
-    phone: '+256 772 202 102',
-    qr_code_url: 'STF-102',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-104',
-    pin_code: '204',
-    full_name: 'Mr. Shafic Musika',
-    role: 'Monitor',
-    campus: 'Hope Campus',
-    learning_center_id: 'Azusa',
-    email: 'shafic.musika@swis.ac.ug',
-    phone: '+256 772 204 104',
-    qr_code_url: 'STF-104',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-105',
-    pin_code: '205',
-    full_name: 'Mrs. Doreen Mugaga',
-    role: 'Monitor',
-    campus: 'Hope Campus',
-    learning_center_id: 'Antioch',
-    email: 'doreen.mugaga@swis.ac.ug',
-    phone: '+256 772 205 105',
-    qr_code_url: 'STF-105',
-    created_at: new Date().toISOString(),
-  },
+  // b). Doxa - Mr. David Kimbugwe (Supervisor)
   {
     staff_id: 'STF-106',
     pin_code: '206',
     full_name: 'Mr. David Kimbugwe',
-    role: 'Monitor',
+    role: 'Supervisor',
     campus: 'Spring Campus',
     learning_center_id: 'Doxa',
     email: 'david.kimbugwe@swis.ac.ug',
@@ -152,101 +106,43 @@ export const INITIAL_STAFF: Staff[] = [
     qr_code_url: 'STF-106',
     created_at: new Date().toISOString(),
   },
+  // c). Splendor - Mr. Arthur Mutebi (Supervisor)
   {
-    staff_id: 'STF-107',
-    pin_code: '207',
-    full_name: 'Mrs. Juliet Mayanja',
-    role: 'Monitor',
-    campus: 'Hope Campus',
-    learning_center_id: 'Blooms and Archie',
-    email: 'juliet.mayanja@swis.ac.ug',
-    phone: '+256 772 207 107',
-    qr_code_url: 'STF-107',
-    created_at: new Date().toISOString(),
-  },
-  // Monitors (Have identical rights as Supervisors)
-  {
-    staff_id: 'STF-301',
-    pin_code: '301',
-    full_name: 'Ms. Gloria Akello',
-    role: 'Monitor',
-    campus: 'Spring Campus',
-    learning_center_id: 'Kayil',
-    email: 'gloria.akello@swis.ac.ug',
-    phone: '+256 772 301 301',
-    qr_code_url: 'STF-301',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-302',
-    pin_code: '302',
-    full_name: 'Mr. Brian Ochieng',
-    role: 'Monitor',
+    staff_id: 'STF-102',
+    pin_code: '202',
+    full_name: 'Mr. Arthur Mutebi',
+    role: 'Supervisor',
     campus: 'Spring Campus',
     learning_center_id: 'Splendor',
-    email: 'brian.ochieng@swis.ac.ug',
-    phone: '+256 772 302 302',
-    qr_code_url: 'STF-302',
+    email: 'arthur.mutebi@swis.ac.ug',
+    phone: '+256 772 202 102',
+    qr_code_url: 'STF-102',
     created_at: new Date().toISOString(),
   },
+  // e). Antioch - Mrs. Doreen Mugaga (Supervisor)
   {
-    staff_id: 'STF-303',
-    pin_code: '303',
-    full_name: 'Ms. Faith Nabirye',
-    role: 'Monitor',
-    campus: 'Hope Campus',
-    learning_center_id: 'Bethany',
-    email: 'faith.nabirye@swis.ac.ug',
-    phone: '+256 772 303 303',
-    qr_code_url: 'STF-303',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-304',
-    pin_code: '304',
-    full_name: 'Mr. Paul Ssekandi',
-    role: 'Monitor',
-    campus: 'Hope Campus',
-    learning_center_id: 'Azusa',
-    email: 'paul.ssekandi@swis.ac.ug',
-    phone: '+256 772 304 304',
-    qr_code_url: 'STF-304',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-305',
-    pin_code: '305',
-    full_name: 'Ms. Joy Kemigisha',
-    role: 'Monitor',
+    staff_id: 'STF-105',
+    pin_code: '205',
+    full_name: 'Mrs. Doreen Mugaga',
+    role: 'Supervisor',
     campus: 'Hope Campus',
     learning_center_id: 'Antioch',
-    email: 'joy.kemigisha@swis.ac.ug',
-    phone: '+256 772 305 305',
-    qr_code_url: 'STF-305',
+    email: 'doreen.mugaga@swis.ac.ug',
+    phone: '+256 772 205 105',
+    qr_code_url: 'STF-105',
     created_at: new Date().toISOString(),
   },
+  // f). Azusa - Mr. Shafic Musika (Supervisor)
   {
-    staff_id: 'STF-306',
-    pin_code: '306',
-    full_name: 'Mr. Kevin Tumusiime',
-    role: 'Monitor',
-    campus: 'Spring Campus',
-    learning_center_id: 'Doxa',
-    email: 'kevin.tumusiime@swis.ac.ug',
-    phone: '+256 772 306 306',
-    qr_code_url: 'STF-306',
-    created_at: new Date().toISOString(),
-  },
-  {
-    staff_id: 'STF-307',
-    pin_code: '307',
-    full_name: 'Ms. Patricia Namubiru',
-    role: 'Monitor',
+    staff_id: 'STF-104',
+    pin_code: '204',
+    full_name: 'Mr. Shafic Musika',
+    role: 'Supervisor',
     campus: 'Hope Campus',
-    learning_center_id: 'Blooms and Archie',
-    email: 'patricia.namubiru@swis.ac.ug',
-    phone: '+256 772 307 307',
-    qr_code_url: 'STF-307',
+    learning_center_id: 'Azusa',
+    email: 'shafic.musika@swis.ac.ug',
+    phone: '+256 772 204 104',
+    qr_code_url: 'STF-104',
     created_at: new Date().toISOString(),
   },
 ];
@@ -259,8 +155,8 @@ export const INITIAL_CAMPUSES: Campus[] = [
     location: 'North Wing, SWIS Academy',
     phone: '+256 700 123 456',
     email: 'spring.campus@swis.ac.ug',
-    lead_administrator: 'Mrs. Irene Lulika',
-    learning_centers: ['Kayil', 'Splendor', 'Doxa', 'Antioch'],
+    lead_administrator: 'Mrs. Khasoma',
+    learning_centers: ['Kayil', 'Doxa', 'Splendor'],
     total_capacity: 150,
     opening_time: '07:30 AM',
     closing_time: '04:30 PM',
@@ -273,8 +169,8 @@ export const INITIAL_CAMPUSES: Campus[] = [
     location: 'South Wing, SWIS Academy',
     phone: '+256 700 789 012',
     email: 'hope.campus@swis.ac.ug',
-    lead_administrator: 'Mr. Jaxon Lulika',
-    learning_centers: ['Bethany', 'Azusa', 'Antioch', 'Blooms and Archie', 'Splendor'],
+    lead_administrator: 'Mrs. Khasoma',
+    learning_centers: ['Bethany', 'Antioch', 'Azusa'],
     total_capacity: 150,
     opening_time: '07:30 AM',
     closing_time: '04:30 PM',
@@ -287,104 +183,108 @@ export const INITIAL_LEARNING_CENTERS: LearningCenter[] = [
     id: 'spring-kayil',
     name: 'Kayil',
     campus: 'Spring Campus',
-    supervisor_name: '',
-    monitor_name: 'Ms. Gloria Akello',
+    supervisor_name: 'Mrs. Irene Oryem',
+    monitor_name: '',
     room_number: 'Room S-101',
     capacity: 25,
-    description: 'Spring Campus Early Learning & Primary Center',
-  },
-  {
-    id: 'spring-splendor',
-    name: 'Splendor',
-    campus: 'Spring Campus',
-    supervisor_name: '',
-    monitor_name: 'Mr. Brian Ochieng',
-    room_number: 'Room S-102',
-    capacity: 25,
-    description: 'Spring Campus Middle School Learning Center',
+    description: 'Spring Campus Early Learning & Primary Center (Supervisor: Mrs. Irene Oryem)',
   },
   {
     id: 'spring-doxa',
     name: 'Doxa',
     campus: 'Spring Campus',
-    supervisor_name: '',
-    monitor_name: 'Mr. Kevin Tumusiime',
-    room_number: 'Room S-103',
+    supervisor_name: 'Mr. David Kimbugwe',
+    monitor_name: '',
+    room_number: 'Room S-102',
     capacity: 25,
-    description: 'Spring Campus Senior Learning Center',
+    description: 'Spring Campus Senior Learning Center (Supervisor: Mr. David Kimbugwe)',
   },
   {
-    id: 'spring-antioch',
-    name: 'Antioch',
+    id: 'spring-splendor',
+    name: 'Splendor',
     campus: 'Spring Campus',
-    supervisor_name: '',
-    monitor_name: 'Ms. Joy Kemigisha',
-    room_number: 'Room S-105',
-    capacity: 20,
-    description: 'Spring Campus Transition Learning Center',
+    supervisor_name: 'Mr. Arthur Mutebi',
+    monitor_name: '',
+    room_number: 'Room S-103',
+    capacity: 25,
+    description: 'Spring Campus Middle School Learning Center (Supervisor: Mr. Arthur Mutebi)',
   },
   {
     id: 'hope-bethany',
     name: 'Bethany',
     campus: 'Hope Campus',
     supervisor_name: 'Mrs. Eunice Mutebe',
-    monitor_name: 'Ms. Faith Nabirye',
+    monitor_name: 'Mrs. Joan Nandhego',
     room_number: 'Room H-101',
     capacity: 25,
-    description: 'Hope Campus Foundation & Primary PACE Center (Supervised by Mrs. Eunice Mutebe - Only Bethany Center in SWIS)',
-  },
-  {
-    id: 'hope-azusa',
-    name: 'Azusa',
-    campus: 'Hope Campus',
-    supervisor_name: '',
-    monitor_name: 'Mr. Paul Ssekandi',
-    room_number: 'Room H-102',
-    capacity: 25,
-    description: 'Hope Campus Intermediate Learning Center',
+    description: 'Hope Campus Foundation & Primary PACE Center (Supervisor: Mrs. Eunice Mutebe, Monitor: Mrs. Joan Nandhego - Only Bethany Center in SWIS)',
   },
   {
     id: 'hope-antioch',
     name: 'Antioch',
     campus: 'Hope Campus',
-    supervisor_name: '',
-    monitor_name: 'Ms. Joy Kemigisha',
+    supervisor_name: 'Mrs. Doreen Mugaga',
+    monitor_name: '',
+    room_number: 'Room H-102',
+    capacity: 25,
+    description: 'Hope Campus Junior Secondary Learning Center (Supervisor: Mrs. Doreen Mugaga)',
+  },
+  {
+    id: 'hope-azusa',
+    name: 'Azusa',
+    campus: 'Hope Campus',
+    supervisor_name: 'Mr. Shafic Musika',
+    monitor_name: '',
     room_number: 'Room H-103',
     capacity: 25,
-    description: 'Hope Campus Junior Secondary Learning Center',
-  },
-  {
-    id: 'hope-blooms',
-    name: 'Blooms and Archie',
-    campus: 'Hope Campus',
-    supervisor_name: '',
-    monitor_name: 'Ms. Patricia Namubiru',
-    room_number: 'Room H-104',
-    capacity: 20,
-    description: 'Hope Campus Specialized Learning & Remedial Center',
-  },
-  {
-    id: 'hope-splendor',
-    name: 'Splendor',
-    campus: 'Hope Campus',
-    supervisor_name: '',
-    monitor_name: 'Mr. Brian Ochieng',
-    room_number: 'Room H-105',
-    capacity: 20,
-    description: 'Hope Campus Senior Secondary PACE Center',
+    description: 'Hope Campus Intermediate Learning Center (Supervisor: Mr. Shafic Musika)',
   },
 ];
 
-// Helper to look up assigned monitor for a learning center
-function getMonitorForCenter(campus: string, center: string): string {
-  if (center === 'Kayil') return 'Ms. Gloria Akello';
-  if (center === 'Splendor') return 'Mr. Brian Ochieng';
-  if (center === 'Doxa') return 'Mr. Kevin Tumusiime';
-  if (center === 'Bethany') return 'Ms. Faith Nabirye';
-  if (center === 'Azusa') return 'Mr. Paul Ssekandi';
-  if (center === 'Antioch') return 'Ms. Joy Kemigisha';
-  if (center === 'Blooms and Archie') return 'Ms. Patricia Namubiru';
-  return 'Ms. Gloria Akello';
+// List of removed monitors to actively purge
+export const REMOVED_STAFF_NAMES_OR_IDS = new Set([
+  'Ms. Joy Kemigisha',
+  'Ms Joy Kamugisha',
+  'Joy Kemigisha',
+  'Joy Kamugisha',
+  'Mr. Paul Ssekandi',
+  'Paul Ssekandi',
+  'Ms. Faith Nabirye',
+  'Faith Nabirye',
+  'Ms. Patricia Namubiru',
+  'Patricia Namubiru',
+  'Mr. Brian Ochieng',
+  'Brian Ochieng',
+  'Mr. Kevin Tumusiime',
+  'Kevin Tumusiime',
+  'Ms. Gloria Akello',
+  'Gloria Akello',
+  'Mrs. Juliet Mayanja',
+  'Juliet Mayanja',
+  'STF-301',
+  'STF-302',
+  'STF-303',
+  'STF-304',
+  'STF-305',
+  'STF-306',
+  'STF-307',
+]);
+
+// Helper to look up assigned supervisor for a learning center
+export function getSupervisorForCenter(campus: string, center: string): string {
+  if (center === 'Kayil') return 'Mrs. Irene Oryem';
+  if (center === 'Doxa') return 'Mr. David Kimbugwe';
+  if (center === 'Splendor') return 'Mr. Arthur Mutebi';
+  if (center === 'Bethany') return 'Mrs. Eunice Mutebe';
+  if (center === 'Antioch') return 'Mrs. Doreen Mugaga';
+  if (center === 'Azusa') return 'Mr. Shafic Musika';
+  return '';
+}
+
+// Helper to look up assigned monitor for a learning center (Only Bethany has Mrs. Joan Nandhego)
+export function getMonitorForCenter(campus: string, center: string): string {
+  if (center === 'Bethany') return 'Mrs. Joan Nandhego';
+  return '';
 }
 
 // 74 Students directly from user's attached CSV
@@ -429,15 +329,15 @@ export const RAW_STUDENT_DATA = [
   { name: 'Legi Hellena Elain', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
   { name: 'Payton A. Kobusingye', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
   { name: 'Gregory James Mwesigye', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
-  { name: 'Zachary Cursten Kwesiga', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Zachary Cursten Kwesiga', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
   { name: 'Jerome Gad Amani', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
   { name: 'Raina Nguya', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
   { name: 'Romanove Nguya', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
-  { name: 'David Nkeza', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'David Nkeza', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
   { name: 'Edrin Baraza', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
   { name: 'Ariana Akoli', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
   { name: 'Nissi Mwiza', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
-  { name: 'Jireh Nziza', campus: 'Spring Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
+  { name: 'Jireh Nziza', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
   { name: 'Zoe Jubilee Mutoni', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
   { name: 'Shaddai Keza', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
   { name: 'Ariella Mpanja', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
@@ -449,11 +349,11 @@ export const RAW_STUDENT_DATA = [
   { name: 'Charis Khane Gzas', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
   { name: 'Lester Nino Kaburu', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
   { name: 'Myles Kisa', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
-  { name: 'Charis Sanyu Keza', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Charis Sanyu Keza', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
   { name: 'Hannah Margaret Mukiibi', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
   { name: 'Immanuella Nambiimbwa', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
   { name: 'Lincoln Kalungi', campus: 'Spring Campus', center: 'Doxa', supervisor: 'Mr. David Kimbugwe' },
-  { name: 'Adore Darian Kunda', campus: 'Hope Campus', center: 'Blooms and Archie', supervisor: 'Mrs. Juliet Mayanja' },
+  { name: 'Adore Darian Kunda', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
   { name: 'Camila Amutuhaire', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
   { name: 'Cruz Bart Rubaale', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
   { name: 'Charissa Laloyo', campus: 'Hope Campus', center: 'Bethany', supervisor: 'Mrs. Eunice Mutebe' },
@@ -461,7 +361,7 @@ export const RAW_STUDENT_DATA = [
   { name: 'Charlotte Bazaine', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
   { name: 'Blessing Phoebe', campus: 'Hope Campus', center: 'Antioch', supervisor: 'Mrs. Doreen Mugaga' },
   { name: 'Darvin Mark Alleni', campus: 'Spring Campus', center: 'Kayil', supervisor: 'Mrs. Irene Oryem' },
-  { name: 'Jovin Zihuramye', campus: 'Hope Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
+  { name: 'Jovin Zihuramye', campus: 'Spring Campus', center: 'Splendor', supervisor: 'Mr. Arthur Mutebi' },
   { name: 'Angelica Rose Otai', campus: 'Hope Campus', center: 'Azusa', supervisor: 'Mr. Shafic Musika' },
 ];
 
@@ -478,8 +378,8 @@ export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => 
   const isSprings = row.campus === 'Spring Campus';
   const enrollment_type: 'Day' | 'Boarding' = isSprings && (index % 3 === 0 || index % 5 === 0) ? 'Boarding' : 'Day';
 
-  // Bethany Learning Center has a supervisor and not any other learning center
-  const supervisor_name = row.center === 'Bethany' ? 'Mrs. Eunice Mutebe' : '';
+  // Official supervisors for each learning center
+  const supervisor_name = row.supervisor || getSupervisorForCenter(row.campus, row.center);
 
   // Sample designated drop-off / pick-up persons other than parents
   const designated_pickups = [
@@ -636,11 +536,13 @@ export async function purgeAllDummyDataAndCleanSystem(): Promise<{
 
     // 8. Sync Learning Centers
     const lcBatch = writeBatch(db);
-    try {
-      lcBatch.delete(doc(db, 'learning_centers', 'spring-bethany'));
-    } catch {
-      // ignore
-    }
+    const validCenterIds = new Set(INITIAL_LEARNING_CENTERS.map((lc) => lc.id));
+    const lcSnap = await getDocs(collection(db, 'learning_centers'));
+    lcSnap.docs.forEach((d) => {
+      if (!validCenterIds.has(d.id)) {
+        lcBatch.delete(d.ref);
+      }
+    });
     INITIAL_LEARNING_CENTERS.forEach((lc) => {
       lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
     });
@@ -672,6 +574,94 @@ export async function purgeAllDummyDataAndCleanSystem(): Promise<{
       studentsCount: 0,
       staffCount: 0,
     };
+  }
+}
+
+/**
+ * Ensures removed monitors are purged and official staff, campuses, and learning centers
+ * are synchronized in Firestore.
+ */
+export async function syncOfficialStaffAndCenters(): Promise<void> {
+  try {
+    const staffSnap = await getDocs(collection(db, 'staff'));
+    const officialStaffIds = new Set(INITIAL_STAFF.map((s) => s.staff_id));
+    
+    // Purge removed monitors or non-official staff
+    const rogueDocs = staffSnap.docs.filter((d) => {
+      const data = d.data();
+      const fullName = (data.full_name || '').trim();
+      return (
+        !officialStaffIds.has(d.id) ||
+        REMOVED_STAFF_NAMES_OR_IDS.has(d.id) ||
+        REMOVED_STAFF_NAMES_OR_IDS.has(fullName)
+      );
+    });
+
+    if (rogueDocs.length > 0) {
+      for (let i = 0; i < rogueDocs.length; i += 300) {
+        const batch = writeBatch(db);
+        rogueDocs.slice(i, i + 300).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
+    // Sync official staff
+    const staffBatch = writeBatch(db);
+    INITIAL_STAFF.forEach((s) => {
+      staffBatch.set(doc(db, 'staff', s.staff_id), s, { merge: true });
+    });
+    await staffBatch.commit();
+
+    // Sync official learning centers and remove obsolete centers
+    const lcSnap = await getDocs(collection(db, 'learning_centers'));
+    const validCenterIds = new Set(INITIAL_LEARNING_CENTERS.map((lc) => lc.id));
+    const lcBatch = writeBatch(db);
+    lcSnap.docs.forEach((d) => {
+      if (!validCenterIds.has(d.id)) {
+        lcBatch.delete(d.ref);
+      }
+    });
+    INITIAL_LEARNING_CENTERS.forEach((lc) => {
+      lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
+    });
+    await lcBatch.commit();
+
+    // Sync Campuses
+    const campusBatch = writeBatch(db);
+    INITIAL_CAMPUSES.forEach((c) => {
+      campusBatch.set(doc(db, 'campuses', c.id), c, { merge: true });
+    });
+    await campusBatch.commit();
+
+    // Ensure all existing students have their official supervisor and monitor
+    const studentsSnap = await getDocs(collection(db, 'students'));
+    if (!studentsSnap.empty) {
+      for (let i = 0; i < studentsSnap.docs.length; i += 300) {
+        const studentBatch = writeBatch(db);
+        const chunk = studentsSnap.docs.slice(i, i + 300);
+        let batchNeedsCommit = false;
+        chunk.forEach((d) => {
+          const data = d.data();
+          const center = (data.learning_center_id || '').trim();
+          const campus = (data.campus || '').trim();
+          const targetSupervisor = getSupervisorForCenter(campus, center);
+          const targetMonitor = getMonitorForCenter(campus, center);
+
+          if (data.supervisor_name !== targetSupervisor || data.monitor_name !== targetMonitor) {
+            studentBatch.update(d.ref, {
+              supervisor_name: targetSupervisor,
+              monitor_name: targetMonitor,
+            });
+            batchNeedsCommit = true;
+          }
+        });
+        if (batchNeedsCommit) {
+          await studentBatch.commit();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Sync official staff and centers error:', err);
   }
 }
 
@@ -709,39 +699,14 @@ export async function seedDatabaseIfEmpty(): Promise<boolean> {
         });
         await batch.commit();
       }
-
-      // 2. Populate official staff
-      const staffBatch = writeBatch(db);
-      INITIAL_STAFF.forEach((s) => {
-        staffBatch.set(doc(db, 'staff', s.staff_id), s);
-      });
-      await staffBatch.commit();
-
-      // 3. Sync Campuses
-      const campusBatch = writeBatch(db);
-      INITIAL_CAMPUSES.forEach((c) => {
-        campusBatch.set(doc(db, 'campuses', c.id), c, { merge: true });
-      });
-      await campusBatch.commit();
-
-      // 4. Sync Learning Centers
-      const lcBatch = writeBatch(db);
-      try {
-        lcBatch.delete(doc(db, 'learning_centers', 'spring-bethany'));
-      } catch {
-        // ignore
-      }
-      INITIAL_LEARNING_CENTERS.forEach((lc) => {
-        lcBatch.set(doc(db, 'learning_centers', lc.id), lc, { merge: true });
-      });
-      await lcBatch.commit();
-
-      return true;
     }
+
+    // Always ensure official staff, campuses, and learning centers are in sync and removed monitors are deleted
+    await syncOfficialStaffAndCenters();
 
     // Always ensure super user account exists
     await ensureSuperUserAccount();
-    return false;
+    return studentsSnap.empty;
   } catch (err) {
     console.warn('Database initialization check:', err);
     return false;

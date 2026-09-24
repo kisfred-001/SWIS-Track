@@ -137,20 +137,22 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               <div className="p-2.5 bg-white rounded-lg border border-slate-200">
                 <div className="text-slate-400 text-[10px]">Assigned Supervisor</div>
                 <div className="font-bold text-slate-800 mt-0.5">
-                  {isBethany ? (
-                    <span className="text-emerald-700 font-bold">Mrs. Eunice Mutebe (Bethany Supervisor)</span>
+                  {student.supervisor_name ? (
+                    <span className="text-emerald-700 font-bold">{student.supervisor_name} (Center Supervisor)</span>
                   ) : (
-                    <span className="text-slate-400 italic font-normal">
-                      No Supervisor (Bethany Learning Center only)
-                    </span>
+                    <span className="text-slate-400 italic font-normal">Assigned Center Supervisor</span>
                   )}
                 </div>
               </div>
 
               <div className="p-2.5 bg-white rounded-lg border border-slate-200">
-                <div className="text-slate-400 text-[10px]">Assigned Monitor / Assistant</div>
+                <div className="text-slate-400 text-[10px]">Assigned Monitor</div>
                 <div className="font-bold text-slate-800 mt-0.5">
-                  {student.monitor_name || 'Assigned Learning Monitor'}
+                  {student.monitor_name ? (
+                    <span className="text-indigo-700 font-bold">{student.monitor_name} (Monitor)</span>
+                  ) : (
+                    <span className="text-slate-400 italic font-normal">None (Bethany Learning Center only)</span>
+                  )}
                 </div>
               </div>
             </div>

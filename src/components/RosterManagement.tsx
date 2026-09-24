@@ -451,22 +451,24 @@ export const RosterManagement: React.FC = () => {
 
                           <td className="py-3 px-3">
                             <div className="font-bold text-slate-800">{s.learning_center_id}</div>
-                            <div className="text-[10px] text-slate-400">Monitor: {s.monitor_name || '—'}</div>
+                            <div className="text-[10px] text-slate-500">
+                              {s.monitor_name ? `Monitor: ${s.monitor_name}` : <span className="text-slate-400 italic">No monitor</span>}
+                            </div>
                           </td>
 
                           <td className="py-3 px-3">
-                            {isBethany ? (
+                            {s.supervisor_name ? (
                               <div>
                                 <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                  Mrs. Eunice Mutebe
+                                  {s.supervisor_name}
                                 </span>
                                 <div className="text-[9px] text-emerald-700 mt-0.5 font-medium">
-                                  Official Supervisor
+                                  Center Supervisor
                                 </div>
                               </div>
                             ) : (
                               <div className="text-slate-400 italic text-[11px]">
-                                None (Bethany only)
+                                Assigned Supervisor
                               </div>
                             )}
                           </td>
@@ -585,12 +587,20 @@ export const RosterManagement: React.FC = () => {
                           <span className="text-slate-400">Center:</span>{' '}
                           <strong className="text-slate-700">{s.learning_center_id}</strong>
                         </div>
-                        <div className="col-span-2">
+                        <div>
                           <span className="text-slate-400">Supervisor:</span>{' '}
-                          {isBethany ? (
-                            <strong className="text-emerald-800">Mrs. Eunice Mutebe</strong>
+                          {s.supervisor_name ? (
+                            <strong className="text-emerald-800">{s.supervisor_name}</strong>
                           ) : (
-                            <span className="text-slate-400 italic">None (Bethany Only)</span>
+                            <span className="text-slate-400 italic">Assigned Supervisor</span>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Monitor:</span>{' '}
+                          {s.monitor_name ? (
+                            <strong className="text-indigo-800">{s.monitor_name}</strong>
+                          ) : (
+                            <span className="text-slate-400 italic">None</span>
                           )}
                         </div>
                       </div>

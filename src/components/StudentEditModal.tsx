@@ -104,7 +104,7 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       setGrade('Primary');
       setEnrollmentType('Day');
       setPhotoUrl('');
-      setMonitorName('Ms. Gloria Akello');
+      setMonitorName('');
 
       setFatherName('');
       setFatherPhone('');
@@ -239,8 +239,24 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
     const parentNamesSummary =
       [fatherName.trim(), motherName.trim()].filter(Boolean).join(' & ') || 'Parent / Guardian';
 
-    // Enforce Bethany supervisor rule
-    const supervisor_name = learningCenterId === 'Bethany' ? 'Mrs. Eunice Mutebe' : '';
+    // Enforce official supervisors for each learning center
+    const supervisor_name =
+      learningCenterId === 'Kayil'
+        ? 'Mrs. Irene Oryem'
+        : learningCenterId === 'Doxa'
+        ? 'Mr. David Kimbugwe'
+        : learningCenterId === 'Splendor'
+        ? 'Mr. Arthur Mutebi'
+        : learningCenterId === 'Bethany'
+        ? 'Mrs. Eunice Mutebe'
+        : learningCenterId === 'Antioch'
+        ? 'Mrs. Doreen Mugaga'
+        : learningCenterId === 'Azusa'
+        ? 'Mr. Shafic Musika'
+        : '';
+
+    // Mrs. Joan Nandhego is the ONLY monitor in SWIS, assigned exclusively to Bethany
+    const finalMonitorName = learningCenterId === 'Bethany' ? 'Mrs. Joan Nandhego' : '';
 
     const newStudentId = student?.student_id || `STU-${Date.now().toString().slice(-4)}`;
 
@@ -251,7 +267,7 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       campus,
       learning_center_id: learningCenterId,
       supervisor_name,
-      monitor_name: monitorName.trim() || 'Assigned Monitor',
+      monitor_name: finalMonitorName,
       grade: `${campus.split(' ')[0]} • ${learningCenterId}`,
       enrollment_type: campus === 'Spring Campus' ? enrollmentType : 'Day',
       photo_url: photoUrl,
@@ -458,6 +474,15 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                       setCampus(newCamp);
                       if (newCamp !== 'Spring Campus') {
                         setEnrollmentType('Day');
+                        if (learningCenterId === 'Kayil' || learningCenterId === 'Doxa' || learningCenterId === 'Splendor') {
+                          setLearningCenterId('Bethany');
+                          setMonitorName('Mrs. Joan Nandhego');
+                        }
+                      } else {
+                        if (learningCenterId === 'Bethany' || learningCenterId === 'Antioch' || learningCenterId === 'Azusa') {
+                          setLearningCenterId('Kayil');
+                          setMonitorName('');
+                        }
                       }
                     }}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none bg-white font-medium"
@@ -521,49 +546,112 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                 </div>
               )}
 
-              {/* Learning Center & Supervisor */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Learning Center, Supervisor & Monitor */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
                     Learning Center:
                   </label>
                   <select
                     value={learningCenterId}
-                    onChange={(e) => setLearningCenterId(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setLearningCenterId(val);
+                      if (val === 'Bethany') {
+                        setCampus('Hope Campus');
+                        setEnrollmentType('Day');
+                        setMonitorName('Mrs. Joan Nandhego');
+                      } else if (val === 'Antioch') {
+                        setCampus('Hope Campus');
+                        setEnrollmentType('Day');
+                        setMonitorName('');
+                      } else if (val === 'Azusa') {
+                        setCampus('Hope Campus');
+                        setEnrollmentType('Day');
+                        setMonitorName('');
+                      } else if (val === 'Kayil') {
+                        setCampus('Spring Campus');
+                        setMonitorName('');
+                      } else if (val === 'Doxa') {
+                        setCampus('Spring Campus');
+                        setMonitorName('');
+                      } else if (val === 'Splendor') {
+                        setCampus('Spring Campus');
+                        setMonitorName('');
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none bg-white font-medium"
                   >
-                    <option value="Bethany">Bethany (With Official Supervisor)</option>
-                    <option value="Kayil">Kayil</option>
-                    <option value="Splendor">Splendor</option>
-                    <option value="Doxa">Doxa</option>
-                    <option value="Antioch">Antioch</option>
-                    <option value="Azusa">Azusa</option>
-                    <option value="Blooms and Archie">Blooms and Archie</option>
+                    {campus === 'Spring Campus' ? (
+                      <>
+                        <option value="Kayil">Kayil (Supervisor: Mrs. Irene Oryem)</option>
+                        <option value="Doxa">Doxa (Supervisor: Mr. David Kimbugwe)</option>
+                        <option value="Splendor">Splendor (Supervisor: Mr. Arthur Mutebi)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Bethany">Bethany (Supervisor: Mrs. Eunice Mutebe • Monitor: Mrs. Joan Nandhego)</option>
+                        <option value="Antioch">Antioch (Supervisor: Mrs. Doreen Mugaga)</option>
+                        <option value="Azusa">Azusa (Supervisor: Mr. Shafic Musika)</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
-                {/* Supervisor Field: LOCKED to Mrs. Eunice Mutebe for Bethany, disabled for others */}
+                {/* Supervisor Field: Official Supervisor for Center */}
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    Supervisor (Assigned):
+                    Supervisor:
+                  </label>
+                  <div className="p-2 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-900 font-semibold flex items-center justify-between">
+                    <span className="truncate">
+                      {learningCenterId === 'Kayil'
+                        ? 'Mrs. Irene Oryem'
+                        : learningCenterId === 'Doxa'
+                        ? 'Mr. David Kimbugwe'
+                        : learningCenterId === 'Splendor'
+                        ? 'Mr. Arthur Mutebi'
+                        : learningCenterId === 'Bethany'
+                        ? 'Mrs. Eunice Mutebe'
+                        : learningCenterId === 'Antioch'
+                        ? 'Mrs. Doreen Mugaga'
+                        : learningCenterId === 'Azusa'
+                        ? 'Mr. Shafic Musika'
+                        : 'Assigned Supervisor'}
+                    </span>
+                    <span className="text-[10px] bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold shrink-0">
+                      Supervisor
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    * Officially assigned supervisor for {learningCenterId}.
+                  </p>
+                </div>
+
+                {/* Monitor Field: Bethany has Mrs. Joan Nandhego, others have none */}
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Assigned Monitor:
                   </label>
                   {isBethany ? (
-                    <div className="p-2 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-900 font-semibold flex items-center justify-between">
-                      <span>Mrs. Eunice Mutebe</span>
-                      <span className="text-[10px] bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded font-bold">
-                        Bethany Supervisor
+                    <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-900 font-semibold flex items-center justify-between">
+                      <span className="truncate">Mrs. Joan Nandhego</span>
+                      <span className="text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded font-bold shrink-0">
+                        Monitor
                       </span>
                     </div>
                   ) : (
                     <div className="p-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 italic flex items-center justify-between">
-                      <span>No Supervisor Assigned</span>
-                      <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium">
+                      <span>None</span>
+                      <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium shrink-0">
                         Bethany Only
                       </span>
                     </div>
                   )}
                   <p className="text-[10px] text-slate-400 mt-1">
-                    * By school policy, Bethany is the only learning center with a supervisor.
+                    {isBethany
+                      ? '* Mrs. Joan Nandhego is the official monitor for Bethany.'
+                      : '* Bethany is the only learning center with an assigned monitor.'}
                   </p>
                 </div>
               </div>

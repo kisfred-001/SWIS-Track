@@ -681,23 +681,7 @@ export const LoginScreen: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mrs. Irene Lulika</strong> (Principal)
-                    </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 101
-                    </span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <strong className="text-slate-800">Mr. Jaxon Lulika</strong> (Director)
-                    </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 102
-                    </span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <strong className="text-slate-800">Mrs. Khasoma Susan</strong> (Administrator)
+                      <strong className="text-slate-800">Mrs. Khasoma</strong> (Administrator)
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 103
@@ -705,10 +689,74 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mrs. Anette Mugala</strong> (Support Staff)
+                      <strong className="text-slate-800">Mrs. Julie Arinaitwe</strong> (Admin Assistant)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 104
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Miss. Anette Mugaga</strong> (Support Staff)
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 105
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Eunice Mutebe</strong> (Bethany Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 203
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Joan Nandhego</strong> (Bethany Monitor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 208
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Irene Oryem</strong> (Kayil Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 201
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mr. David Kimbugwe</strong> (Doxa Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 206
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mr. Arthur Mutebi</strong> (Splendor Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 202
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Doreen Mugaga</strong> (Antioch Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 205
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mr. Shafic Musika</strong> (Azusa Supervisor)
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 204
                     </span>
                   </div>
                 </div>

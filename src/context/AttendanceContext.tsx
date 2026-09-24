@@ -200,24 +200,40 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => unsub();
   }, []);
 
-  // Subscribe to learning centers with fallback & enforce only one Bethany in Hope Campus
+  // Subscribe to learning centers with fallback & enforce official centers and monitors
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'learning_centers'),
       (snap) => {
         let list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as LearningCenter[];
-        // Enforce: only one Bethany learning center and it is in Hope Campus
-        const hasSpringBethany = list.some(
-          (lc) => lc.id === 'spring-bethany' || (lc.name === 'Bethany' && lc.campus === 'Spring Campus')
-        );
-        if (hasSpringBethany) {
-          list = list.filter(
-            (lc) => lc.id !== 'spring-bethany' && !(lc.name === 'Bethany' && lc.campus === 'Spring Campus')
-          );
-          deleteDoc(doc(db, 'learning_centers', 'spring-bethany')).catch(() => {});
-        }
+        // Filter to official learning centers
+        const validIds = new Set(INITIAL_LEARNING_CENTERS.map((lc) => lc.id));
+        const invalidDocs = snap.docs.filter((d) => !validIds.has(d.id));
+        invalidDocs.forEach((d) => {
+          deleteDoc(d.ref).catch(() => {});
+        });
+
+        list = list.filter((lc) => validIds.has(lc.id));
+        list = list.map((lc) => {
+          if (lc.name === 'Bethany') {
+            return {
+              ...lc,
+              supervisor_name: 'Mrs. Eunice Mutebe',
+              monitor_name: 'Mrs. Joan Nandhego',
+            };
+          }
+          if (lc.name === 'Kayil') return { ...lc, supervisor_name: 'Mrs. Irene Oryem', monitor_name: '' };
+          if (lc.name === 'Doxa') return { ...lc, supervisor_name: 'Mr. David Kimbugwe', monitor_name: '' };
+          if (lc.name === 'Splendor') return { ...lc, supervisor_name: 'Mr. Arthur Mutebi', monitor_name: '' };
+          if (lc.name === 'Antioch') return { ...lc, supervisor_name: 'Mrs. Doreen Mugaga', monitor_name: '' };
+          if (lc.name === 'Azusa') return { ...lc, supervisor_name: 'Mr. Shafic Musika', monitor_name: '' };
+          return lc;
+        });
+
         if (list.length > 0) {
           setLearningCenters(list);
+        } else {
+          setLearningCenters(INITIAL_LEARNING_CENTERS);
         }
       },
       () => {

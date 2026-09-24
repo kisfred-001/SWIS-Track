@@ -28,8 +28,8 @@ export interface LearningCenter {
   id: string;
   name: string;
   campus: string; // 'Spring Campus' | 'Hope Campus'
-  supervisor_name?: string; // ONLY Bethany has a supervisor
-  monitor_name: string;
+  supervisor_name: string; // Assigned supervisor for this center
+  monitor_name?: string; // Optional monitor (Bethany Learning Center has Mrs. Joan Nandhego)
   room_number?: string;
   capacity?: number;
   description?: string;

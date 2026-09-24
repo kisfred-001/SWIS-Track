@@ -3,7 +3,7 @@ import { Staff, UserRole } from '../types';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { INITIAL_STAFF, SUPER_USER_ACCOUNT, ensureSuperUserAccount } from '../firebase/seed';
+import { INITIAL_STAFF, SUPER_USER_ACCOUNT, ensureSuperUserAccount, REMOVED_STAFF_NAMES_OR_IDS } from '../firebase/seed';
 import { sound } from '../utils/sound';
 
 export const DEFAULT_IDLE_TIMEOUT_MINUTES = 5;
@@ -199,16 +199,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       collection(db, 'staff'),
       (snapshot) => {
         if (!snapshot.empty) {
-          const staffList = snapshot.docs.map((doc) => ({
+          const rawList = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           })) as Staff[];
+          const staffList = rawList.filter(
+            (s) =>
+              !REMOVED_STAFF_NAMES_OR_IDS.has(s.staff_id) &&
+              !REMOVED_STAFF_NAMES_OR_IDS.has((s.full_name || '').trim())
+          );
           setAllStaff(staffList);
           // If current user is present in the updated list, refresh current user object
           if (currentUser) {
             const found = staffList.find((s) => s.staff_id === currentUser.staff_id);
             if (found) {
               setCurrentUser(found);
+            } else if (
+              REMOVED_STAFF_NAMES_OR_IDS.has(currentUser.staff_id) ||
+              REMOVED_STAFF_NAMES_OR_IDS.has((currentUser.full_name || '').trim())
+            ) {
+              setCurrentUser(null);
             }
           }
         }

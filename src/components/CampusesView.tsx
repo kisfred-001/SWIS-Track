@@ -406,12 +406,14 @@ export const CampusesView: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">Supervisor:</span>
                       <strong className="text-slate-800">
-                        {lc.supervisor_name || <span className="text-slate-400 font-normal">None (Bethany only)</span>}
+                        {lc.supervisor_name || <span className="text-slate-400 font-normal">—</span>}
                       </strong>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">Monitor:</span>
-                      <strong className="text-slate-800">{lc.monitor_name || '—'}</strong>
+                      <strong className="text-slate-800">
+                        {lc.monitor_name || <span className="text-slate-400 font-normal">None</span>}
+                      </strong>
                     </div>
                   </div>
 
@@ -614,7 +616,7 @@ export const CampusesView: React.FC = () => {
                         {student.supervisor_name || <span className="text-slate-400 italic">None</span>}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
-                        {student.monitor_name}
+                        {student.monitor_name || <span className="text-slate-400 italic">None</span>}
                       </td>
                       <td className="px-4 py-3 text-center font-mono font-bold text-slate-600">
                         {student.pin_code}
