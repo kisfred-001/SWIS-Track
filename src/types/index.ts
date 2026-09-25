@@ -199,6 +199,51 @@ export interface PremisesSummary {
   staffAbsent: number;
 }
 
+export interface SchoolHoursSchedule {
+  enabled: boolean;
+  mondayToThursday: {
+    openTime: string; // e.g. "07:00"
+    closeTime: string; // e.g. "16:30"
+    openLabel?: string;
+    closeLabel?: string;
+  };
+  friday: {
+    openTime: string; // e.g. "07:00"
+    closeTime: string; // e.g. "14:00"
+    openLabel?: string;
+    closeLabel?: string;
+  };
+  weekendClosed: boolean;
+}
+
+export interface BoardingScheduleConfig {
+  enabled: boolean;
+  campusName: string; // 'Spring Campus'
+  dropoffDayName: string; // 'Monday'
+  dropoffTime: string; // '07:00'
+  dismissalDayName: string; // 'Friday'
+  dismissalTime: string; // '14:00'
+  notifyMidWeekDepartures: boolean; // Mid-week departures trigger resident security notifications
+  requireApprovalForMidWeek: boolean;
+}
+
+export interface EarlyDepartureEnforcementConfig {
+  enabled: boolean;
+  monThuDismissalTime: string; // '16:30'
+  friDismissalTime: string; // '14:00'
+  earlyDepartureBufferMinutes: number; // 10 minutes buffer
+  requireAuthorizationNote: boolean;
+  requirePartyDetails: boolean;
+}
+
+export interface OperationalPolicySettings {
+  schoolHours: SchoolHoursSchedule;
+  boardingSchedule: BoardingScheduleConfig;
+  earlyDeparture: EarlyDepartureEnforcementConfig;
+  updated_at?: string;
+  updated_by?: string;
+}
+
 export interface SystemSettings {
   id: string;
   school_name: string;

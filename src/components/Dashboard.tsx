@@ -42,6 +42,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setSelectedCampus,
     pendingRequestsCount,
     processScan,
+    operationalPolicies,
   } = useAttendance();
   const { currentUser, allStaff, canScanTeachers } = useAuth();
 
@@ -158,7 +159,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return showAllRecords ? filteredStaff : filteredStaff.slice(0, 25);
   }, [filteredStaff, showAllRecords]);
 
-  const schoolSchedule = getSchoolSchedule();
+  const schoolSchedule = getSchoolSchedule(new Date(), operationalPolicies);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -170,10 +171,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
           <div>
             <div className="font-bold text-slate-100 flex items-center space-x-2">
-              <span>School Schedule: Mon–Thu 7:00 AM – 4:30 PM • Fri 7:00 AM – 2:00 PM</span>
+              <span>
+                {operationalPolicies.schoolHours.enabled
+                  ? `School Schedule: Mon–Thu ${operationalPolicies.schoolHours.mondayToThursday.openLabel || '7:00 AM'} – ${operationalPolicies.schoolHours.mondayToThursday.closeLabel || '4:30 PM'} • Fri ${operationalPolicies.schoolHours.friday.openLabel || '7:00 AM'} – ${operationalPolicies.schoolHours.friday.closeLabel || '2:00 PM'}`
+                  : 'Official School Schedule Policy: Testing Mode (Schedule Unrestricted)'}
+              </span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Springs Campus Boarding: Resident drop-off Monday 7:00 AM • Friday dismissal 2:00 PM
+              {operationalPolicies.boardingSchedule.enabled
+                ? 'Springs Campus Boarding: Resident drop-off Monday 7:00 AM • Friday dismissal 2:00 PM (Enforced)'
+                : 'Springs Campus Boarding: Policy disabled for system testing (Open check-in/out permitted)'}
             </p>
           </div>
         </div>

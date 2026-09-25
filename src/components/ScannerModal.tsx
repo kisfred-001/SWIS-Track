@@ -29,7 +29,7 @@ interface ScannerModalProps {
 }
 
 export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) => {
-  const { processScan, findTargetByCode, todayLogs } = useAttendance();
+  const { processScan, findTargetByCode, todayLogs, operationalPolicies } = useAttendance();
   const { currentUser, canScanTeachers } = useAuth();
 
   const [scanMode, setScanMode] = useState<'camera' | 'manual'>('manual');
@@ -207,8 +207,8 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
         setPartyRelationship('Parent / Guardian');
         setPartyPhone(student.emergency_contact || '');
         setNotes('');
-        // Check if current time is before normal dismissal via official school schedule
-        const isEarly = isEarlyDepartureTime();
+        // Check if current time is before normal dismissal via operational policies
+        const isEarly = isEarlyDepartureTime(new Date(), operationalPolicies);
         setIsEarlyDeparture(isEarly);
         setEarlyDepartureReason(isEarly ? 'Early dismissal prior to official school close' : '');
       }
@@ -334,11 +334,13 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
           <div className="flex items-center space-x-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
             <span className="font-semibold">
-              School Hours: Mon–Thu 7:00 AM – 4:30 PM • Fri 7:00 AM – 2:00 PM
+              {operationalPolicies.schoolHours.enabled
+                ? `Official Hours: Mon–Thu ${operationalPolicies.schoolHours.mondayToThursday.openLabel || '7:00 AM'} – ${operationalPolicies.schoolHours.mondayToThursday.closeLabel || '4:30 PM'} • Fri ${operationalPolicies.schoolHours.friday.openLabel || '7:00 AM'} – ${operationalPolicies.schoolHours.friday.closeLabel || '2:00 PM'}`
+                : 'School Hours Policy: Testing Mode (Schedule Unrestricted)'}
             </span>
           </div>
           <span className="font-mono text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
-            {getSchoolSchedule().statusBadgeText}
+            {getSchoolSchedule(new Date(), operationalPolicies).statusBadgeText}
           </span>
         </div>
 
@@ -441,7 +443,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         <span>Springs Campus Boarding Section (Mon–Fri)</span>
                       </div>
                       <p className="text-[11px] text-purple-800">
-                        {getBoardingScheduleStatus().message}
+                        {getBoardingScheduleStatus(new Date(), operationalPolicies).message}
                       </p>
                     </div>
                   )}

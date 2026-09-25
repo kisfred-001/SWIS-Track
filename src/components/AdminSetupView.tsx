@@ -33,9 +33,16 @@ import {
   FileCheck,
   Info,
   ExternalLink,
+  Bed,
+  Calendar,
+  Sliders,
+  AlertCircle,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
-import { Campus, LearningCenter, UserRole } from '../types';
+import { Campus, LearningCenter, UserRole, OperationalPolicySettings } from '../types';
 import { SchoolLogo } from './SchoolLogo';
+import { formatTime24to12, DEFAULT_OPERATIONAL_POLICIES } from '../utils/schedule';
 
 export const AdminSetupView: React.FC = () => {
   const {
@@ -51,6 +58,8 @@ export const AdminSetupView: React.FC = () => {
     purgeAllDummyData,
     systemLogo,
     updateSystemLogo,
+    operationalPolicies,
+    updateOperationalPolicies,
   } = useAttendance();
 
   const {
@@ -62,7 +71,9 @@ export const AdminSetupView: React.FC = () => {
     setIdleTimeoutMinutes,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'branding' | 'campuses' | 'learning_centers' | 'rbac' | 'security' | 'database'>('branding');
+  const [activeTab, setActiveTab] = useState<
+    'branding' | 'operational_policies' | 'campuses' | 'learning_centers' | 'rbac' | 'security' | 'database'
+  >('branding');
 
   // Branding & Logo State
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(systemLogo);
@@ -71,6 +82,86 @@ export const AdminSetupView: React.FC = () => {
   const [logoSaving, setLogoSaving] = useState(false);
   const [logoSuccessMsg, setLogoSuccessMsg] = useState('');
   const [logoMode, setLogoMode] = useState<'upload' | 'url'>('upload');
+
+  // Operational Policies Configuration Form State
+  const [schoolHoursEnabled, setSchoolHoursEnabled] = useState<boolean>(
+    operationalPolicies?.schoolHours?.enabled ?? false
+  );
+  const [monThuOpenTime, setMonThuOpenTime] = useState<string>(
+    operationalPolicies?.schoolHours?.mondayToThursday?.openTime || '07:00'
+  );
+  const [monThuCloseTime, setMonThuCloseTime] = useState<string>(
+    operationalPolicies?.schoolHours?.mondayToThursday?.closeTime || '16:30'
+  );
+  const [friOpenTime, setFriOpenTime] = useState<string>(
+    operationalPolicies?.schoolHours?.friday?.openTime || '07:00'
+  );
+  const [friCloseTime, setFriCloseTime] = useState<string>(
+    operationalPolicies?.schoolHours?.friday?.closeTime || '14:00'
+  );
+  const [weekendClosed, setWeekendClosed] = useState<boolean>(
+    operationalPolicies?.schoolHours?.weekendClosed ?? true
+  );
+
+  const [boardingEnabled, setBoardingEnabled] = useState<boolean>(
+    operationalPolicies?.boardingSchedule?.enabled ?? false
+  );
+  const [boardingDropoffTime, setBoardingDropoffTime] = useState<string>(
+    operationalPolicies?.boardingSchedule?.dropoffTime || '07:00'
+  );
+  const [boardingDismissalTime, setBoardingDismissalTime] = useState<string>(
+    operationalPolicies?.boardingSchedule?.dismissalTime || '14:00'
+  );
+  const [boardingNotifyMidWeek, setBoardingNotifyMidWeek] = useState<boolean>(
+    operationalPolicies?.boardingSchedule?.notifyMidWeekDepartures ?? true
+  );
+  const [boardingRequireApproval, setBoardingRequireApproval] = useState<boolean>(
+    operationalPolicies?.boardingSchedule?.requireApprovalForMidWeek ?? true
+  );
+
+  const [earlyDepartureEnabled, setEarlyDepartureEnabled] = useState<boolean>(
+    operationalPolicies?.earlyDeparture?.enabled ?? false
+  );
+  const [earlyDepartureMonThuTime, setEarlyDepartureMonThuTime] = useState<string>(
+    operationalPolicies?.earlyDeparture?.monThuDismissalTime || '16:30'
+  );
+  const [earlyDepartureFriTime, setEarlyDepartureFriTime] = useState<string>(
+    operationalPolicies?.earlyDeparture?.friDismissalTime || '14:00'
+  );
+  const [earlyDepartureBuffer, setEarlyDepartureBuffer] = useState<number>(
+    operationalPolicies?.earlyDeparture?.earlyDepartureBufferMinutes ?? 10
+  );
+  const [earlyDepartureRequireNote, setEarlyDepartureRequireNote] = useState<boolean>(
+    operationalPolicies?.earlyDeparture?.requireAuthorizationNote ?? true
+  );
+
+  const [policiesSaving, setPoliciesSaving] = useState<boolean>(false);
+  const [policiesSuccessMsg, setPoliciesSuccessMsg] = useState<string>('');
+  const [policiesErrorMsg, setPoliciesErrorMsg] = useState<string>('');
+
+  // Synchronize local policy state when remote operationalPolicies update
+  useEffect(() => {
+    if (operationalPolicies) {
+      setSchoolHoursEnabled(operationalPolicies.schoolHours?.enabled ?? false);
+      setMonThuOpenTime(operationalPolicies.schoolHours?.mondayToThursday?.openTime || '07:00');
+      setMonThuCloseTime(operationalPolicies.schoolHours?.mondayToThursday?.closeTime || '16:30');
+      setFriOpenTime(operationalPolicies.schoolHours?.friday?.openTime || '07:00');
+      setFriCloseTime(operationalPolicies.schoolHours?.friday?.closeTime || '14:00');
+      setWeekendClosed(operationalPolicies.schoolHours?.weekendClosed ?? true);
+
+      setBoardingEnabled(operationalPolicies.boardingSchedule?.enabled ?? false);
+      setBoardingDropoffTime(operationalPolicies.boardingSchedule?.dropoffTime || '07:00');
+      setBoardingDismissalTime(operationalPolicies.boardingSchedule?.dismissalTime || '14:00');
+      setBoardingNotifyMidWeek(operationalPolicies.boardingSchedule?.notifyMidWeekDepartures ?? true);
+      setBoardingRequireApproval(operationalPolicies.boardingSchedule?.requireApprovalForMidWeek ?? true);
+
+      setEarlyDepartureEnabled(operationalPolicies.earlyDeparture?.enabled ?? false);
+      setEarlyDepartureMonThuTime(operationalPolicies.earlyDeparture?.monThuDismissalTime || '16:30');
+      setEarlyDepartureFriTime(operationalPolicies.earlyDeparture?.friDismissalTime || '14:00');
+      setEarlyDepartureBuffer(operationalPolicies.earlyDeparture?.earlyDepartureBufferMinutes ?? 10);
+      setEarlyDepartureRequireNote(operationalPolicies.earlyDeparture?.requireAuthorizationNote ?? true);
+    }
+  }, [operationalPolicies]);
 
   // Sync logo preview if systemLogo updates from remote
   useEffect(() => {
@@ -176,6 +267,133 @@ export const AdminSetupView: React.FC = () => {
     setLogoSaving(false);
     setLogoSuccessMsg(res.message);
     setTimeout(() => setLogoSuccessMsg(''), 4500);
+  };
+
+  // Build current operational policies payload from state
+  const buildCurrentPoliciesPayload = (overrides?: Partial<OperationalPolicySettings>): OperationalPolicySettings => {
+    return {
+      schoolHours: {
+        enabled: schoolHoursEnabled,
+        mondayToThursday: {
+          openTime: monThuOpenTime,
+          closeTime: monThuCloseTime,
+          openLabel: formatTime24to12(monThuOpenTime),
+          closeLabel: formatTime24to12(monThuCloseTime),
+        },
+        friday: {
+          openTime: friOpenTime,
+          closeTime: friCloseTime,
+          openLabel: formatTime24to12(friOpenTime),
+          closeLabel: formatTime24to12(friCloseTime),
+        },
+        weekendClosed,
+      },
+      boardingSchedule: {
+        enabled: boardingEnabled,
+        campusName: 'Spring Campus',
+        dropoffDayName: 'Monday',
+        dropoffTime: boardingDropoffTime,
+        dismissalDayName: 'Friday',
+        dismissalTime: boardingDismissalTime,
+        notifyMidWeekDepartures: boardingNotifyMidWeek,
+        requireApprovalForMidWeek: boardingRequireApproval,
+      },
+      earlyDeparture: {
+        enabled: earlyDepartureEnabled,
+        monThuDismissalTime: earlyDepartureMonThuTime,
+        friDismissalTime: earlyDepartureFriTime,
+        earlyDepartureBufferMinutes: earlyDepartureBuffer,
+        requireAuthorizationNote: earlyDepartureRequireNote,
+        requirePartyDetails: true,
+      },
+      ...overrides,
+    };
+  };
+
+  const handleSaveOperationalPolicies = async (customPayload?: OperationalPolicySettings) => {
+    setPoliciesSaving(true);
+    setPoliciesErrorMsg('');
+    setPoliciesSuccessMsg('');
+    try {
+      const payload = customPayload || buildCurrentPoliciesPayload();
+      const res = await updateOperationalPolicies(payload);
+      if (res.success) {
+        setPoliciesSuccessMsg(res.message);
+        setTimeout(() => setPoliciesSuccessMsg(''), 5000);
+      } else {
+        setPoliciesErrorMsg(res.message);
+      }
+    } catch (err: any) {
+      setPoliciesErrorMsg(err?.message || 'Failed to save operational policies.');
+    } finally {
+      setPoliciesSaving(false);
+    }
+  };
+
+  const handleQuickTogglePolicy = async (
+    policy: 'schoolHours' | 'boardingSchedule' | 'earlyDeparture',
+    newVal: boolean
+  ) => {
+    let payload = buildCurrentPoliciesPayload();
+    if (policy === 'schoolHours') {
+      setSchoolHoursEnabled(newVal);
+      payload.schoolHours.enabled = newVal;
+    } else if (policy === 'boardingSchedule') {
+      setBoardingEnabled(newVal);
+      payload.boardingSchedule.enabled = newVal;
+    } else if (policy === 'earlyDeparture') {
+      setEarlyDepartureEnabled(newVal);
+      payload.earlyDeparture.enabled = newVal;
+    }
+    await handleSaveOperationalPolicies(payload);
+  };
+
+  const handleEnableAllPolicies = async () => {
+    setSchoolHoursEnabled(true);
+    setBoardingEnabled(true);
+    setEarlyDepartureEnabled(true);
+    const payload = buildCurrentPoliciesPayload();
+    payload.schoolHours.enabled = true;
+    payload.boardingSchedule.enabled = true;
+    payload.earlyDeparture.enabled = true;
+    await handleSaveOperationalPolicies(payload);
+  };
+
+  const handleDisableAllPolicies = async () => {
+    setSchoolHoursEnabled(false);
+    setBoardingEnabled(false);
+    setEarlyDepartureEnabled(false);
+    const payload = buildCurrentPoliciesPayload();
+    payload.schoolHours.enabled = false;
+    payload.boardingSchedule.enabled = false;
+    payload.earlyDeparture.enabled = false;
+    await handleSaveOperationalPolicies(payload);
+  };
+
+  const handleResetPoliciesToDefault = async () => {
+    if (!window.confirm('Reset operational policies to institutional standard defaults?')) {
+      return;
+    }
+    setSchoolHoursEnabled(DEFAULT_OPERATIONAL_POLICIES.schoolHours.enabled);
+    setMonThuOpenTime(DEFAULT_OPERATIONAL_POLICIES.schoolHours.mondayToThursday.openTime);
+    setMonThuCloseTime(DEFAULT_OPERATIONAL_POLICIES.schoolHours.mondayToThursday.closeTime);
+    setFriOpenTime(DEFAULT_OPERATIONAL_POLICIES.schoolHours.friday.openTime);
+    setFriCloseTime(DEFAULT_OPERATIONAL_POLICIES.schoolHours.friday.closeTime);
+    setWeekendClosed(DEFAULT_OPERATIONAL_POLICIES.schoolHours.weekendClosed);
+
+    setBoardingEnabled(DEFAULT_OPERATIONAL_POLICIES.boardingSchedule.enabled);
+    setBoardingDropoffTime(DEFAULT_OPERATIONAL_POLICIES.boardingSchedule.dropoffTime);
+    setBoardingDismissalTime(DEFAULT_OPERATIONAL_POLICIES.boardingSchedule.dismissalTime);
+    setBoardingNotifyMidWeek(DEFAULT_OPERATIONAL_POLICIES.boardingSchedule.notifyMidWeekDepartures);
+    setBoardingRequireApproval(DEFAULT_OPERATIONAL_POLICIES.boardingSchedule.requireApprovalForMidWeek);
+
+    setEarlyDepartureEnabled(DEFAULT_OPERATIONAL_POLICIES.earlyDeparture.enabled);
+    setEarlyDepartureMonThuTime(DEFAULT_OPERATIONAL_POLICIES.earlyDeparture.monThuDismissalTime);
+    setEarlyDepartureFriTime(DEFAULT_OPERATIONAL_POLICIES.earlyDeparture.friDismissalTime);
+    setEarlyDepartureBuffer(DEFAULT_OPERATIONAL_POLICIES.earlyDeparture.earlyDepartureBufferMinutes);
+    setEarlyDepartureRequireNote(DEFAULT_OPERATIONAL_POLICIES.earlyDeparture.requireAuthorizationNote);
+
+    await handleSaveOperationalPolicies(DEFAULT_OPERATIONAL_POLICIES);
   };
 
   // Guard: ONLY accessible to ICCE Coordinator
@@ -432,6 +650,26 @@ export const AdminSetupView: React.FC = () => {
           <ImageIcon className="w-3.5 h-3.5" />
           <span>School Logo & Branding</span>
           {systemLogo && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('operational_policies')}
+          className={`px-3.5 py-2 rounded-lg transition whitespace-nowrap flex items-center space-x-1.5 ${
+            activeTab === 'operational_policies'
+              ? 'bg-indigo-600 text-white shadow-xs font-bold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          <span>Official Hours & Operational Policies</span>
+          {(!schoolHoursEnabled && !boardingEnabled && !earlyDepartureEnabled) ? (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+              Testing Mode (Disabled)
+            </span>
+          ) : (
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           )}
         </button>
@@ -773,6 +1011,556 @@ export const AdminSetupView: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Official Hours & Operational Policies */}
+      {activeTab === 'operational_policies' && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800">
+                  Institutional Governance
+                </span>
+                {!schoolHoursEnabled && !boardingEnabled && !earlyDepartureEnabled ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                    <Sliders className="w-3 h-3 mr-1 text-amber-600" /> Testing Mode (All 3 Policies Disabled)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> Enforced Policies Active
+                  </span>
+                )}
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mt-1">
+                Official School Hours, Boarding Schedule &amp; Early Departure Enforcement
+              </h3>
+              <p className="text-xs text-slate-500 max-w-3xl mt-0.5">
+                Configure operational schedules, weekly boarding resident parameters, and check-out early departure guards. You can toggle each policy individually or enable/disable all policies together during system testing.
+              </p>
+            </div>
+
+            {/* Quick Action Presets */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleDisableAllPolicies}
+                disabled={policiesSaving}
+                className="px-3 py-1.5 border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer"
+                title="Disable all 3 enforcement rules for testing"
+              >
+                <ToggleLeft className="w-4 h-4 text-amber-700" />
+                <span>Disable All (Testing)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleEnableAllPolicies}
+                disabled={policiesSaving}
+                className="px-3 py-1.5 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer"
+                title="Enable all 3 enforcement rules for production"
+              >
+                <ToggleRight className="w-4 h-4 text-emerald-700" />
+                <span>Enable All (Production)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetPoliciesToDefault}
+                disabled={policiesSaving}
+                className="px-3 py-1.5 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Defaults</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Feedback Messages */}
+          {policiesSuccessMsg && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-900 flex items-center space-x-2 font-medium">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{policiesSuccessMsg}</span>
+            </div>
+          )}
+
+          {policiesErrorMsg && (
+            <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-xl text-xs text-rose-900 flex items-center space-x-2 font-medium">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{policiesErrorMsg}</span>
+            </div>
+          )}
+
+          {/* 3 Core Policy Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Card 1: Official School Hours */}
+            <div
+              className={`bg-white rounded-2xl border p-5 shadow-xs space-y-4 transition flex flex-col justify-between ${
+                schoolHoursEnabled
+                  ? 'border-indigo-300 ring-2 ring-indigo-500/10'
+                  : 'border-slate-200 opacity-95'
+              }`}
+            >
+              <div className="space-y-4">
+                {/* Header & Toggle */}
+                <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center space-x-2.5">
+                    <div
+                      className={`p-2 rounded-xl shrink-0 ${
+                        schoolHoursEnabled ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900">a). Official School Hours</h4>
+                      <span className="text-[11px] text-slate-500 block">Daily Operating Schedule</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickTogglePolicy('schoolHours', !schoolHoursEnabled)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      schoolHoursEnabled ? 'bg-indigo-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        schoolHoursEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Status Indicator */}
+                <div
+                  className={`p-2.5 rounded-xl text-xs flex items-center justify-between ${
+                    schoolHoursEnabled
+                      ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-900 border border-amber-200'
+                  }`}
+                >
+                  <span className="font-semibold">
+                    {schoolHoursEnabled ? 'Enforcement: Active' : 'Enforcement: Disabled for Testing'}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-white border">
+                    {schoolHoursEnabled ? 'Schedule Active' : 'Unrestricted Open Mode'}
+                  </span>
+                </div>
+
+                {/* Monday to Thursday Configuration */}
+                <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
+                  <div className="flex items-center justify-between font-bold text-slate-800">
+                    <span>Monday to Thursday</span>
+                    <span className="text-indigo-600 text-[11px]">
+                      {formatTime24to12(monThuOpenTime)} – {formatTime24to12(monThuCloseTime)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                        Opens At
+                      </label>
+                      <input
+                        type="time"
+                        value={monThuOpenTime}
+                        onChange={(e) => setMonThuOpenTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                        Dismissal / Closes At
+                      </label>
+                      <input
+                        type="time"
+                        value={monThuCloseTime}
+                        onChange={(e) => setMonThuCloseTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Friday Configuration */}
+                <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
+                  <div className="flex items-center justify-between font-bold text-slate-800">
+                    <span>Friday (Early Dismissal)</span>
+                    <span className="text-indigo-600 text-[11px]">
+                      {formatTime24to12(friOpenTime)} – {formatTime24to12(friCloseTime)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                        Opens At
+                      </label>
+                      <input
+                        type="time"
+                        value={friOpenTime}
+                        onChange={(e) => setFriOpenTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                        Dismissal / Closes At
+                      </label>
+                      <input
+                        type="time"
+                        value={friCloseTime}
+                        onChange={(e) => setFriCloseTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Weekend Policy */}
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-800 block">Saturday &amp; Sunday</span>
+                    <span className="text-[11px] text-slate-500">School Closed / Classes Resume Monday 7:00 AM</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={weekendClosed}
+                    onChange={(e) => setWeekendClosed(e.target.checked)}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Policy note */}
+              <p className="text-[10px] text-slate-400 mt-2">
+                * When enabled, gates display operating status and badge headers enforce active hours.
+              </p>
+            </div>
+
+            {/* Card 2: Boarding Schedule */}
+            <div
+              className={`bg-white rounded-2xl border p-5 shadow-xs space-y-4 transition flex flex-col justify-between ${
+                boardingEnabled
+                  ? 'border-purple-300 ring-2 ring-purple-500/10'
+                  : 'border-slate-200 opacity-95'
+              }`}
+            >
+              <div className="space-y-4">
+                {/* Header & Toggle */}
+                <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center space-x-2.5">
+                    <div
+                      className={`p-2 rounded-xl shrink-0 ${
+                        boardingEnabled ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      <Bed className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900">b). Boarding Schedule</h4>
+                      <span className="text-[11px] text-purple-700 font-semibold block">
+                        Springs Campus Boarding Section
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickTogglePolicy('boardingSchedule', !boardingEnabled)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      boardingEnabled ? 'bg-purple-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        boardingEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Status Indicator */}
+                <div
+                  className={`p-2.5 rounded-xl text-xs flex items-center justify-between ${
+                    boardingEnabled
+                      ? 'bg-purple-50 text-purple-900 border border-purple-200'
+                      : 'bg-amber-50 text-amber-900 border border-amber-200'
+                  }`}
+                >
+                  <span className="font-semibold">
+                    {boardingEnabled ? 'Resident Security: Active' : 'Resident Security: Disabled for Testing'}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-white border">
+                    {boardingEnabled ? 'Mon-Fri Boarding' : 'Open Check-in/out'}
+                  </span>
+                </div>
+
+                {/* Drop-off & Dismissal Schedule */}
+                <div className="space-y-3 bg-purple-50/50 p-3 rounded-xl border border-purple-200/80 text-xs">
+                  <div>
+                    <div className="flex items-center justify-between font-bold text-slate-800 mb-1">
+                      <span>Weekly Drop-Off Window</span>
+                      <span className="text-purple-700 text-[11px]">
+                        Monday from {formatTime24to12(boardingDropoffTime)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Designated Day</span>
+                        <input
+                          type="text"
+                          disabled
+                          value="Monday Morning"
+                          className="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Drop-off Time</span>
+                        <input
+                          type="time"
+                          value={boardingDropoffTime}
+                          onChange={(e) => setBoardingDropoffTime(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-purple-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-purple-200/50">
+                    <div className="flex items-center justify-between font-bold text-slate-800 mb-1">
+                      <span>Weekly Dismissal Window</span>
+                      <span className="text-purple-700 text-[11px]">
+                        Friday by {formatTime24to12(boardingDismissalTime)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Designated Day</span>
+                        <input
+                          type="text"
+                          disabled
+                          value="Friday Afternoon"
+                          className="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block uppercase font-bold">Dismissal Time</span>
+                        <input
+                          type="time"
+                          value={boardingDismissalTime}
+                          onChange={(e) => setBoardingDismissalTime(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-purple-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mid-Week Departure Security Options */}
+                <div className="space-y-2 text-xs">
+                  <label className="flex items-start space-x-2 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={boardingNotifyMidWeek}
+                      onChange={(e) => setBoardingNotifyMidWeek(e.target.checked)}
+                      className="mt-0.5 rounded text-purple-600 focus:ring-purple-500"
+                    />
+                    <div className="text-[11px]">
+                      <strong className="text-slate-800 block">Mid-Week Resident Security Trigger</strong>
+                      <span className="text-slate-500">
+                        Departures Tue–Thu trigger campus resident security flags and supervisor notifications.
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start space-x-2 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={boardingRequireApproval}
+                      onChange={(e) => setBoardingRequireApproval(e.target.checked)}
+                      className="mt-0.5 rounded text-purple-600 focus:ring-purple-500"
+                    />
+                    <div className="text-[11px]">
+                      <strong className="text-slate-800 block">Require Exit Authorization</strong>
+                      <span className="text-slate-500">
+                        Mid-week checkouts require supervisor or administrative sign-off note.
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Policy note */}
+              <p className="text-[10px] text-slate-400 mt-2">
+                * Configured for Monday morning drop-off (7:00 AM) and Friday dismissal (2:00 PM).
+              </p>
+            </div>
+
+            {/* Card 3: Early Departure Enforcement */}
+            <div
+              className={`bg-white rounded-2xl border p-5 shadow-xs space-y-4 transition flex flex-col justify-between ${
+                earlyDepartureEnabled
+                  ? 'border-rose-300 ring-2 ring-rose-500/10'
+                  : 'border-slate-200 opacity-95'
+              }`}
+            >
+              <div className="space-y-4">
+                {/* Header & Toggle */}
+                <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center space-x-2.5">
+                    <div
+                      className={`p-2 rounded-xl shrink-0 ${
+                        earlyDepartureEnabled ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      <ShieldAlert className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900">c). Early Departure Guard</h4>
+                      <span className="text-[11px] text-slate-500 block">Scanner &amp; Check-Out Guard</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuickTogglePolicy('earlyDeparture', !earlyDepartureEnabled)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      earlyDepartureEnabled ? 'bg-rose-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        earlyDepartureEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Status Indicator */}
+                <div
+                  className={`p-2.5 rounded-xl text-xs flex items-center justify-between ${
+                    earlyDepartureEnabled
+                      ? 'bg-rose-50 text-rose-900 border border-rose-200'
+                      : 'bg-amber-50 text-amber-900 border border-amber-200'
+                  }`}
+                >
+                  <span className="font-semibold">
+                    {earlyDepartureEnabled ? 'Check-Out Guard: Active' : 'Check-Out Guard: Disabled for Testing'}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-white border">
+                    {earlyDepartureEnabled ? 'Early Notes Required' : 'Open Checkout'}
+                  </span>
+                </div>
+
+                {/* Dismissal Threshold Hours */}
+                <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
+                  <span className="font-bold text-slate-800 block">Dismissal Time Triggers</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                        Mon–Thu Dismissal
+                      </label>
+                      <input
+                        type="time"
+                        value={earlyDepartureMonThuTime}
+                        onChange={(e) => setEarlyDepartureMonThuTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-rose-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                        Friday Dismissal
+                      </label>
+                      <input
+                        type="time"
+                        value={earlyDepartureFriTime}
+                        onChange={(e) => setEarlyDepartureFriTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buffer and Note Requirements */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                    <div>
+                      <span className="font-bold text-slate-800 block">Early Departure Buffer</span>
+                      <span className="text-[11px] text-slate-500">Minutes before dismissal to trigger early flag</span>
+                    </div>
+                    <select
+                      value={earlyDepartureBuffer}
+                      onChange={(e) => setEarlyDepartureBuffer(parseInt(e.target.value, 10) || 10)}
+                      className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold"
+                    >
+                      <option value={0}>0 mins (Exact time)</option>
+                      <option value={5}>5 mins</option>
+                      <option value={10}>10 mins (Standard)</option>
+                      <option value={15}>15 mins</option>
+                      <option value={30}>30 mins</option>
+                    </select>
+                  </div>
+
+                  <label className="flex items-start space-x-2 p-2 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={earlyDepartureRequireNote}
+                      onChange={(e) => setEarlyDepartureRequireNote(e.target.checked)}
+                      className="mt-0.5 rounded text-rose-600 focus:ring-rose-500"
+                    />
+                    <div className="text-[11px]">
+                      <strong className="text-slate-800 block">Mandatory Authorization Note</strong>
+                      <span className="text-slate-500">
+                        Check-outs prior to scheduled closing require mandatory reason note &amp; pickup verification.
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Policy note */}
+              <p className="text-[10px] text-slate-400 mt-2">
+                * The scanner station automatically enforces the day&apos;s dismissal time (4:30 PM Mon–Thu, 2:00 PM Fri).
+              </p>
+            </div>
+          </div>
+
+          {/* Master Save Bar */}
+          <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-bold flex items-center space-x-2">
+                <Settings className="w-4 h-4 text-indigo-400" />
+                <span>Save All Operational Policies &amp; Schedules</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Current State: School Hours ({schoolHoursEnabled ? 'Enabled' : 'Disabled'}), Boarding ({boardingEnabled ? 'Enabled' : 'Disabled'}), Early Departure ({earlyDepartureEnabled ? 'Enabled' : 'Disabled'}).
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={() => handleSaveOperationalPolicies()}
+                disabled={policiesSaving}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-2 cursor-pointer"
+              >
+                {policiesSaving ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Saving Policies...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Save All Operational Policies</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

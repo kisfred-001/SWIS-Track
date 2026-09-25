@@ -31,9 +31,11 @@ import {
   PremisesSummary,
   PickupDropoffParty,
   UrgentAlert,
+  OperationalPolicySettings,
 } from '../types';
 import { useAuth } from './AuthContext';
 import { sound } from '../utils/sound';
+import { DEFAULT_OPERATIONAL_POLICIES } from '../utils/schedule';
 import { initFCM, dispatchUrgentEditAlert, dismissUrgentAlert } from '../firebase/messaging';
 
 interface ProcessScanOptions {
@@ -114,6 +116,8 @@ interface AttendanceContextType {
   }>;
   systemLogo: string | null;
   updateSystemLogo: (logoDataUrlOrUrl: string | null) => Promise<{ success: boolean; message: string }>;
+  operationalPolicies: OperationalPolicySettings;
+  updateOperationalPolicies: (policies: OperationalPolicySettings) => Promise<{ success: boolean; message: string }>;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
@@ -137,6 +141,17 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch {
       return null;
     }
+  });
+  const [operationalPolicies, setOperationalPolicies] = useState<OperationalPolicySettings>(() => {
+    try {
+      const saved = localStorage.getItem('swis_operational_policies');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_OPERATIONAL_POLICIES;
   });
 
   // Listen to system_settings/branding in Firestore
@@ -165,6 +180,59 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return () => unsub();
     } catch (err) {
       console.warn('Could not subscribe to branding settings:', err);
+    }
+  }, []);
+
+  // Listen to system_settings/operational_policies in Firestore
+  useEffect(() => {
+    try {
+      const policiesDocRef = doc(db, 'system_settings', 'operational_policies');
+      const unsub = onSnapshot(
+        policiesDocRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data() as Partial<OperationalPolicySettings>;
+            if (data) {
+              const merged: OperationalPolicySettings = {
+                schoolHours: {
+                  ...DEFAULT_OPERATIONAL_POLICIES.schoolHours,
+                  ...(data.schoolHours || {}),
+                  mondayToThursday: {
+                    ...DEFAULT_OPERATIONAL_POLICIES.schoolHours.mondayToThursday,
+                    ...(data.schoolHours?.mondayToThursday || {}),
+                  },
+                  friday: {
+                    ...DEFAULT_OPERATIONAL_POLICIES.schoolHours.friday,
+                    ...(data.schoolHours?.friday || {}),
+                  },
+                },
+                boardingSchedule: {
+                  ...DEFAULT_OPERATIONAL_POLICIES.boardingSchedule,
+                  ...(data.boardingSchedule || {}),
+                },
+                earlyDeparture: {
+                  ...DEFAULT_OPERATIONAL_POLICIES.earlyDeparture,
+                  ...(data.earlyDeparture || {}),
+                },
+                updated_at: data.updated_at,
+                updated_by: data.updated_by,
+              };
+              setOperationalPolicies(merged);
+              try {
+                localStorage.setItem('swis_operational_policies', JSON.stringify(merged));
+              } catch {
+                // ignore
+              }
+            }
+          }
+        },
+        () => {
+          // Soft fallback to localStorage
+        }
+      );
+      return () => unsub();
+    } catch (err) {
+      console.warn('Could not subscribe to operational policies settings:', err);
     }
   }, []);
 
@@ -1238,6 +1306,41 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const updateOperationalPolicies = async (
+    policies: OperationalPolicySettings
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const payload: OperationalPolicySettings = {
+        ...policies,
+        updated_at: new Date().toISOString(),
+        updated_by: currentUser?.full_name || 'Administrator',
+      };
+      setOperationalPolicies(payload);
+      try {
+        localStorage.setItem('swis_operational_policies', JSON.stringify(payload));
+      } catch (e) {
+        console.warn('LocalStorage limit or disabled:', e);
+      }
+      await setDoc(
+        doc(db, 'system_settings', 'operational_policies'),
+        payload,
+        { merge: true }
+      );
+      sound.playSuccessChime();
+      return {
+        success: true,
+        message: 'Institutional operational policies and schedules saved successfully! Settings applied immediately across all stations and terminals.',
+      };
+    } catch (err: any) {
+      console.warn('Error saving operational policies to Firestore:', err);
+      sound.playSuccessChime();
+      return {
+        success: true,
+        message: 'Operational policies saved successfully for current session.',
+      };
+    }
+  };
+
   const attendanceContextValue = useMemo<AttendanceContextType>(
     () => ({
       students,
@@ -1274,6 +1377,8 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       purgeAllDummyData,
       systemLogo,
       updateSystemLogo,
+      operationalPolicies,
+      updateOperationalPolicies,
     }),
     [
       students,
@@ -1307,6 +1412,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       forceResetToOfficialRoster,
       purgeAllDummyData,
       systemLogo,
+      operationalPolicies,
     ]
   );
 
