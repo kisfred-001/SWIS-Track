@@ -43,6 +43,7 @@ interface ProcessScanOptions {
   party?: PickupDropoffParty;
   earlyDepartureReason?: string;
   notes?: string;
+  intendedAction?: 'check_in' | 'check_out';
 }
 
 interface AttendanceContextType {
@@ -678,6 +679,38 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const staff = lookup.staff;
       const existingLog = lookup.currentLog;
 
+      if (options.intendedAction === 'check_in' && existingLog) {
+        sound.playError();
+        if (!existingLog.check_out_time) {
+          return {
+            success: false,
+            message: `Duplicate PIN Entry: ${staff.full_name} is already clocked IN today at ${existingLog.check_in_time}. PIN cannot be entered twice for check-in.`,
+          };
+        } else {
+          return {
+            success: false,
+            message: `Duplicate PIN Entry: ${staff.full_name} has already clocked out today (${existingLog.check_out_time}).`,
+          };
+        }
+      }
+
+      if (options.intendedAction === 'check_out') {
+        if (!existingLog) {
+          sound.playError();
+          return {
+            success: false,
+            message: `Cannot Clock Out: ${staff.full_name} has not clocked in today yet.`,
+          };
+        }
+        if (existingLog.check_out_time) {
+          sound.playError();
+          return {
+            success: false,
+            message: `Duplicate PIN Entry: ${staff.full_name} was already clocked OUT today at ${existingLog.check_out_time}.`,
+          };
+        }
+      }
+
       if (!existingLog) {
         // Check-in staff
         const newLogId = `LOG-${Date.now().toString().slice(-6)}`;
@@ -726,7 +759,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         sound.playError();
         return {
           success: false,
-          message: `${staff.full_name} is already checked out today (${existingLog.check_out_time}).`,
+          message: `Duplicate PIN Entry: ${staff.full_name} is already checked out today (${existingLog.check_out_time}).`,
         };
       }
     }
@@ -735,6 +768,40 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (lookup.targetType === 'Student') {
       const student = lookup.student!;
       const existingLog = lookup.currentLog;
+
+      // Explicit duplicate guard for Check-In
+      if (options.intendedAction === 'check_in' && existingLog) {
+        sound.playError();
+        if (!existingLog.check_out_time) {
+          return {
+            success: false,
+            message: `Duplicate PIN Entry: ${student.full_name} is already checked IN today at ${existingLog.check_in_time}. Student PIN cannot be entered twice for check-in.`,
+          };
+        } else {
+          return {
+            success: false,
+            message: `Duplicate PIN Entry: ${student.full_name} has already completed attendance today (In: ${existingLog.check_in_time}, Out: ${existingLog.check_out_time}).`,
+          };
+        }
+      }
+
+      // Explicit duplicate/invalid guard for Check-Out
+      if (options.intendedAction === 'check_out') {
+        if (!existingLog) {
+          sound.playError();
+          return {
+            success: false,
+            message: `Cannot Check Out: ${student.full_name} has not checked in today yet.`,
+          };
+        }
+        if (existingLog.check_out_time) {
+          sound.playError();
+          return {
+            success: false,
+            message: `Duplicate PIN Entry: ${student.full_name} was already checked OUT today at ${existingLog.check_out_time}.`,
+          };
+        }
+      }
 
       if (!existingLog) {
         // Student Check-In
@@ -802,7 +869,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         sound.playError();
         return {
           success: false,
-          message: `${student.full_name} was already checked out today at ${existingLog.check_out_time}.`,
+          message: `Duplicate PIN Entry: ${student.full_name} was already checked OUT today at ${existingLog.check_out_time}.`,
         };
       }
     }

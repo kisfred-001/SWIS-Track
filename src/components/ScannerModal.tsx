@@ -169,7 +169,9 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
 
       if (!actionType) {
         sound.playError();
-        setErrorMessage(`${staff.full_name} is already checked out today.`);
+        setErrorMessage(
+          `Duplicate PIN Entry: ${staff.full_name} was already clocked OUT today (${lookup.currentLog?.check_out_time || 'Completed'}).`
+        );
         return;
       }
 
@@ -188,7 +190,9 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
 
       if (!actionType) {
         sound.playError();
-        setErrorMessage(`${student.full_name} is already checked out today.`);
+        setErrorMessage(
+          `Duplicate PIN Entry: ${student.full_name} was already checked OUT today (${lookup.currentLog?.check_out_time || 'Completed'}). Attendance is already complete for today.`
+        );
         return;
       }
 
@@ -254,6 +258,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
       code,
       party,
       earlyDepartureReason: isEarlyDeparture ? earlyDepartureReason.trim() : undefined,
+      intendedAction: identifiedTarget.actionType,
     });
 
     setProcessing(false);

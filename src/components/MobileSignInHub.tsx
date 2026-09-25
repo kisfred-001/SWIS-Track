@@ -156,25 +156,101 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
   const handleDirectCodeScan = async (code: string) => {
     setPinError('');
     const target = findTargetByCode(code);
-    if (!target) {
+    if (!target || !target.targetType) {
       sound.playError();
-      setPinError(`Unrecognized code "${code}". Please check student/staff ID.`);
+      setPinError(`Unrecognized code "${code}". Please verify the student or staff PIN.`);
+      setPinInput('');
       return;
     }
 
     if (target.targetType === 'Student' && target.student) {
-      // If student and checking out, prompt for pickup person confirmation
+      const student = target.student;
+      const existingLog = target.currentLog;
+
+      // Duplicate Check-In Guard
+      if (actionType === 'check_in' && existingLog) {
+        sound.playError();
+        setPinInput('');
+        if (!existingLog.check_out_time) {
+          setPinError(
+            `Duplicate PIN Entry: ${student.full_name} is already checked IN today at ${existingLog.check_in_time}. Student PIN cannot be entered twice for check-in.`
+          );
+        } else {
+          setPinError(
+            `Duplicate PIN Entry: ${student.full_name} has already completed attendance today (In: ${existingLog.check_in_time}, Out: ${existingLog.check_out_time}).`
+          );
+        }
+        return;
+      }
+
+      // Check-Out Guard: Not checked in yet or already checked out
       if (actionType === 'check_out') {
-        setCheckoutStudentTarget(target.student);
-        setPickupPartyName(target.student.parent_names || 'Parent');
+        if (!existingLog) {
+          sound.playError();
+          setPinInput('');
+          setPinError(`Cannot Check Out: ${student.full_name} has not checked in today yet.`);
+          return;
+        }
+        if (existingLog.check_out_time) {
+          sound.playError();
+          setPinInput('');
+          setPinError(
+            `Duplicate PIN Entry: ${student.full_name} was already checked OUT today at ${existingLog.check_out_time}.`
+          );
+          return;
+        }
+
+        // Prompt for pickup person confirmation
+        setCheckoutStudentTarget(student);
+        setPickupPartyName((student.parent_names || '').split('&')[0]?.trim() || 'Parent');
         return;
       }
 
       // Check-in student directly
-      await executeAttendanceAction(code, target.student.full_name, target.student.learning_center_id, 'Student');
+      await executeAttendanceAction(
+        code,
+        student.full_name,
+        student.learning_center_id,
+        'Student'
+      );
     } else if (target.staff) {
+      const staff = target.staff;
+      const existingLog = target.currentLog;
+
+      if (actionType === 'check_in' && existingLog) {
+        sound.playError();
+        setPinInput('');
+        if (!existingLog.check_out_time) {
+          setPinError(
+            `Duplicate PIN Entry: ${staff.full_name} is already clocked IN today at ${existingLog.check_in_time}. PIN cannot be entered twice for check-in.`
+          );
+        } else {
+          setPinError(
+            `Duplicate PIN Entry: ${staff.full_name} has already clocked out today (${existingLog.check_out_time}).`
+          );
+        }
+        return;
+      }
+
+      if (actionType === 'check_out') {
+        if (!existingLog) {
+          sound.playError();
+          setPinInput('');
+          setPinError(`Cannot Clock Out: ${staff.full_name} has not clocked in today yet.`);
+          return;
+        }
+        if (existingLog.check_out_time) {
+          sound.playError();
+          setPinInput('');
+          setPinError(
+            `Duplicate PIN Entry: ${staff.full_name} was already clocked OUT today at ${existingLog.check_out_time}.`
+          );
+          return;
+        }
+      }
+
       // Staff member
-      await executeAttendanceAction(code, target.staff.full_name, target.staff.role, 'Staff');
+      await executeAttendanceAction(code, staff.full_name, staff.role, 'Staff');
     }
   };
 
@@ -192,6 +268,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
         code,
         party,
         notes,
+        intendedAction: actionType,
       });
 
       if (res.success) {
@@ -221,10 +298,12 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
       } else {
         sound.playError();
         setPinError(res.message);
+        setPinInput('');
       }
     } catch (err: any) {
       sound.playError();
       setPinError(err?.message || 'Error processing attendance scan.');
+      setPinInput('');
     }
   };
 
