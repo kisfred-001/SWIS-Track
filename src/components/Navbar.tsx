@@ -17,15 +17,11 @@ import {
   CheckCircle2,
   Scan,
   Lock,
-  Menu,
-  X,
   Briefcase,
   Smartphone,
   Monitor,
-  Download,
 } from 'lucide-react';
 import { SchoolLogo } from './SchoolLogo';
-import { BulkExportModal } from './BulkExportModal';
 
 interface NavbarProps {
   onOpenScanner: () => void;
@@ -65,8 +61,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(sound.isEnabled());
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleToggleSound = () => {
     const next = !soundEnabled;
@@ -84,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       setShowSwitchModal(false);
       sound.playSuccessChime();
     } else {
-      setPinError('Invalid 3-digit PIN. (E.g. 555 for Fredrick, 103 for Khasoma, 104 for Julie Arinaitwe, 105 for Miss. Anette Mugala, 207 for Mrs. Julie Mayanja).');
+      setPinError('Invalid 3-digit PIN.');
       sound.playError();
     }
   };
@@ -114,480 +108,193 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-slate-900 text-white shadow-xl border-b border-slate-800/80">
+      {/* Tangerine Yellow (#FCCB0D) Menubar Header */}
+      <header className="sticky top-0 z-40 bg-[#FCCB0D] text-slate-900 shadow-xl border-b border-[#e5b70a] font-sans">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16 gap-3">
-            {/* Brand Logo & Name */}
+          
+          {/* ROW 1: On the Left ( Spirit and Word Logo and system name ) | On the Right ( Launch scanner ) ( Person logged in ) */}
+          <div className="flex flex-wrap items-center justify-between py-2.5 border-b border-[#e5b70a]/80 gap-3">
+            {/* Left: Spirit and Word Logo and the name of the system */}
             <div className="flex items-center space-x-3 shrink-0">
               <SchoolLogo variant="emblem" size="md" className="bg-white p-1 rounded-xl shadow-md shrink-0 border border-slate-200" />
               <div className="flex flex-col">
                 <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-serif leading-none">
+                  <span className="font-black text-base sm:text-xl tracking-tight text-[#1c1b1e] font-sans leading-none">
                     Spirit &amp; Word
                   </span>
-                  <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e3d40] text-amber-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
-                    Live
+                    Live System
                   </span>
                 </div>
-                <span className="text-[10px] text-indigo-300 font-medium tracking-wide leading-tight mt-0.5">
-                  International School
+                <span className="text-[11px] text-[#3e3d40] font-bold tracking-wide leading-tight mt-0.5">
+                  International School Management System
                 </span>
               </div>
             </div>
 
-            {/* Center: Integrated Campus & Premises Statistics Bar */}
-            <div className="hidden xl:flex items-center space-x-3 bg-slate-800/90 px-3.5 py-1.5 rounded-xl border border-slate-700/80 text-xs shadow-inner">
-              {/* Campus Selector Dropdown */}
-              <div className="flex items-center space-x-1.5 pr-2.5 border-r border-slate-700">
-                <School className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                <select
-                  value={selectedCampus}
-                  onChange={(e) => setSelectedCampus(e.target.value)}
-                  className="bg-slate-900 text-white font-bold text-xs rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                >
-                  <option value="All Campuses">All Campuses</option>
-                  {campuses.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Live Attendance Counts */}
-              <div className="flex items-center space-x-3 text-[11px]">
-                <div className="flex items-center space-x-1">
-                  <span className="text-slate-400 font-medium">Students:</span>
-                  <strong className="text-emerald-400 font-extrabold">
-                    {filteredPremisesSummary.studentsOnPremises}
-                  </strong>
-                  <span className="text-slate-500 font-mono">/{filteredPremisesSummary.studentsTotal}</span>
-                </div>
-                <span className="text-slate-600">│</span>
-                <div className="flex items-center space-x-1">
-                  <span className="text-slate-400 font-medium">Staff:</span>
-                  <strong className="text-sky-400 font-extrabold">
-                    {filteredPremisesSummary.staffOnPremises}
-                  </strong>
-                  <span className="text-slate-500 font-mono">/{filteredPremisesSummary.staffTotal}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Header Controls Group */}
+            {/* Right: Launch scanner & Person logged in */}
             <div className="flex items-center space-x-2 shrink-0">
-              {/* Device View Segmented Switcher */}
-              <div
-                className="hidden md:flex items-center bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80"
-                role="group"
-                aria-label="Device View Switcher"
-              >
-                <button
-                  type="button"
-                  onClick={() => setViewportMode('auto')}
-                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    viewportMode === 'auto'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                  title="Responsive (Auto) View"
-                >
-                  <Monitor className="w-3.5 h-3.5 shrink-0" />
-                  <span className="hidden lg:inline">Auto</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setViewportMode('mobile')}
-                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    viewportMode === 'mobile'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                  title="Mobile View Phone Shell"
-                >
-                  <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                  <span className="hidden lg:inline">Mobile</span>
-                </button>
-              </div>
-
-              {/* Sound Toggle */}
+              {/* Sound Chimes Toggle */}
               <button
                 type="button"
                 onClick={handleToggleSound}
                 title={soundEnabled ? 'Mute Audio Chimes' : 'Enable Audio Chimes'}
-                className="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition cursor-pointer"
+                className="p-2 rounded-xl bg-[#3e3d40] hover:bg-[#A71C21] text-white transition cursor-pointer shadow-xs"
               >
                 {soundEnabled ? (
                   <Volume2 className="w-4 h-4 text-emerald-400" />
                 ) : (
-                  <VolumeX className="w-4 h-4 text-slate-500" />
+                  <VolumeX className="w-4 h-4 text-slate-400" />
                 )}
               </button>
 
-              {/* Quick Scanner Launch Button */}
+              {/* Launch Scanner */}
               <button
                 type="button"
                 onClick={onOpenScanner}
-                className="inline-flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm shadow-indigo-500/20 transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 bg-[#3e3d40] hover:bg-[#A71C21] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition cursor-pointer shadow-xs"
               >
-                <Scan className="w-4 h-4" />
-                <span className="hidden sm:inline">Scanner</span>
+                <Scan className="w-4 h-4 text-amber-300" />
+                <span className="hidden sm:inline">Launch Scanner</span>
               </button>
 
-              {/* Bulk Export Button */}
-              <button
-                type="button"
-                onClick={() => setIsExportModalOpen(true)}
-                className="inline-flex items-center space-x-1.5 bg-slate-800/90 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-700/80 transition cursor-pointer"
-                title="Bulk Export System Data & Student Badges"
-              >
-                <Download className="w-4 h-4" />
-                <span className="hidden md:inline">Bulk Export</span>
-              </button>
-
-              {/* Active User Pill */}
+              {/* Person logged in */}
               <button
                 type="button"
                 onClick={() => setShowSwitchModal(true)}
-                className="flex items-center space-x-2 bg-slate-800/90 hover:bg-slate-750 border border-slate-700/80 rounded-xl px-2.5 py-1 transition cursor-pointer text-left"
+                className="flex items-center space-x-2 bg-[#3e3d40] hover:bg-[#A71C21] text-white rounded-xl px-3 py-1.5 transition cursor-pointer text-left shadow-xs"
+                title="Person Logged In - Switch Staff Persona"
               >
-                <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-extrabold border border-indigo-400/50">
+                <div className="w-6.5 h-6.5 rounded-full bg-[#A71C21] text-white flex items-center justify-center text-xs font-extrabold border border-white/40 shrink-0">
                   {currentUser?.full_name?.charAt(0) || 'U'}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[100px]">
+                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[120px]">
                     {currentUser?.full_name}
                   </div>
-                  <div className="text-[10px] text-slate-400 leading-none">
+                  <div className="text-[10px] text-amber-200 leading-none">
                     {currentUser?.role}
                   </div>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
               </button>
 
               {/* Lock Terminal */}
               <button
                 type="button"
                 onClick={() => logout(false)}
-                className="p-2 bg-slate-800/90 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 border border-slate-700/80 rounded-xl transition cursor-pointer"
+                className="p-2 bg-[#3e3d40] hover:bg-[#A71C21] text-white rounded-xl transition cursor-pointer shadow-xs"
                 title="Lock Terminal"
               >
                 <Lock className="w-4 h-4" />
               </button>
-
-              {/* Mobile Menu Toggle Button */}
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="sm:hidden p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 rounded-lg transition"
-                aria-label="Toggle Navigation Menu"
-              >
-                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </button>
             </div>
           </div>
 
-          {/* Responsive Mobile / Tablet Campus Selector Bar (< 1024px) */}
-          <div className="flex lg:hidden items-center justify-between py-2 border-t border-slate-800 text-xs">
-            <div className="flex items-center space-x-1.5 bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700">
-              <School className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-              <select
-                value={selectedCampus}
-                onChange={(e) => setSelectedCampus(e.target.value)}
-                className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
-              >
-                <option value="All Campuses" className="bg-slate-900">All Campuses</option>
-                {campuses.map((c) => (
-                  <option key={c.id} value={c.name} className="bg-slate-900">
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2 text-[11px]">
-              <span className="text-slate-400">
-                Present: <strong className="text-emerald-400 font-bold">{filteredPremisesSummary.studentsOnPremises}</strong>
-                <span className="text-slate-500">/{filteredPremisesSummary.studentsTotal}</span>
-              </span>
-              <span className="text-slate-600">·</span>
-              <span className="text-slate-400">
-                Staff: <strong className="text-sky-400 font-bold">{filteredPremisesSummary.staffOnPremises}</strong>
-              </span>
-            </div>
-          </div>
-
-          {/* Mobile Collapsible Navigation Menu */}
-          {mobileMenuOpen && (
-            <div className="sm:hidden py-3 border-t border-slate-800 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
-              {/* Device View Mode Switcher in Mobile Drawer */}
-              <div className="bg-slate-800/80 p-2 rounded-2xl border border-slate-700/80">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-1 flex items-center justify-between">
-                  <span>Display Mode</span>
-                  <span className="text-indigo-400 font-mono">{viewportMode === 'mobile' ? 'Phone Shell Active' : 'Fluid Auto Active'}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewportMode('auto');
-                    }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
-                      viewportMode === 'auto'
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-slate-900/80 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Monitor className="w-3.5 h-3.5" />
-                    <span>Responsive (Auto)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewportMode('mobile');
-                    }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
-                      viewportMode === 'mobile'
-                        ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xs'
-                        : 'bg-slate-900/80 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Smartphone className="w-3.5 h-3.5" />
-                    <span>Mobile View</span>
-                  </button>
-                </div>
+          {/* ROW 2: All Campuses, Students, Staff, Responsive auto, Mobile View */}
+          <div className="flex flex-wrap items-center justify-between py-2 border-b border-[#e5b70a]/80 gap-2 text-xs font-semibold">
+            {/* Left Group: Campus Selector, Students Count, Staff Count */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* All Campuses */}
+              <div className="flex items-center space-x-1.5 bg-[#3e3d40] text-white px-3 py-1.5 rounded-xl shadow-xs">
+                <School className="w-4 h-4 text-amber-300 shrink-0" />
+                <span className="text-slate-300 font-bold text-[11px]">Campus:</span>
+                <select
+                  value={selectedCampus}
+                  onChange={(e) => setSelectedCampus(e.target.value)}
+                  className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="All Campuses" className="bg-[#3e3d40] text-white">All Campuses</option>
+                  {campuses.map((c) => (
+                    <option key={c.id} value={c.name} className="bg-[#3e3d40] text-white">
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Primary Mobile Gate Check-in for Children and Staff */}
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('signin');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3.5 py-3 rounded-2xl text-xs font-black flex items-center justify-between transition ${
-                  activeTab === 'signin'
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-sm">Sign In Children &amp; Staff</span>
-                </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200">
-                  Primary Mobile Gate
-                </span>
-              </button>
+              {/* Students Stats */}
+              <div className="flex items-center space-x-1.5 bg-[#3e3d40] text-white px-3 py-1.5 rounded-xl shadow-xs">
+                <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-slate-300">Students:</span>
+                <strong className="text-emerald-400 font-extrabold">
+                  {filteredPremisesSummary.studentsOnPremises}
+                </strong>
+                <span className="text-slate-400 font-mono">/{filteredPremisesSummary.studentsTotal}</span>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('dashboard');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                  activeTab === 'dashboard'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <School className="w-4 h-4 text-blue-400" />
-                  <span>Real-Time Dashboard</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('campuses');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                  activeTab === 'campuses'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <School className="w-4 h-4 text-indigo-400" />
-                  <span>Campus Modules</span>
-                </div>
-              </button>
-
-              {!isSupportStaff && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('staff');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                    activeTab === 'staff'
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Briefcase className="w-4 h-4 text-sky-400" />
-                    <span>Staff Module</span>
-                  </div>
-                  <span className="text-[10px] px-1.5 py-0.2 bg-slate-700 text-slate-300 rounded font-mono">
-                    {filteredPremisesSummary.staffTotal}
-                  </span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('attendance');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                  activeTab === 'attendance'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span>Attendance Logs</span>
-                </div>
-              </button>
-
-              {!isSupportStaff && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('approvals');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                    activeTab === 'approvals'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <ShieldAlert className="w-4 h-4 text-amber-400" />
-                    <span>Edit Requests</span>
-                  </div>
-                  {pendingRequestsCount > 0 && (
-                    <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
-                      {pendingRequestsCount}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {!isSupportStaff && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('roster');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                    activeTab === 'roster'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Users className="w-4 h-4 text-slate-400" />
-                    <span>Roster & Badges</span>
-                  </div>
-                </button>
-              )}
-
-              {canAccessReports && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('reports');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                    activeTab === 'reports'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <UserCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Analytics & Reports</span>
-                  </div>
-                </button>
-              )}
-
-              {canAccessSetup && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('setup');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
-                    activeTab === 'setup'
-                      ? 'bg-amber-600 text-white font-bold'
-                      : 'text-amber-300 hover:bg-slate-800 hover:text-white border border-amber-500/30'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    <span>Administrative Setup</span>
-                  </div>
-                </button>
-              )}
+              {/* Staff Stats */}
+              <div className="flex items-center space-x-1.5 bg-[#3e3d40] text-white px-3 py-1.5 rounded-xl shadow-xs">
+                <Briefcase className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="text-slate-300">Staff:</span>
+                <strong className="text-sky-400 font-extrabold">
+                  {filteredPremisesSummary.staffOnPremises}
+                </strong>
+                <span className="text-slate-400 font-mono">/{filteredPremisesSummary.staffTotal}</span>
+              </div>
             </div>
-          )}
 
-          {/* Navigation Bar Tabs Strip */}
-          <nav className="hidden sm:flex items-center justify-between py-1.5 border-t border-slate-800/80 text-xs font-semibold gap-1 overflow-x-auto scrollbar-none">
-            <div className="flex items-center space-x-1 shrink-0">
-              {/* Primary Gate Sign-In Station */}
+            {/* Right Group: Responsive auto & Mobile View Viewport Switchers */}
+            <div className="flex items-center space-x-2">
               <button
                 type="button"
-                onClick={() => setActiveTab('signin')}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-2 font-bold cursor-pointer ${
-                  activeTab === 'signin'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-emerald-400 hover:text-white hover:bg-slate-800'
+                onClick={() => setViewportMode('auto')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs ${
+                  viewportMode === 'auto'
+                    ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                 }`}
+                title="Responsive auto view"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Sign In Station</span>
+                <Monitor className="w-4 h-4" />
+                <span>Responsive auto</span>
               </button>
 
+              <button
+                type="button"
+                onClick={() => setViewportMode('mobile')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs ${
+                  viewportMode === 'mobile'
+                    ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
+                }`}
+                title="Mobile View Phone Shell"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Mobile View</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ROW 3: Real-Time Dashboard, Campus Modules, Staff Module, Attendance Logs, Edit Requests, Roster & Badges, Analytics & Reports */}
+          <div className="flex items-center justify-between py-2 border-b border-[#e5b70a]/80 gap-1.5 overflow-x-auto scrollbar-none text-xs font-bold">
+            <div className="flex items-center space-x-2 shrink-0 flex-wrap sm:flex-nowrap gap-y-2">
               {/* Real-Time Dashboard */}
               <button
                 type="button"
                 onClick={() => setActiveTab('dashboard')}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                   activeTab === 'dashboard'
-                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                 }`}
               >
-                Dashboard
+                <School className="w-4 h-4 text-amber-300" />
+                <span>Real-Time Dashboard</span>
               </button>
 
               {/* Campus Modules */}
               <button
                 type="button"
                 onClick={() => setActiveTab('campuses')}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                   activeTab === 'campuses'
-                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                 }`}
               >
-                <School className="w-3.5 h-3.5" />
-                <span>Campuses</span>
+                <span>Campus Modules</span>
               </button>
 
               {/* Staff Module */}
@@ -595,14 +302,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('staff')}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'staff'
-                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                      ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                      : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                   }`}
                 >
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span>Staff</span>
+                  <span>Staff Module</span>
                 </button>
               )}
 
@@ -610,13 +316,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('attendance')}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                   activeTab === 'attendance'
-                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                 }`}
               >
-                Attendance Logs
+                <Clock className="w-4 h-4" />
+                <span>Attendance Logs</span>
               </button>
 
               {/* Edit Requests */}
@@ -624,15 +331,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('approvals')}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'approvals'
-                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                      ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                      : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                   }`}
                 >
+                  <ShieldAlert className="w-4 h-4 text-amber-300" />
                   <span>Edit Requests</span>
                   {pendingRequestsCount > 0 && (
-                    <span className="px-1.5 py-0.2 bg-rose-500 text-white text-[10px] font-bold rounded-full animate-bounce">
+                    <span className="px-1.5 py-0.2 bg-white text-[#A71C21] text-[10px] font-black rounded-full animate-bounce">
                       {pendingRequestsCount}
                     </span>
                   )}
@@ -644,48 +352,68 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('roster')}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'roster'
-                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                      ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                      : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                   }`}
                 >
-                  Roster &amp; Badges
+                  <Users className="w-4 h-4" />
+                  <span>Roster &amp; Badges</span>
                 </button>
               )}
 
-              {/* Reports */}
+              {/* Analytics & Reports */}
               {canAccessReports && (
                 <button
                   type="button"
                   onClick={() => setActiveTab('reports')}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'reports'
-                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                      ? 'bg-[#A71C21] text-white ring-2 ring-white/30 font-extrabold'
+                      : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                   }`}
                 >
-                  Reports
+                  <UserCheck className="w-4 h-4 text-emerald-300" />
+                  <span>Analytics &amp; Reports</span>
                 </button>
               )}
             </div>
+          </div>
 
-            {/* Administrative Setup Tab (Isolated on the Right) */}
+          {/* ROW 4: On the Left ( Sign In Children and Staff ) | On the Right ( Administrative Setup ) */}
+          <div className="flex items-center justify-between py-2 gap-3 text-xs font-bold">
+            {/* On the Left: Sign In Children and Staff */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('signin')}
+              className={`px-4 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-2 font-black shadow-md ${
+                activeTab === 'signin'
+                  ? 'bg-[#A71C21] text-white ring-2 ring-white/40'
+                  : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-sm">Sign In Children and Staff</span>
+            </button>
+
+            {/* On the Right: Administrative Setup */}
             {canAccessSetup && (
               <button
                 type="button"
                 onClick={() => setActiveTab('setup')}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                className={`px-4 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-2 font-black shadow-md ${
                   activeTab === 'setup'
-                    ? 'bg-amber-600 text-white shadow-sm font-bold'
-                    : 'text-amber-300 hover:bg-slate-800 border border-amber-500/30 font-bold bg-amber-500/10'
+                    ? 'bg-[#A71C21] text-white ring-2 ring-white/40'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#A71C21]'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Admin Setup</span>
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Administrative Setup</span>
               </button>
             )}
-          </nav>
+          </div>
+
         </div>
       </header>
 
@@ -694,21 +422,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-5 text-white">
+            <div className="bg-[#3e3d40] p-5 text-white">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-base flex items-center space-x-2">
-                    <UserCheck className="w-5 h-5 text-indigo-400" />
+                    <UserCheck className="w-5 h-5 text-amber-300" />
                     <span>Switch Staff Role</span>
                   </h3>
                   <p className="text-xs text-slate-300 mt-1">
-                    Select a staff persona or enter a 3-digit PIN code to test permissions.
+                    Select a staff persona or enter a 3-digit PIN code.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowSwitchModal(false)}
-                  className="text-slate-400 hover:text-white text-sm"
+                  className="text-slate-400 hover:text-white text-sm cursor-pointer"
                 >
                   ✕
                 </button>
@@ -744,7 +472,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       sound.playSuccessChime();
                     }
                   }}
-                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                  className="px-3 py-1.5 bg-[#A71C21] hover:bg-[#88151a] text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
                 >
                   Sign In As Fredrick
                 </button>
@@ -771,9 +499,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       key={mins}
                       type="button"
                       onClick={() => setIdleTimeoutMinutes(mins)}
-                      className={`px-2 py-1 rounded text-[10px] font-bold transition ${
+                      className={`px-2 py-1 rounded text-[10px] font-bold transition cursor-pointer ${
                         idleTimeoutMinutes === mins
-                          ? 'bg-amber-600 text-white shadow-xs'
+                          ? 'bg-[#A71C21] text-white shadow-xs'
                           : 'bg-white text-amber-900 border border-amber-300 hover:bg-amber-100'
                       }`}
                     >
@@ -786,10 +514,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setShowSwitchModal(false);
                       logout(true);
                     }}
-                    className="ml-auto text-[10px] text-rose-700 hover:text-rose-900 font-bold underline"
+                    className="ml-auto text-[10px] text-rose-700 hover:text-rose-900 font-bold underline cursor-pointer"
                     title="Test immediate inactivity timeout lock"
                   >
-                    Test Auto-Lock Now
+                    Test Lock
                   </button>
                 </div>
               </div>
@@ -808,12 +536,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                       value={pinInput}
                       onChange={(e) => setPinInput(e.target.value)}
                       placeholder="Enter 3-digit PIN"
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A71C21] font-mono"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition"
+                    className="px-4 py-2 bg-[#3e3d40] text-white rounded-lg text-xs font-semibold hover:bg-[#A71C21] transition cursor-pointer"
                   >
                     Authenticate
                   </button>
@@ -844,14 +572,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                         switchUser(staff);
                         setShowSwitchModal(false);
                       }}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition ${
+                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition cursor-pointer ${
                         isActive
-                          ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20'
+                          ? 'border-[#A71C21] bg-red-50 ring-2 ring-red-500/20'
                           : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
+                        <div className="w-9 h-9 rounded-full bg-[#3e3d40] text-white flex items-center justify-center font-bold text-xs">
                           {staff.full_name.charAt(0)}
                         </div>
                         <div>
@@ -877,50 +605,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                         >
                           {staff.role}
                         </span>
-                        {isActive && <CheckCircle2 className="w-4 h-4 text-indigo-600" />}
+                        {isActive && <CheckCircle2 className="w-4 h-4 text-[#A71C21]" />}
                       </div>
                     </button>
                   );
                 })}
-              </div>
-
-              {/* Permission Summary of Current User */}
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1.5 text-slate-600">
-                <p className="font-semibold text-slate-800">
-                  Current Role Capabilities ({currentUser?.role}):
-                </p>
-                <ul className="list-disc pl-4 space-y-1 text-[11px]">
-                  <li>Scan students in/out via QR or 4-digit PIN: <strong className="text-emerald-700">Allowed</strong></li>
-                  <li>
-                    Scan teachers in/out:{' '}
-                    <strong className={canScanTeachers ? 'text-emerald-700' : 'text-red-700'}>
-                      {canScanTeachers ? 'Allowed' : 'Restricted (Admin only)'}
-                    </strong>
-                  </li>
-                  <li>
-                    Direct edit/delete logs:{' '}
-                    <strong
-                      className={
-                        currentUser?.role === 'Principal' ||
-                        currentUser?.role === 'Director' ||
-                        currentUser?.role === 'ICCE Coordinator'
-                          ? 'text-emerald-700'
-                          : 'text-amber-700'
-                      }
-                    >
-                      {currentUser?.role === 'Principal' ||
-                      currentUser?.role === 'Director' ||
-                      currentUser?.role === 'ICCE Coordinator'
-                        ? 'Allowed'
-                        : 'Must Submit Edit Request'}
-                    </strong>
-                  </li>
-                  {isSuperUser && (
-                    <li>
-                      Super User Account Management: <strong className="text-purple-700">Full Access</strong>
-                    </li>
-                  )}
-                </ul>
               </div>
             </div>
 
@@ -928,7 +617,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setShowSwitchModal(false)}
-                className="px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-semibold hover:bg-slate-700 transition"
+                className="px-4 py-2 bg-[#3e3d40] text-white rounded-lg text-xs font-semibold hover:bg-slate-700 transition cursor-pointer"
               >
                 Close
               </button>
@@ -936,12 +625,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
-
-      {/* Bulk System Data & Student Badges Export Modal */}
-      <BulkExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-      />
     </>
   );
 };

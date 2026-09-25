@@ -18,8 +18,16 @@ export async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
+    if (error instanceof Error) {
+      if (
+        error.message.includes('the client is offline') ||
+        error.message.includes('unavailable') ||
+        (error as { code?: string }).code === 'unavailable'
+      ) {
+        console.warn('Firestore operating in offline cache mode until backend connection is established.');
+      } else {
+        console.warn('Firestore initial connection status:', error.message);
+      }
     }
   }
 }
