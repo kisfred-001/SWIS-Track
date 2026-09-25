@@ -586,7 +586,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, student/staff ID, PIN, supervisor..."
-              className="w-full min-h-[44px] pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-xs sm:text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition touch-manipulation"
+              className="w-full min-h-[44px] pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl text-xs sm:text-sm bg-white text-black font-semibold placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition touch-manipulation"
             />
           </div>
 

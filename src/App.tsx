@@ -76,6 +76,8 @@ function AppContent() {
             handleSetActiveTab('signin_children');
           } else if (action === 'signin_staff') {
             handleSetActiveTab('signin_staff');
+          } else if (action === 'signin') {
+            handleSetActiveTab('signin');
           } else if (action === 'dashboard') {
             handleSetActiveTab('dashboard');
           }

@@ -281,7 +281,7 @@ export const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ initialSubTab = 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search target or ID..."
-              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-black font-bold placeholder:text-slate-400"
             />
           </div>
 

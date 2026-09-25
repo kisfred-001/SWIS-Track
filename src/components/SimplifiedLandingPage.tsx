@@ -4,7 +4,7 @@ import { SchoolLogo } from './SchoolLogo';
 import { Users, Briefcase, LayoutDashboard, LogOut, UserCheck, KeyRound, CheckCircle2, X } from 'lucide-react';
 
 interface SimplifiedLandingPageProps {
-  onSelectAction: (action: 'signin_children' | 'signin_staff' | 'dashboard') => void;
+  onSelectAction: (action: 'signin_children' | 'signin_staff' | 'dashboard' | 'signin') => void;
   onOpenSwitchUserModal?: () => void;
 }
 
@@ -102,13 +102,13 @@ export const SimplifiedLandingPage: React.FC<SimplifiedLandingPageProps> = ({
           </p>
         </div>
 
-        {/* Action Buttons Grid (2 buttons for Teachers/Support, 3 buttons for Leadership) */}
+        {/* Action Buttons Grid (2 buttons for ALL users) */}
         <div className="w-full space-y-3.5 pt-2">
           
-          {/* Button 1: Sign In Children */}
+          {/* Button 1: Sign In Station (Sign In Children / Staff for Leadership, Sign In Children for Teachers) */}
           <button
             type="button"
-            onClick={() => onSelectAction('signin_children')}
+            onClick={() => onSelectAction(isLeadership ? 'signin' : 'signin_children')}
             className="w-full group relative overflow-hidden bg-gradient-to-r from-[#A71C21] to-[#88151a] hover:from-[#b91e24] hover:to-[#9c181e] text-white p-4 sm:p-5 rounded-2xl shadow-xl shadow-red-950/40 border border-red-500/30 flex items-center justify-between transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] cursor-pointer touch-manipulation min-h-[68px]"
           >
             <div className="flex items-center space-x-3.5 text-left">
@@ -117,49 +117,23 @@ export const SimplifiedLandingPage: React.FC<SimplifiedLandingPageProps> = ({
               </div>
               <div>
                 <div className="text-base sm:text-lg font-black tracking-tight text-white flex items-center space-x-2">
-                  <span>Sign In Children</span>
+                  <span>{isLeadership ? 'Sign In Children / Staff' : 'Sign In Children'}</span>
                 </div>
                 <p className="text-xs text-amber-100/80 font-medium">
-                  Scan QR badge, enter 4-digit PIN, or search name
+                  {isLeadership
+                    ? 'Scan QR badge, enter student/staff PIN, or search name list'
+                    : 'Scan QR badge, enter 4-digit PIN, or search name list'}
                 </p>
               </div>
             </div>
 
             <div className="hidden sm:flex items-center space-x-1 text-xs font-extrabold bg-white/15 px-3 py-1.5 rounded-xl border border-white/20 text-amber-200">
               <KeyRound className="w-3.5 h-3.5" />
-              <span>4-Digit</span>
+              <span>{isLeadership ? 'PIN / QR' : '4-Digit'}</span>
             </div>
           </button>
 
-          {/* Button 2 (Leadership Only): Sign In Staff */}
-          {isLeadership && (
-            <button
-              type="button"
-              onClick={() => onSelectAction('signin_staff')}
-              className="w-full group relative overflow-hidden bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white p-4 sm:p-5 rounded-2xl shadow-xl shadow-slate-950/50 border border-amber-500/30 flex items-center justify-between transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] cursor-pointer touch-manipulation min-h-[68px]"
-            >
-              <div className="flex items-center space-x-3.5 text-left">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center shrink-0 group-hover:bg-[#FCCB0D] group-hover:text-slate-900 transition-colors">
-                  <Briefcase className="w-6 h-6 text-amber-400 group-hover:text-slate-900" />
-                </div>
-                <div>
-                  <div className="text-base sm:text-lg font-black tracking-tight text-white flex items-center space-x-2">
-                    <span>Sign In Staff</span>
-                  </div>
-                  <p className="text-xs text-slate-300 font-medium">
-                    Clock in/out staff via 3-digit PIN or QR scan
-                  </p>
-                </div>
-              </div>
-
-              <div className="hidden sm:flex items-center space-x-1 text-xs font-extrabold bg-amber-400/20 px-3 py-1.5 rounded-xl border border-amber-400/30 text-amber-300">
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>3-Digit</span>
-              </div>
-            </button>
-          )}
-
-          {/* Button 3: Portal Access */}
+          {/* Button 2: Portal Access */}
           <button
             type="button"
             onClick={() => onSelectAction('dashboard')}

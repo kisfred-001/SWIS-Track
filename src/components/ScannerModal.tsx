@@ -933,7 +933,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                         value={manualCode}
                         onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                         placeholder="Enter 4-digit Student PIN or 3-digit Staff PIN"
-                        className="w-full text-center text-xl tracking-widest font-mono font-bold py-3 px-4 border-2 border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        className="w-full text-center text-xl tracking-widest font-mono font-bold py-3 px-4 border-2 border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 bg-white text-black placeholder:text-slate-400"
                         maxLength={10}
                         autoFocus
                       />

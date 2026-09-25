@@ -317,7 +317,7 @@ export const RosterManagement: React.FC = () => {
                   ? 'Search student name, ID, PIN, parent, emergency phone...'
                   : 'Search staff name, role, ID, PIN...'
               }
-              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none"
+              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none bg-white text-black font-bold placeholder:text-slate-400"
             />
           </div>
 

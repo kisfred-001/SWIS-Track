@@ -803,7 +803,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                   ? 'Type child name or PIN...'
                   : 'Type staff name or role...'
               }
-              className="w-full min-h-[44px] text-sm pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 touch-manipulation"
+              className="w-full min-h-[44px] text-sm pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-black font-semibold placeholder:text-slate-400 touch-manipulation"
             />
           </div>
 
