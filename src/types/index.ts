@@ -132,6 +132,10 @@ export interface AttendanceLog {
   check_out_time: string | null; // e.g., "03:15 PM" or null
   scanned_by: string; // staff_id or staff name
   scanned_by_name?: string;
+  signed_in_by?: string;
+  signed_in_by_name?: string;
+  signed_out_by?: string;
+  signed_out_by_name?: string;
   pickup_dropoff_party?: PickupDropoffParty;
   early_departure_reason?: string;
   status: AttendanceLogStatus;

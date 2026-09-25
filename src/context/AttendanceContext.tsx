@@ -718,6 +718,11 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (!existingLog) {
         // Check-in staff
         const newLogId = `LOG-${Date.now().toString().slice(-6)}`;
+        const operatorName = currentUser?.full_name
+          ? `${currentUser.full_name} (${currentUser.role})`
+          : 'Terminal Operator';
+        const operatorId = currentUser?.staff_id || 'STF-Unknown';
+
         const newLog: AttendanceLog = {
           id: newLogId,
           log_id: newLogId,
@@ -730,8 +735,10 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           date: todayStr,
           check_in_time: formatTimeNow(),
           check_out_time: null,
-          scanned_by: currentUser?.staff_id || 'System',
-          scanned_by_name: currentUser?.full_name || 'System Operator',
+          scanned_by: operatorId,
+          scanned_by_name: operatorName,
+          signed_in_by: operatorId,
+          signed_in_by_name: operatorName,
           status: 'Active',
           created_at: new Date().toISOString(),
         };
@@ -754,15 +761,22 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           success: true,
           action: 'check_in' as const,
           targetName: staff.full_name,
-          message: `${staff.full_name} (${staff.role}) successfully checked IN at ${newLog.check_in_time}.`,
+          message: `${staff.full_name} (${staff.role}) successfully checked IN at ${newLog.check_in_time}. (Signed in by: ${operatorName})`,
           log: newLog,
         };
       } else if (!existingLog.check_out_time) {
         // Check-out staff
         const checkoutTime = formatTimeNow();
+        const operatorName = currentUser?.full_name
+          ? `${currentUser.full_name} (${currentUser.role})`
+          : 'Terminal Operator';
+        const operatorId = currentUser?.staff_id || 'STF-Unknown';
+
         const updatedLog: AttendanceLog = {
           ...existingLog,
           check_out_time: checkoutTime,
+          signed_out_by: operatorId,
+          signed_out_by_name: operatorName,
           updated_at: new Date().toISOString(),
         };
 
@@ -778,6 +792,8 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         try {
           await updateDoc(doc(db, 'attendance_logs', existingLog.id), {
             check_out_time: checkoutTime,
+            signed_out_by: operatorId,
+            signed_out_by_name: operatorName,
             updated_at: new Date().toISOString(),
           });
         } catch {
@@ -789,7 +805,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           success: true,
           action: 'check_out' as const,
           targetName: staff.full_name,
-          message: `${staff.full_name} successfully checked OUT at ${checkoutTime}.`,
+          message: `${staff.full_name} successfully checked OUT at ${checkoutTime}. (Signed out by: ${operatorName})`,
         };
       } else {
         sound.playError();
@@ -858,6 +874,11 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           name: (student.parent_names || '').split('&')[0]?.trim() || 'Parent',
         };
 
+        const operatorName = currentUser?.full_name
+          ? `${currentUser.full_name} (${currentUser.role})`
+          : 'Staff Member';
+        const operatorId = currentUser?.staff_id || 'STF-Unknown';
+
         const newLog: AttendanceLog = {
           id: newLogId,
           log_id: newLogId,
@@ -870,8 +891,10 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           date: todayStr,
           check_in_time: formatTimeNow(),
           check_out_time: null,
-          scanned_by: currentUser?.staff_id || 'STF-Unknown',
-          scanned_by_name: currentUser?.full_name || 'Staff Member',
+          scanned_by: operatorId,
+          scanned_by_name: operatorName,
+          signed_in_by: operatorId,
+          signed_in_by_name: operatorName,
           pickup_dropoff_party: checkInParty,
           status: 'Active',
           created_at: new Date().toISOString(),
@@ -895,7 +918,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           success: true,
           action: 'check_in' as const,
           targetName: student.full_name,
-          message: `${student.full_name} (${student.grade}) checked IN at ${newLog.check_in_time}. Dropped by ${checkInParty.type}: ${checkInParty.name}.`,
+          message: `${student.full_name} (${student.grade}) checked IN at ${newLog.check_in_time}. Dropped by ${checkInParty.type}: ${checkInParty.name}. (Signed in by: ${operatorName})`,
           log: newLog,
         };
       } else if (!existingLog.check_out_time) {
@@ -906,8 +929,15 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           name: (student.parent_names || '').split('&')[0]?.trim() || 'Authorized Parent',
         };
 
+        const operatorName = currentUser?.full_name
+          ? `${currentUser.full_name} (${currentUser.role})`
+          : 'Staff Member';
+        const operatorId = currentUser?.staff_id || 'STF-Unknown';
+
         const updatePayload: any = {
           check_out_time: checkoutTime,
+          signed_out_by: operatorId,
+          signed_out_by_name: operatorName,
           pickup_dropoff_party: pickParty,
           updated_at: new Date().toISOString(),
         };
@@ -941,7 +971,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           success: true,
           action: 'check_out' as const,
           targetName: student.full_name,
-          message: `${student.full_name} checked OUT at ${checkoutTime}. Picked up by ${pickParty.type}: ${pickParty.name}.`,
+          message: `${student.full_name} checked OUT at ${checkoutTime}. Picked up by ${pickParty.type}: ${pickParty.name}. (Signed out by: ${operatorName})`,
         };
       } else {
         sound.playError();

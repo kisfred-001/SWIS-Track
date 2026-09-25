@@ -701,7 +701,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }`}
                     >
                       {/* Left: User Avatar + Name + Role */}
-                      <div className="flex items-center space-x-3 min-w-0">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
                         <div
                           className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-xs ${
                             log.target_type === 'Student'
@@ -712,7 +712,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           {log.target_name ? log.target_name.charAt(0) : 'U'}
                         </div>
 
-                        <div className="truncate min-w-0">
+                        <div className="truncate min-w-0 flex-1">
                           <div className="flex items-center space-x-2">
                             <h4 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                               {log.target_name}
@@ -728,14 +728,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             </span>
                           </div>
 
-                          <div className="text-[11px] text-slate-500 flex items-center space-x-1.5 mt-0.5 truncate">
-                            <span className="font-semibold text-slate-700 truncate">
+                          <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
+                            <span className="font-semibold text-slate-700">
                               {log.classroom || log.grade_or_role || 'General'}
                             </span>
                             <span>•</span>
                             <span className="text-slate-400 font-mono text-[10px]">{log.target_id}</span>
                             <span>•</span>
-                            <span className="text-slate-500">{log.campus}</span>
+                            <span className="text-slate-600 font-medium">{log.campus}</span>
+                          </div>
+
+                          {/* Prominent Operator Information: Who signed them in/out */}
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                            {/* Check-In Operator */}
+                            <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                              <UserCheck className="w-3 h-3 text-emerald-600" />
+                              <span>Signed In By:</span>
+                              <strong className="text-slate-900 font-semibold">
+                                {log.signed_in_by_name || log.scanned_by_name || log.scanned_by || 'Staff Terminal'}
+                              </strong>
+                            </span>
+
+                            {/* Check-Out Operator if departed */}
+                            {log.check_out_time && (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+                                <LogOut className="w-3 h-3 text-blue-600" />
+                                <span>Signed Out By:</span>
+                                <strong className="text-blue-950 font-semibold">
+                                  {log.signed_out_by_name || log.scanned_by_name || 'Staff Terminal'}
+                                </strong>
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -746,9 +769,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {log.pickup_dropoff_party && (
                           <div className="text-[10px] text-slate-500 text-left sm:text-right hidden md:block">
                             <span className="text-slate-400 block">{log.pickup_dropoff_party.type}:</span>
-                            <strong className="text-slate-700 truncate max-w-[120px] block">
+                            <strong className="text-slate-700 truncate max-w-[130px] block">
                               {log.pickup_dropoff_party.name}
                             </strong>
+                            {log.early_departure_reason && (
+                              <span className="text-amber-700 text-[9px] block">
+                                Reason: {log.early_departure_reason}
+                              </span>
+                            )}
                           </div>
                         )}
 
@@ -826,6 +854,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <span>{student.learning_center_id}</span>
                             <span>{log?.check_in_time ? `In: ${log.check_in_time}` : 'Not Scanned'}</span>
                           </div>
+                          {log && (
+                            <div className="text-[10px] text-slate-600 bg-white p-2 rounded-xl border border-slate-200 space-y-0.5">
+                              <div>
+                                <span className="text-slate-400">Signed In By: </span>
+                                <strong className="text-slate-800">
+                                  {log.signed_in_by_name || log.scanned_by_name || log.scanned_by || 'Staff'}
+                                </strong>
+                              </div>
+                              {log.check_out_time && (
+                                <div>
+                                  <span className="text-slate-400">Signed Out By: </span>
+                                  <strong className="text-slate-800">
+                                    {log.signed_out_by_name || log.scanned_by_name || 'Staff'}
+                                  </strong>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )
                     )
@@ -840,8 +886,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <th className="py-3 px-3.5">Student</th>
                         <th className="py-3 px-3.5">Learning Center</th>
                         <th className="py-3 px-3.5">Status</th>
-                        <th className="py-3 px-3.5">Check-In</th>
-                        <th className="py-3 px-3.5">Check-Out</th>
+                        <th className="py-3 px-3.5">Check-In &amp; Signed By</th>
+                        <th className="py-3 px-3.5">Check-Out &amp; Signed By</th>
                         <th className="py-3 px-3.5 text-right">Quick Scan</th>
                       </tr>
                     </thead>
@@ -876,11 +922,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                   {status === 'on_premises' ? 'On Premises' : status === 'checked_out' ? 'Departed' : 'Absent'}
                                 </span>
                               </td>
-                              <td className="py-2.5 px-3.5 text-slate-700 font-mono text-[11px]">
-                                {log?.check_in_time || '—'}
+                              <td className="py-2.5 px-3.5">
+                                {log?.check_in_time ? (
+                                  <div>
+                                    <div className="text-slate-800 font-mono font-bold text-[11px]">
+                                      {log.check_in_time}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 flex items-center space-x-1">
+                                      <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                                      <span className="truncate max-w-[130px]" title={log.signed_in_by_name || log.scanned_by_name || log.scanned_by}>
+                                        {log.signed_in_by_name || log.scanned_by_name || log.scanned_by || 'Staff'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
                               </td>
-                              <td className="py-2.5 px-3.5 text-slate-700 font-mono text-[11px]">
-                                {log?.check_out_time || '—'}
+                              <td className="py-2.5 px-3.5">
+                                {log?.check_out_time ? (
+                                  <div>
+                                    <div className="text-slate-800 font-mono font-bold text-[11px]">
+                                      {log.check_out_time}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 flex items-center space-x-1">
+                                      <LogOut className="w-3 h-3 text-blue-600 shrink-0" />
+                                      <span className="truncate max-w-[130px]" title={log.signed_out_by_name || log.scanned_by_name}>
+                                        {log.signed_out_by_name || log.scanned_by_name || 'Staff'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
                               </td>
                               <td className="py-2.5 px-3.5 text-right">
                                 <button
@@ -918,8 +992,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <th className="py-3 px-3.5">Staff Member</th>
                         <th className="py-3 px-3.5">Role</th>
                         <th className="py-3 px-3.5">Status</th>
-                        <th className="py-3 px-3.5">Arrival</th>
-                        <th className="py-3 px-3.5">Departure</th>
+                        <th className="py-3 px-3.5">Arrival &amp; Clocked By</th>
+                        <th className="py-3 px-3.5">Departure &amp; Clocked By</th>
                         <th className="py-3 px-3.5 text-right">Register</th>
                       </tr>
                     </thead>
@@ -953,11 +1027,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 {status === 'on_premises' ? 'On Campus' : status === 'checked_out' ? 'Departed' : 'Off Campus'}
                               </span>
                             </td>
-                            <td className="py-2.5 px-3.5 text-slate-700 font-mono text-[11px]">
-                              {log?.check_in_time || '—'}
+                            <td className="py-2.5 px-3.5">
+                              {log?.check_in_time ? (
+                                <div>
+                                  <div className="text-slate-800 font-mono font-bold text-[11px]">
+                                    {log.check_in_time}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 flex items-center space-x-1">
+                                    <UserCheck className="w-3 h-3 text-indigo-600 shrink-0" />
+                                    <span className="truncate max-w-[130px]" title={log.signed_in_by_name || log.scanned_by_name || log.scanned_by}>
+                                      {log.signed_in_by_name || log.scanned_by_name || log.scanned_by || 'Staff'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
                             </td>
-                            <td className="py-2.5 px-3.5 text-slate-700 font-mono text-[11px]">
-                              {log?.check_out_time || '—'}
+                            <td className="py-2.5 px-3.5">
+                              {log?.check_out_time ? (
+                                <div>
+                                  <div className="text-slate-800 font-mono font-bold text-[11px]">
+                                    {log.check_out_time}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 flex items-center space-x-1">
+                                    <LogOut className="w-3 h-3 text-blue-600 shrink-0" />
+                                    <span className="truncate max-w-[130px]" title={log.signed_out_by_name || log.scanned_by_name}>
+                                      {log.signed_out_by_name || log.scanned_by_name || 'Staff'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
                             </td>
                             <td className="py-2.5 px-3.5 text-right">
                               {canScanTeachers ? (

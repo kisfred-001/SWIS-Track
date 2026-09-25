@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { sound } from '../utils/sound';
 import { Staff } from '../types';
-import { MobileSignInHub } from './MobileSignInHub';
 
 export const LoginScreen: React.FC = () => {
   const {
@@ -32,17 +31,7 @@ export const LoginScreen: React.FC = () => {
     idleTimeoutMinutes,
   } = useAuth();
 
-  const [authMode, setAuthMode] = useState<'pin' | 'email' | 'roster' | 'signin_station'>('pin');
-
-  // When opening on mobile, primarily open the option of signing in children and staff!
-  useEffect(() => {
-    const isMobile =
-      typeof window !== 'undefined' &&
-      (window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
-    if (isMobile && !idleTimedOut) {
-      setAuthMode('signin_station');
-    }
-  }, [idleTimedOut]);
+  const [authMode, setAuthMode] = useState<'pin' | 'email' | 'roster'>('pin');
   const [pinInput, setPinInput] = useState<string>('');
   const [emailInput, setEmailInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
@@ -240,76 +229,42 @@ export const LoginScreen: React.FC = () => {
 
       {/* Main Authentication Container */}
       <div className="max-w-xl w-full mx-auto my-auto py-4">
-        {authMode === 'signin_station' ? (
-          <div className="space-y-3">
-            <div className="bg-slate-900/90 text-white p-3.5 rounded-3xl border border-slate-800 flex items-center justify-between shadow-xl">
-              <div className="flex items-center space-x-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <div>
-                  <span className="text-xs font-black text-white block">Mobile Attendance Gate Station</span>
-                  <span className="text-[10px] text-emerald-300">Signing In Children &amp; Staff</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAuthMode('pin')}
-                className="text-xs text-indigo-300 hover:text-white font-bold flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 rounded-xl border border-slate-700 transition"
-              >
-                <Lock className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Staff Terminal Login</span>
-              </button>
+        <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+          {/* Header Card */}
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 text-center relative overflow-hidden">
+            {/* Ambient background decoration */}
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <Lock className="w-7 h-7 text-indigo-300" />
             </div>
-            <MobileSignInHub onNavigateToDashboard={() => setAuthMode('pin')} />
+
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 mb-2">
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Multi-Campus Identity System</span>
+            </div>
+
+            <h1 className="text-2xl font-black text-white tracking-tight">
+              {idleTimedOut ? 'Session Inactivity Lock' : 'School Terminal Sign In'}
+            </h1>
+
+            <p className="text-xs text-slate-300 mt-1.5 max-w-md mx-auto leading-relaxed">
+              {idleTimedOut
+                ? `Terminal locked automatically after ${idleTimeoutMinutes} minutes of inactivity to safeguard student records. Enter your staff PIN or credentials to resume.`
+                : 'Welcome to SWIS Track. All faculty and staff must authenticate with their 3-digit PIN, account credentials, or select their staff persona before accessing terminal operations.'}
+            </p>
+
+            {idleTimedOut && (
+              <div className="mt-3 inline-flex items-center space-x-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-200 px-3 py-1 rounded-xl text-xs font-semibold">
+                <AlertTriangle className="w-4 h-4 text-amber-300" />
+                <span>Inactivity Security Protocol Triggered</span>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-            {/* Header Card */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 text-center relative overflow-hidden">
-              {/* Ambient background decoration */}
-              <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
 
-              <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <Lock className="w-7 h-7 text-indigo-300" />
-              </div>
-
-              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 mb-2">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Multi-Campus Identity System</span>
-              </div>
-
-              <h1 className="text-2xl font-black text-white tracking-tight">
-                {idleTimedOut ? 'Session Inactivity Lock' : 'School Terminal Sign In'}
-              </h1>
-
-              <p className="text-xs text-slate-300 mt-1.5 max-w-md mx-auto leading-relaxed">
-                {idleTimedOut
-                  ? `Terminal locked automatically after ${idleTimeoutMinutes} minutes of inactivity to safeguard student records. Enter your staff PIN or credentials to resume.`
-                  : 'Welcome to SWIS Track. Please authenticate with your authorized staff PIN, account credentials, or select your staff persona.'}
-              </p>
-
-              {idleTimedOut && (
-                <div className="mt-3 inline-flex items-center space-x-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-200 px-3 py-1 rounded-xl text-xs font-semibold">
-                  <AlertTriangle className="w-4 h-4 text-amber-300" />
-                  <span>Inactivity Security Protocol Triggered</span>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Option to Open Sign-In Station */}
-            <div className="p-4 sm:p-6 pb-0">
-              <button
-                type="button"
-                onClick={() => setAuthMode('signin_station')}
-                className="w-full py-3 px-4 rounded-2xl text-xs font-black transition flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white shadow-md shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 cursor-pointer active:scale-98"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse"></span>
-                <span>📱 Open Sign-In Station (Children &amp; Staff)</span>
-              </button>
-            </div>
-
-            {/* Mode Selector Tabs */}
-            <div className="p-4 sm:p-6 pb-2">
+          {/* Mode Selector Tabs */}
+          <div className="p-4 sm:p-6 pb-2">
             <div className="grid grid-cols-3 gap-1.5 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold text-slate-600">
               <button
                 type="button"
@@ -840,7 +795,6 @@ export const LoginScreen: React.FC = () => {
             <span>SWIS Track Premises Access • Safe International School Attendance & Verification</span>
           </div>
         </div>
-        )}
       </div>
 
       {/* Page Footer */}

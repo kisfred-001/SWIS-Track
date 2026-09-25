@@ -53,16 +53,14 @@ service cloud.firestore {
       allow delete: if true;
     }
 
-    // Attendance Logs: Real-time gate and classroom logs
+    // Attendance Logs: Real-time gate and classroom logs across all staff operators
     match /attendance_logs/{logId} {
       allow read: if true;
       allow create: if request.resource.data.target_id is string &&
                        request.resource.data.target_type in ['Student', 'Teacher'] &&
-                       request.resource.data.check_in_time is string &&
-                       isValidCampus(request.resource.data.campus);
+                       request.resource.data.check_in_time is string;
       allow update: if request.resource.data.target_id is string &&
-                       request.resource.data.target_type in ['Student', 'Teacher'] &&
-                       isValidCampus(request.resource.data.campus);
+                       request.resource.data.target_type in ['Student', 'Teacher'];
       allow delete: if true;
     }
 
