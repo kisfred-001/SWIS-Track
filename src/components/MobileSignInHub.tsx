@@ -200,9 +200,21 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
           return;
         }
 
-        // Prompt for pickup person confirmation
+        // Prompt for pickup person confirmation with pre-selected parent
+        const fatherName = student.parent_info?.father_name;
+        const motherName = student.parent_info?.mother_name;
+        const initialName =
+          fatherName ||
+          motherName ||
+          (student.parent_names || '').split('&')[0]?.trim() ||
+          'Parent / Guardian';
+        const initialRel = fatherName ? 'Father' : motherName ? 'Mother' : 'Parent / Guardian';
+
         setCheckoutStudentTarget(student);
-        setPickupPartyName((student.parent_names || '').split('&')[0]?.trim() || 'Parent');
+        setPickupPartyType('Parent');
+        setPickupPartyName(initialName);
+        setPickupPartyRelationship(initialRel);
+        setCheckoutNotes('');
         return;
       }
 
@@ -877,150 +889,233 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
         </div>
       )}
 
-      {/* Child Check-Out Modal (for pickup person recording) */}
+      {/* Child Check-Out Modal (Child Departure Authorization) */}
       {checkoutStudentTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 border border-slate-200 animate-in zoom-in duration-150 space-y-4 my-auto">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                  Child Departure Authorization
-                </span>
-                <h3 className="font-bold text-base text-slate-900 mt-1">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[92vh] flex flex-col border border-slate-200 animate-in slide-in-from-bottom-6 sm:zoom-in duration-150 overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 via-white to-orange-50 flex justify-between items-start shrink-0">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full border border-rose-200 flex items-center space-x-1">
+                    <ShieldCheck className="w-3 h-3 text-rose-600" />
+                    <span>Departure Authorization</span>
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                    PIN: {checkoutStudentTarget.pin_code}
+                  </span>
+                </div>
+                <h3 className="font-black text-lg text-slate-900 leading-tight">
                   {checkoutStudentTarget.full_name}
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-600">
                   {checkoutStudentTarget.learning_center_id} • Campus: {checkoutStudentTarget.campus}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setCheckoutStudentTarget(null)}
-                className="text-slate-400 hover:text-slate-700 p-1"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl bg-white/80 border border-slate-200 shrink-0 cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleConfirmStudentCheckout} className="space-y-3 text-xs">
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleConfirmStudentCheckout} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
+              {/* Quick 1-Tap Pick-Up Selector */}
               <div>
-                <label className="block text-slate-700 font-bold mb-1">
-                  Releasing Child To:
+                <label className="block text-slate-800 font-black text-xs mb-1.5">
+                  1-Tap Authorized Releasing Person:
                 </label>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPickupPartyType('Parent');
-                      setPickupPartyName(checkoutStudentTarget.parent_names || 'Parent');
-                      setPickupPartyRelationship('Parent/Guardian');
-                    }}
-                    className={`py-2 px-2.5 rounded-xl border text-center font-bold transition ${
-                      pickupPartyType === 'Parent'
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-900'
-                        : 'bg-slate-50 border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    Parent / Guardian
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPickupPartyType('Designate');
-                      const firstDesignate = checkoutStudentTarget.designated_pickups?.[0];
-                      setPickupPartyName(firstDesignate?.name || '');
-                      setPickupPartyRelationship(firstDesignate?.relationship || 'Authorized Designate');
-                    }}
-                    className={`py-2 px-2.5 rounded-xl border text-center font-bold transition ${
-                      pickupPartyType === 'Designate'
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-900'
-                        : 'bg-slate-50 border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    Authorized Designate
-                  </button>
-                </div>
-
-                {/* Pre-fill from designated list if available */}
-                {pickupPartyType === 'Designate' &&
-                  checkoutStudentTarget.designated_pickups &&
-                  checkoutStudentTarget.designated_pickups.length > 0 && (
-                    <div className="mb-2">
-                      <label className="text-[10px] text-slate-500 font-semibold block mb-1">
-                        Select Authorized Person:
-                      </label>
-                      <select
-                        onChange={(e) => {
-                          const found = checkoutStudentTarget.designated_pickups?.find(
-                            (p) => p.name === e.target.value
-                          );
-                          if (found) {
-                            setPickupPartyName(found.name);
-                            setPickupPartyRelationship(found.relationship);
-                          }
-                        }}
-                        className="w-full text-xs p-2 border border-slate-300 rounded-xl bg-slate-50 font-bold"
-                      >
-                        <option value="">-- Choose Authorized Person --</option>
-                        {checkoutStudentTarget.designated_pickups.map((p) => (
-                          <option key={p.id} value={p.name}>
-                            {p.name} ({p.relationship} - {p.phone})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Father Option if present */}
+                  {checkoutStudentTarget.parent_info?.father_name && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPickupPartyType('Parent');
+                        setPickupPartyName(checkoutStudentTarget.parent_info?.father_name || '');
+                        setPickupPartyRelationship('Father');
+                      }}
+                      className={`p-2.5 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation ${
+                        pickupPartyName === checkoutStudentTarget.parent_info?.father_name
+                          ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0">
+                        👨
+                      </div>
+                      <div className="truncate">
+                        <div className="font-bold text-xs truncate">
+                          {checkoutStudentTarget.parent_info.father_name}
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Father • {checkoutStudentTarget.parent_info.father_phone || 'Parent'}
+                        </div>
+                      </div>
+                    </button>
                   )}
 
-                <input
-                  type="text"
-                  required
-                  value={pickupPartyName}
-                  onChange={(e) => setPickupPartyName(e.target.value)}
-                  placeholder="Person's Full Name"
-                  className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                  {/* Mother Option if present */}
+                  {checkoutStudentTarget.parent_info?.mother_name && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPickupPartyType('Parent');
+                        setPickupPartyName(checkoutStudentTarget.parent_info?.mother_name || '');
+                        setPickupPartyRelationship('Mother');
+                      }}
+                      className={`p-2.5 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation ${
+                        pickupPartyName === checkoutStudentTarget.parent_info?.mother_name
+                          ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-pink-100 text-pink-700 font-bold flex items-center justify-center shrink-0">
+                        👩
+                      </div>
+                      <div className="truncate">
+                        <div className="font-bold text-xs truncate">
+                          {checkoutStudentTarget.parent_info.mother_name}
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Mother • {checkoutStudentTarget.parent_info.mother_phone || 'Parent'}
+                        </div>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Designated Emergency / Authorized Pickups */}
+                  {checkoutStudentTarget.designated_pickups?.map((des) => (
+                    <button
+                      key={des.id}
+                      type="button"
+                      onClick={() => {
+                        setPickupPartyType('Designate');
+                        setPickupPartyName(des.name);
+                        setPickupPartyRelationship(des.relationship || 'Authorized Designate');
+                      }}
+                      className={`p-2.5 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation ${
+                        pickupPartyName === des.name
+                          ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0">
+                        🚗
+                      </div>
+                      <div className="truncate">
+                        <div className="font-bold text-xs truncate">{des.name}</div>
+                        <div className="text-[10px] text-slate-500">
+                          {des.relationship} • {des.phone}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">
-                  Relationship / Role
-                </label>
-                <input
-                  type="text"
-                  value={pickupPartyRelationship}
-                  onChange={(e) => setPickupPartyRelationship(e.target.value)}
-                  placeholder="e.g. Mother, Father, Driver, Aunt"
-                  className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+              {/* Editable Name & Relationship Inputs */}
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Releasing To Full Name:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={pickupPartyName}
+                    onChange={(e) => setPickupPartyName(e.target.value)}
+                    placeholder="Enter name of person picking up child"
+                    className="w-full text-sm sm:text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Relationship to Child:
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 mb-1.5">
+                    {['Mother', 'Father', 'Guardian', 'Driver', 'Aunt', 'Uncle'].map((rel) => (
+                      <button
+                        key={rel}
+                        type="button"
+                        onClick={() => setPickupPartyRelationship(rel)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition cursor-pointer ${
+                          pickupPartyRelationship === rel
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {rel}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={pickupPartyRelationship}
+                    onChange={(e) => setPickupPartyRelationship(e.target.value)}
+                    placeholder="e.g. Mother, Father, Driver, Aunt"
+                    className="w-full text-sm sm:text-xs p-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
               </div>
 
+              {/* Quick Notes / Reason */}
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Optional Departure Notes
+                  Departure Note / Reason (Optional):
                 </label>
+                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                  {['Regular Dismissal', 'Clinic / Doctor', 'Family Pick-up', 'Approved Early Release'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setCheckoutNotes(preset)}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition cursor-pointer ${
+                        checkoutNotes === preset
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
                 <input
                   type="text"
                   value={checkoutNotes}
                   onChange={(e) => setCheckoutNotes(e.target.value)}
-                  placeholder="e.g. Clinic visit, Early pickup approved"
-                  className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g. Regular afternoon pickup, clinic appointment..."
+                  className="w-full text-sm sm:text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2">
+              {/* Sticky Action Footer */}
+              <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setCheckoutStudentTarget(null)}
-                  className="py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100"
+                  className="py-3 px-4 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition active:scale-95 cursor-pointer touch-manipulation"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmittingCheckout}
-                  className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md disabled:opacity-50"
+                  disabled={isSubmittingCheckout || !pickupPartyName.trim()}
+                  className="py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black shadow-md disabled:opacity-50 transition active:scale-95 cursor-pointer touch-manipulation flex items-center justify-center space-x-1.5"
                 >
-                  {isSubmittingCheckout ? 'Logging Departure...' : 'Authorize Departure'}
+                  {isSubmittingCheckout ? (
+                    <span>Logging Departure...</span>
+                  ) : (
+                    <>
+                      <LogOut className="w-4 h-4" />
+                      <span>Authorize Departure</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
