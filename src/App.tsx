@@ -14,6 +14,8 @@ import { RosterManagement } from './components/RosterManagement';
 import { ReportingView } from './components/ReportingView';
 import { CampusesView } from './components/CampusesView';
 import { AdminSetupView } from './components/AdminSetupView';
+import { StaffManagementView } from './components/StaffManagementView';
+import { MobileSignInHub } from './components/MobileSignInHub';
 import { ScannerModal } from './components/ScannerModal';
 import { UrgentAlertBanner } from './components/UrgentAlertBanner';
 import { IdleLockModal } from './components/IdleLockModal';
@@ -21,11 +23,19 @@ import { InactivityWarningBanner } from './components/InactivityWarningBanner';
 import { LoginScreen } from './components/LoginScreen';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
 
+const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+};
+
 function AppContent() {
   const { loading: authLoading, currentUser } = useAuth();
   const { loading: attendanceLoading } = useAttendance();
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  // On mobile devices, primarily open the option of signing in children and staff!
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    return isMobileDevice() ? 'signin' : 'dashboard';
+  });
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
 
   if (authLoading && attendanceLoading) {
@@ -61,12 +71,20 @@ function AppContent() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Mobile / Primary Sign In Station for Children and Staff */}
+        {activeTab === 'signin' && (
+          <MobileSignInHub onNavigateToDashboard={() => setActiveTab('dashboard')} />
+        )}
+
         {activeTab === 'dashboard' && (
           <Dashboard
             onOpenScanner={() => setIsScannerOpen(true)}
             onNavigateToApprovals={() => setActiveTab('approvals')}
           />
         )}
+
+        {/* Staff Management Module */}
+        {activeTab === 'staff' && <StaffManagementView />}
 
         {activeTab === 'campuses' && <CampusesView />}
 

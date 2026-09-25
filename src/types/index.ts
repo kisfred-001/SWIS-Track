@@ -68,7 +68,19 @@ export interface Staff {
   email: string;
   phone?: string;
   qr_code_url?: string;
+  job_title?: string;
+  department?: string;
+  status?: 'Active' | 'On Leave' | 'Inactive';
+  emergency_contact?: string;
+  duty_schedule?: string;
+  shift_start?: string;
+  shift_end?: string;
+  can_scan_teachers?: boolean;
+  can_manage_staff?: boolean;
+  can_approve_edits?: boolean;
+  notes?: string;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface Student {

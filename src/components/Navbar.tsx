@@ -18,6 +18,7 @@ import {
   Lock,
   Menu,
   X,
+  Briefcase,
 } from 'lucide-react';
 import { Staff } from '../types';
 import { SchoolLogo } from './SchoolLogo';
@@ -183,6 +184,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
 
+              {/* Mobile Quick Sign In Button */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('signin')}
+                className={`sm:hidden px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                  activeTab === 'signin'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}
+                title="Sign In Children & Staff"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Sign In</span>
+              </button>
+
               {/* Quick Scanner Launch Button */}
               <button
                 type="button"
@@ -268,6 +284,28 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Collapsible Navigation Menu */}
           {mobileMenuOpen && (
             <div className="sm:hidden py-3 border-t border-slate-800 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* Primary Mobile Gate Check-in for Children and Staff */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('signin');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-3 rounded-2xl text-xs font-black flex items-center justify-between transition ${
+                  activeTab === 'signin'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-sm">Sign In Children &amp; Staff</span>
+                </div>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200">
+                  Primary Mobile Gate
+                </span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -303,6 +341,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>Campus Modules</span>
                 </div>
               </button>
+
+              {!isSupportStaff && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('staff');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+                    activeTab === 'staff'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Briefcase className="w-4 h-4 text-sky-400" />
+                    <span>Staff Module</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.2 bg-slate-700 text-slate-300 rounded font-mono">
+                    {filteredPremisesSummary.staffTotal}
+                  </span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -411,6 +472,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Navigation Bar Tabs (Scrollable on Tablet & Desktop) */}
           <nav className="hidden sm:flex space-x-1 overflow-x-auto py-2 border-t border-slate-800/80 text-xs font-medium scrollbar-none">
+            {/* Primary Sign In Station for Children and Staff */}
+            <button
+              onClick={() => setActiveTab('signin')}
+              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 font-bold ${
+                activeTab === 'signin'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-emerald-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Sign In (Children &amp; Staff)</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
@@ -434,6 +508,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <School className="w-3.5 h-3.5" />
               <span>Campus Modules</span>
             </button>
+
+            {/* Staff Management Module */}
+            {!isSupportStaff && (
+              <button
+                onClick={() => setActiveTab('staff')}
+                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
+                  activeTab === 'staff'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Staff Module</span>
+              </button>
+            )}
 
             <button
               onClick={() => setActiveTab('attendance')}

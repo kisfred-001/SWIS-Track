@@ -99,6 +99,7 @@ interface AttendanceContextType {
     studentList: Array<Omit<Student, 'id'> & { id?: string }>
   ) => Promise<{ success: boolean; created: number; updated: number; message: string }>;
   saveStaff: (staff: any, id?: string) => Promise<{ success: boolean; message: string }>;
+  deleteStaff: (staffId: string) => Promise<{ success: boolean; message: string }>;
   saveCampus: (campus: Campus) => Promise<{ success: boolean; message: string }>;
   saveLearningCenter: (lc: LearningCenter) => Promise<{ success: boolean; message: string }>;
   forceResetToOfficialRoster: () => Promise<{ success: boolean; message: string }>;
@@ -1115,6 +1116,19 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // Delete staff
+  const deleteStaff = async (staffId: string) => {
+    try {
+      const ref = doc(db, 'staff', staffId);
+      await deleteDoc(ref);
+      sound.playSuccessChime();
+      return { success: true, message: 'Staff record removed successfully.' };
+    } catch (err: any) {
+      sound.playError();
+      return { success: false, message: err?.message || 'Failed to delete staff record.' };
+    }
+  };
+
   // Add / edit Campus
   const saveCampus = async (campusData: Campus) => {
     try {
@@ -1253,6 +1267,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       deleteStudent,
       bulkSaveStudents,
       saveStaff,
+      deleteStaff,
       saveCampus,
       saveLearningCenter,
       forceResetToOfficialRoster,
@@ -1286,6 +1301,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       deleteStudent,
       bulkSaveStudents,
       saveStaff,
+      deleteStaff,
       saveCampus,
       saveLearningCenter,
       forceResetToOfficialRoster,
