@@ -114,37 +114,37 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-slate-900 text-white shadow-lg border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <header className="sticky top-0 z-40 bg-slate-900 text-white shadow-xl border-b border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-16 gap-3">
             {/* Brand Logo & Name */}
-            <div className="flex items-center space-x-3">
-              <SchoolLogo variant="emblem" size="md" className="bg-white p-1 rounded-xl shadow-md shrink-0" />
-              <div>
+            <div className="flex items-center space-x-3 shrink-0">
+              <SchoolLogo variant="emblem" size="md" className="bg-white p-1 rounded-xl shadow-md shrink-0 border border-slate-200" />
+              <div className="flex flex-col">
                 <div className="flex items-center space-x-2">
-                  <span className="font-bold text-base sm:text-lg tracking-tight text-white font-serif">
+                  <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-serif leading-none">
                     Spirit &amp; Word
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-                    Live Campus
+                  <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
+                    Live
                   </span>
                 </div>
-                <p className="text-[10px] text-amber-300/90 italic hidden sm:block">
-                  The Quick, The Sharp and The Clever
-                </p>
+                <span className="text-[10px] text-indigo-300 font-medium tracking-wide leading-tight mt-0.5">
+                  International School
+                </span>
               </div>
             </div>
 
-            {/* Live Campus Premises Quick Pill & Campus Dropdown */}
-            <div className="hidden lg:flex items-center space-x-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
+            {/* Center: Integrated Campus & Premises Statistics Bar */}
+            <div className="hidden xl:flex items-center space-x-3 bg-slate-800/90 px-3.5 py-1.5 rounded-xl border border-slate-700/80 text-xs shadow-inner">
               {/* Campus Selector Dropdown */}
-              <div className="flex items-center space-x-1.5 pr-2 border-r border-slate-700">
-                <School className="w-3.5 h-3.5 text-indigo-400" />
+              <div className="flex items-center space-x-1.5 pr-2.5 border-r border-slate-700">
+                <School className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                 <select
                   value={selectedCampus}
                   onChange={(e) => setSelectedCampus(e.target.value)}
-                  className="bg-slate-900 text-white font-bold text-xs rounded-md px-2 py-0.5 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                  className="bg-slate-900 text-white font-bold text-xs rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                 >
                   <option value="All Campuses">All Campuses</option>
                   {campuses.map((c) => (
@@ -155,61 +155,60 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </select>
               </div>
 
-              <div className="flex items-center space-x-1.5">
-                <span className="text-slate-400">Students:</span>
-                <span className="font-bold text-emerald-400">
-                  {filteredPremisesSummary.studentsOnPremises}
-                </span>
-                <span className="text-slate-500">/ {filteredPremisesSummary.studentsTotal}</span>
-              </div>
-              <span className="text-slate-600">|</span>
-              <div className="flex items-center space-x-1.5">
-                <span className="text-slate-400">Staff:</span>
-                <span className="font-bold text-sky-400">
-                  {filteredPremisesSummary.staffOnPremises}
-                </span>
-                <span className="text-slate-500">/ {filteredPremisesSummary.staffTotal}</span>
+              {/* Live Attendance Counts */}
+              <div className="flex items-center space-x-3 text-[11px]">
+                <div className="flex items-center space-x-1">
+                  <span className="text-slate-400 font-medium">Students:</span>
+                  <strong className="text-emerald-400 font-extrabold">
+                    {filteredPremisesSummary.studentsOnPremises}
+                  </strong>
+                  <span className="text-slate-500 font-mono">/{filteredPremisesSummary.studentsTotal}</span>
+                </div>
+                <span className="text-slate-600">│</span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-slate-400 font-medium">Staff:</span>
+                  <strong className="text-sky-400 font-extrabold">
+                    {filteredPremisesSummary.staffOnPremises}
+                  </strong>
+                  <span className="text-slate-500 font-mono">/{filteredPremisesSummary.staffTotal}</span>
+                </div>
               </div>
             </div>
 
-            {/* Quick Actions & User Switcher */}
-            <div className="flex items-center space-x-2 sm:space-x-2.5">
+            {/* Right Header Controls Group */}
+            <div className="flex items-center space-x-2 shrink-0">
               {/* Device View Segmented Switcher */}
               <div
-                className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 shadow-xs"
+                className="hidden md:flex items-center bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80"
                 role="group"
                 aria-label="Device View Switcher"
               >
                 <button
                   type="button"
                   onClick={() => setViewportMode('auto')}
-                  className={`flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                     viewportMode === 'auto'
                       ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/60'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
-                  title="Responsive (Auto) - Fluid full-width desktop view"
-                  aria-pressed={viewportMode === 'auto'}
+                  title="Responsive (Auto) View"
                 >
                   <Monitor className="w-3.5 h-3.5 shrink-0" />
-                  <span className="hidden md:inline">Responsive (Auto)</span>
-                  <span className="hidden xs:inline md:hidden">Auto</span>
+                  <span className="hidden lg:inline">Auto</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setViewportMode('mobile')}
-                  className={`flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                     viewportMode === 'mobile'
-                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xs ring-1 ring-indigo-400/40'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/60'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
-                  title="Mobile View - Fixed-width centered mobile phone shell preview"
-                  aria-pressed={viewportMode === 'mobile'}
+                  title="Mobile View Phone Shell"
                 >
                   <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                  <span className="hidden md:inline">Mobile View</span>
-                  <span className="hidden xs:inline md:hidden">Mobile</span>
+                  <span className="hidden lg:inline">Mobile</span>
                 </button>
               </div>
 
@@ -218,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 onClick={handleToggleSound}
                 title={soundEnabled ? 'Mute Audio Chimes' : 'Enable Audio Chimes'}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition cursor-pointer"
               >
                 {soundEnabled ? (
                   <Volume2 className="w-4 h-4 text-emerald-400" />
@@ -227,53 +226,38 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
 
-              {/* Mobile Quick Sign In Button */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('signin')}
-                className={`sm:hidden px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
-                  activeTab === 'signin'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                }`}
-                title="Sign In Children & Staff"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Sign In</span>
-              </button>
-
               {/* Quick Scanner Launch Button */}
               <button
                 type="button"
                 onClick={onOpenScanner}
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm shadow-blue-500/30 transition transform active:scale-95 cursor-pointer"
+                className="inline-flex items-center space-x-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm shadow-indigo-500/20 transition cursor-pointer"
               >
                 <Scan className="w-4 h-4" />
-                <span className="hidden sm:inline">Launch Scanner</span>
+                <span className="hidden sm:inline">Scanner</span>
               </button>
 
               {/* Bulk Export Button */}
               <button
                 type="button"
                 onClick={() => setIsExportModalOpen(true)}
-                className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer"
+                className="inline-flex items-center space-x-1.5 bg-slate-800/90 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-700/80 transition cursor-pointer"
                 title="Bulk Export System Data & Student Badges"
               >
                 <Download className="w-4 h-4" />
                 <span className="hidden md:inline">Bulk Export</span>
               </button>
 
-              {/* Active User Pill with Switch Modal Trigger */}
+              {/* Active User Pill */}
               <button
                 type="button"
                 onClick={() => setShowSwitchModal(true)}
-                className="flex items-center space-x-2 bg-slate-800 hover:bg-slate-750 border border-slate-700/80 rounded-lg px-2.5 py-1.5 transition text-left"
+                className="flex items-center space-x-2 bg-slate-800/90 hover:bg-slate-750 border border-slate-700/80 rounded-xl px-2.5 py-1 transition cursor-pointer text-left"
               >
-                <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-indigo-300 border border-slate-600">
+                <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-extrabold border border-indigo-400/50">
                   {currentUser?.full_name?.charAt(0) || 'U'}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-semibold text-white leading-tight truncate max-w-[110px]">
+                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[100px]">
                     {currentUser?.full_name}
                   </div>
                   <div className="text-[10px] text-slate-400 leading-none">
@@ -283,11 +267,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
-              {/* Secure Lock / Sign Out Button */}
+              {/* Lock Terminal */}
               <button
                 type="button"
                 onClick={() => logout(false)}
-                className="p-2 bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 border border-slate-700/80 rounded-lg transition"
+                className="p-2 bg-slate-800/90 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 border border-slate-700/80 rounded-xl transition cursor-pointer"
                 title="Lock Terminal"
               >
                 <Lock className="w-4 h-4" />
@@ -562,130 +546,143 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Navigation Bar Tabs (Scrollable on Tablet & Desktop) */}
-          <nav className="hidden sm:flex space-x-1 overflow-x-auto py-2 border-t border-slate-800/80 text-xs font-medium scrollbar-none">
-            {/* Primary Sign In Station for Children and Staff */}
-            <button
-              onClick={() => setActiveTab('signin')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 font-bold ${
-                activeTab === 'signin'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-emerald-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Sign In (Children &amp; Staff)</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
-                activeTab === 'dashboard'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              Real-Time Dashboard
-            </button>
-
-            {/* Campus Modules Tab */}
-            <button
-              onClick={() => setActiveTab('campuses')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
-                activeTab === 'campuses'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <School className="w-3.5 h-3.5" />
-              <span>Campus Modules</span>
-            </button>
-
-            {/* Staff Management Module */}
-            {!isSupportStaff && (
+          {/* Navigation Bar Tabs Strip */}
+          <nav className="hidden sm:flex items-center justify-between py-1.5 border-t border-slate-800/80 text-xs font-semibold gap-1 overflow-x-auto scrollbar-none">
+            <div className="flex items-center space-x-1 shrink-0">
+              {/* Primary Gate Sign-In Station */}
               <button
-                onClick={() => setActiveTab('staff')}
-                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
-                  activeTab === 'staff'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                type="button"
+                onClick={() => setActiveTab('signin')}
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-2 font-bold cursor-pointer ${
+                  activeTab === 'signin'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-emerald-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                <Briefcase className="w-3.5 h-3.5" />
-                <span>Staff Module</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Sign In Station</span>
               </button>
-            )}
 
-            <button
-              onClick={() => setActiveTab('attendance')}
-              className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
-                activeTab === 'attendance'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              Attendance Logs
-            </button>
-
-            {/* Edit Approvals - visible to staff with edit rights */}
-            {!isSupportStaff && (
+              {/* Real-Time Dashboard */}
               <button
-                onClick={() => setActiveTab('approvals')}
-                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
-                  activeTab === 'approvals'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                type="button"
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                  activeTab === 'dashboard'
+                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                <span>Edit Requests</span>
-                {pendingRequestsCount > 0 && (
-                  <span className="px-1.5 py-0.2 bg-red-500 text-white text-[10px] font-bold rounded-full animate-bounce">
-                    {pendingRequestsCount}
-                  </span>
-                )}
+                Dashboard
               </button>
-            )}
 
-            {/* Student & Staff Roster */}
-            {!isSupportStaff && (
+              {/* Campus Modules */}
               <button
-                onClick={() => setActiveTab('roster')}
-                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
-                  activeTab === 'roster'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                type="button"
+                onClick={() => setActiveTab('campuses')}
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                  activeTab === 'campuses'
+                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                Roster & Badges
+                <School className="w-3.5 h-3.5" />
+                <span>Campuses</span>
               </button>
-            )}
 
-            {/* Reports */}
-            {canAccessReports && (
+              {/* Staff Module */}
+              {!isSupportStaff && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('staff')}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                    activeTab === 'staff'
+                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>Staff</span>
+                </button>
+              )}
+
+              {/* Attendance Logs */}
               <button
-                onClick={() => setActiveTab('reports')}
-                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition ${
-                  activeTab === 'reports'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                type="button"
+                onClick={() => setActiveTab('attendance')}
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                  activeTab === 'attendance'
+                    ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                Analytics & Reports
+                Attendance Logs
               </button>
-            )}
 
-            {/* ICCE Coordinator Exclusive Administrative Setup Tab */}
+              {/* Edit Requests */}
+              {!isSupportStaff && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('approvals')}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
+                    activeTab === 'approvals'
+                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <span>Edit Requests</span>
+                  {pendingRequestsCount > 0 && (
+                    <span className="px-1.5 py-0.2 bg-rose-500 text-white text-[10px] font-bold rounded-full animate-bounce">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Roster & Badges */}
+              {!isSupportStaff && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('roster')}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                    activeTab === 'roster'
+                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  Roster &amp; Badges
+                </button>
+              )}
+
+              {/* Reports */}
+              {canAccessReports && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reports')}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer ${
+                    activeTab === 'reports'
+                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  Reports
+                </button>
+              )}
+            </div>
+
+            {/* Administrative Setup Tab (Isolated on the Right) */}
             {canAccessSetup && (
               <button
+                type="button"
                 onClick={() => setActiveTab('setup')}
-                className={`px-3 py-1.5 rounded-md whitespace-nowrap transition flex items-center space-x-1.5 ${
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center space-x-1.5 cursor-pointer ${
                   activeTab === 'setup'
                     ? 'bg-amber-600 text-white shadow-sm font-bold'
-                    : 'text-amber-400 hover:text-white hover:bg-slate-800 font-semibold border border-amber-500/30'
+                    : 'text-amber-300 hover:bg-slate-800 border border-amber-500/30 font-bold bg-amber-500/10'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Administrative Setup</span>
+                <span>Admin Setup</span>
               </button>
             )}
           </nav>
