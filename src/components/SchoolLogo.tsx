@@ -10,7 +10,7 @@ interface SchoolLogoProps {
 }
 
 /**
- * Official Spirit & Word International School Logo
+ * Official Spirit & Word Attendance Tracking System Logo & Emblem
  * Motto: "The Quick, The Sharp and The Clever"
  * Supports dynamic uploaded logos from Admin Setup with high-fidelity fallback.
  */
@@ -26,7 +26,7 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
     const attendance = useAttendance();
     contextLogo = attendance.systemLogo;
   } catch {
-    // If used outside context, fallback to localStorage
+    // If used outside context, fallback to localStorage or default emblem
     try {
       contextLogo = localStorage.getItem('swis_custom_logo');
     } catch {
@@ -34,7 +34,7 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
     }
   }
 
-  const activeLogo = customLogo !== undefined ? customLogo : contextLogo;
+  const activeLogo = customLogo !== undefined ? customLogo : (contextLogo || '/assets/saw_emblem.svg');
 
   const getPixelSize = () => {
     switch (size) {
@@ -57,52 +57,12 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
 
   // Polished Institutional Emblem Fallback
   const FallbackEmblem = ({ emblemPx }: { emblemPx: number }) => (
-    <svg
-      width={emblemPx}
-      height={emblemPx}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0 drop-shadow-xs"
-    >
-      {/* Outer Maroon Circular Seal */}
-      <circle cx="50" cy="50" r="48" fill="#8B1E2F" stroke="#F59E0B" strokeWidth="2.5" />
-      {/* Inner Concentric Ring */}
-      <circle cx="50" cy="50" r="43" fill="#6B1321" stroke="#FBBF24" strokeWidth="1" strokeDasharray="2 2" />
-
-      {/* Radiant Sunburst Flares */}
-      <circle cx="50" cy="50" r="38" fill="#8B1E2F" />
-
-      {/* Golden Latin Cross */}
-      <path
-        d="M47 22H53V34H65V40H53V72H47V40H35V34H47V22Z"
-        fill="#F59E0B"
-        stroke="#FEF08A"
-        strokeWidth="0.8"
-      />
-
-      {/* Open Book of Knowledge / Word */}
-      <path
-        d="M28 58C36 54 44 56 50 60C56 56 64 54 72 58V76C64 72 56 74 50 78C44 74 36 72 28 76V58Z"
-        fill="#FFFFFF"
-        stroke="#D97706"
-        strokeWidth="1.2"
-      />
-      {/* Book Center Binding */}
-      <line x1="50" y1="60" x2="50" y2="78" stroke="#8B1E2F" strokeWidth="1.2" />
-      {/* Subtle Book Text Lines */}
-      <line x1="33" y1="64" x2="45" y2="64" stroke="#94A3B8" strokeWidth="0.8" />
-      <line x1="33" y1="68" x2="45" y2="68" stroke="#94A3B8" strokeWidth="0.8" />
-      <line x1="55" y1="64" x2="67" y2="64" stroke="#94A3B8" strokeWidth="0.8" />
-      <line x1="55" y1="68" x2="67" y2="68" stroke="#94A3B8" strokeWidth="0.8" />
-
-      {/* Academic Mortarboard Graduation Cap at Apex */}
-      <polygon points="50,16 64,22 50,28 36,22" fill="#FEF08A" stroke="#B45309" strokeWidth="0.8" />
-      <path d="M42 25V30C42 32 50 34 50 34C50 34 58 32 58 30V25" stroke="#FEF08A" strokeWidth="0.8" fill="none" />
-      {/* Tassel */}
-      <path d="M64 22L67 31" stroke="#F59E0B" strokeWidth="0.8" />
-      <circle cx="67" cy="32" r="1" fill="#FEF08A" />
-    </svg>
+    <img
+      src="/assets/saw_emblem.svg"
+      alt="Spirit & Word Attendance Tracking System Emblem"
+      style={{ width: emblemPx, height: emblemPx }}
+      className="object-contain shrink-0 rounded select-none drop-shadow-xs"
+    />
   );
 
   // Render emblem: either the user's uploaded logo or the clean emblem
@@ -111,9 +71,13 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
       return (
         <img
           src={activeLogo}
-          alt="Spirit & Word International School"
+          alt="Spirit & Word Attendance Tracking System"
           style={{ width: emblemPx, height: emblemPx }}
           className="object-contain shrink-0 rounded select-none"
+          onError={(e) => {
+            // Fallback to svg if image fails
+            (e.target as HTMLImageElement).src = '/assets/saw_emblem.svg';
+          }}
         />
       );
     }
@@ -141,7 +105,7 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
             SPIRIT &amp; WORD
           </h1>
           <p className="font-serif text-[8px] tracking-widest uppercase text-amber-200 font-semibold">
-            INTERNATIONAL SCHOOL
+            ATTENDANCE TRACKING SYSTEM
           </p>
           {showMotto && (
             <p className="text-[7.5px] italic text-slate-100 font-sans tracking-tight pt-0.5 border-t border-white/20 mt-0.5">
@@ -162,15 +126,15 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
         </div>
         <div className="text-left">
           <div className="flex items-center space-x-1.5">
-            <span className="font-serif font-extrabold text-sm sm:text-base tracking-wider text-white">
+            <span className="font-serif font-extrabold text-sm sm:text-base tracking-wider text-slate-900">
               SPIRIT &amp; WORD
             </span>
           </div>
-          <p className="font-serif text-[9px] sm:text-[10px] tracking-widest uppercase text-amber-300 font-bold -mt-0.5">
-            INTERNATIONAL SCHOOL
+          <p className="font-serif text-[9px] sm:text-[10px] tracking-widest uppercase text-[#A71C21] font-bold -mt-0.5">
+            ATTENDANCE TRACKING SYSTEM
           </p>
           {showMotto && (
-            <p className="text-[9px] text-slate-300 italic hidden md:block font-sans">
+            <p className="text-[9px] text-slate-600 italic hidden md:block font-sans">
               The Quick, The Sharp and The Clever
             </p>
           )}
@@ -191,7 +155,7 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({
           SPIRIT &amp; WORD
         </h1>
         <h2 className="font-serif font-bold text-xs sm:text-sm tracking-widest text-[#8B1E2F] uppercase leading-tight mt-0.5">
-          INTERNATIONAL SCHOOL
+          ATTENDANCE TRACKING SYSTEM
         </h2>
 
         {/* Maroon underline rule */}

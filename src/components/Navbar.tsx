@@ -108,12 +108,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      {/* Tangerine Yellow (#FCCB0D) Menubar Header */}
-      <header className="sticky top-0 z-40 bg-[#FCCB0D] text-slate-900 shadow-xl border-b border-[#e5b70a] font-sans">
+      {/* Cream Yellow (#FEF1B9) Menubar Header */}
+      <header className="sticky top-0 z-40 bg-[#FEF1B9] text-slate-900 shadow-xl border-b border-[#e6cd72] font-sans">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
           
           {/* ROW 1: On the Left ( Spirit and Word Logo and system name ) | On the Right ( Launch scanner ) ( Person logged in ) */}
-          <div className="flex flex-wrap items-center justify-between py-2.5 border-b border-[#e5b70a]/80 gap-3">
+          <div className="flex flex-wrap items-center justify-between py-2.5 border-b border-[#e6cd72]/80 gap-3">
             {/* Left: Spirit and Word Logo and the name of the system */}
             <div className="flex items-center space-x-3 shrink-0">
               <SchoolLogo variant="emblem" size="md" className="bg-white p-1 rounded-xl shadow-md shrink-0 border border-slate-200" />
@@ -128,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
                 <span className="text-[11px] text-[#3e3d40] font-bold tracking-wide leading-tight mt-0.5">
-                  International School Management System
+                  Attendance Tracking System
                 </span>
               </div>
             </div>
@@ -193,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* ROW 2: All Campuses, Students, Staff, Responsive auto, Mobile View */}
-          <div className="flex flex-wrap items-center justify-between py-2 border-b border-[#e5b70a]/80 gap-2 text-xs font-semibold">
+          <div className="flex flex-wrap items-center justify-between py-2 border-b border-[#e6cd72]/80 gap-2 text-xs font-semibold">
             {/* Left Group: Campus Selector, Students Count, Staff Count */}
             <div className="flex flex-wrap items-center gap-2">
               {/* All Campuses */}
@@ -268,7 +268,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* ROW 3: Real-Time Dashboard, Campus Modules, Staff Module, Attendance Logs, Edit Requests, Roster & Badges, Analytics & Reports */}
-          <div className="flex items-center justify-between py-2 border-b border-[#e5b70a]/80 gap-1.5 overflow-x-auto scrollbar-none text-xs font-bold">
+          <div className="flex items-center justify-between py-2 border-b border-[#e6cd72]/80 gap-1.5 overflow-x-auto scrollbar-none text-xs font-bold">
             <div className="flex items-center space-x-2 shrink-0 flex-wrap sm:flex-nowrap gap-y-2">
               {/* Real-Time Dashboard */}
               <button
