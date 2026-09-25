@@ -23,25 +23,21 @@ import { IdleLockModal } from './components/IdleLockModal';
 import { InactivityWarningBanner } from './components/InactivityWarningBanner';
 import { LoginScreen } from './components/LoginScreen';
 import { MobileDeviceShell } from './components/MobileDeviceShell';
+import { SimplifiedLandingPage } from './components/SimplifiedLandingPage';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
-
-const isMobileDevice = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-};
 
 function AppContent() {
   const { loading: authLoading, currentUser } = useAuth();
   const { loading: attendanceLoading } = useAttendance();
   const { viewportMode } = useViewport();
 
-  // Active navigation tab (persists across sessions and defaults to real-time dashboard)
+  // Active navigation tab (defaults to simplified landing page on login)
   const [activeTab, setActiveTab] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('swis_active_tab');
-      if (saved) return saved;
+      if (saved && saved !== 'landing') return saved;
     } catch {}
-    return 'dashboard';
+    return 'landing';
   });
 
   const handleSetActiveTab = (tab: string) => {
@@ -71,12 +67,50 @@ function AppContent() {
     return <LoginScreen />;
   }
 
-  // Core view content
+  // Simplified Landing Page View (uncluttered, mobile-friendly landing)
+  if (activeTab === 'landing') {
+    return (
+      <SimplifiedLandingPage
+        onSelectAction={(action) => {
+          if (action === 'signin_children') {
+            handleSetActiveTab('signin_children');
+          } else if (action === 'signin_staff') {
+            handleSetActiveTab('signin_staff');
+          } else if (action === 'dashboard') {
+            handleSetActiveTab('dashboard');
+          }
+        }}
+      />
+    );
+  }
+
+  // Core view content inside the Portal
   const renderActiveTabContent = () => (
     <>
-      {/* Mobile / Primary Sign In Station for Children and Staff */}
+      {/* Mobile / Primary Sign In Station for Children */}
+      {activeTab === 'signin_children' && (
+        <MobileSignInHub
+          initialTarget="children"
+          onNavigateToLanding={() => handleSetActiveTab('landing')}
+          onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
+        />
+      )}
+
+      {/* Mobile / Primary Sign In Station for Staff */}
+      {activeTab === 'signin_staff' && (
+        <MobileSignInHub
+          initialTarget="staff"
+          onNavigateToLanding={() => handleSetActiveTab('landing')}
+          onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
+        />
+      )}
+
+      {/* Generic Sign In Station */}
       {activeTab === 'signin' && (
-        <MobileSignInHub onNavigateToDashboard={() => handleSetActiveTab('dashboard')} />
+        <MobileSignInHub
+          onNavigateToLanding={() => handleSetActiveTab('landing')}
+          onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
+        />
       )}
 
       {activeTab === 'dashboard' && (

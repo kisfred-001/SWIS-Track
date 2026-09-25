@@ -33,7 +33,6 @@ import {
 import { Campus, LearningCenter, OperationalPolicySettings } from '../types';
 import { SchoolLogo } from './SchoolLogo';
 import { formatTime24to12, DEFAULT_OPERATIONAL_POLICIES } from '../utils/schedule';
-import { BulkExportModal } from './BulkExportModal';
 
 export const AdminSetupView: React.FC = () => {
   const {
@@ -66,7 +65,6 @@ export const AdminSetupView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'branding' | 'operational_policies' | 'campuses' | 'learning_centers' | 'rbac' | 'security' | 'database'
   >('branding');
-  const [isBulkExportOpen, setIsBulkExportOpen] = useState(false);
 
   // Branding & Logo State
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(systemLogo);

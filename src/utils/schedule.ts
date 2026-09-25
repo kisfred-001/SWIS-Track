@@ -207,21 +207,6 @@ export const isEarlyDepartureTime = (
 };
 
 /**
- * Checks if staff check-in is after standard opening time
- */
-export const isStaffLateArrival = (
-  date: Date = new Date(),
-  policies: OperationalPolicySettings = DEFAULT_OPERATIONAL_POLICIES
-): boolean => {
-  if (!policies.schoolHours?.enabled) return false;
-  const curHour = date.getHours();
-  const curMin = date.getMinutes();
-  const [openH] = (policies.schoolHours.mondayToThursday.openTime || '07:00').split(':').map(Number);
-  const openHour = isNaN(openH) ? 7 : openH;
-  return curHour > openHour || (curHour === openHour && curMin > 15);
-};
-
-/**
  * Helper to check Boarding Schedule status
  */
 export const getBoardingScheduleStatus = (

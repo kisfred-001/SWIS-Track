@@ -31,11 +31,15 @@ import { SchoolLogo } from './SchoolLogo';
 import { isEarlyDepartureTime } from '../utils/schedule';
 
 interface MobileSignInHubProps {
+  initialTarget?: 'children' | 'staff';
   onNavigateToDashboard?: () => void;
+  onNavigateToLanding?: () => void;
 }
 
 export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
+  initialTarget = 'children',
   onNavigateToDashboard,
+  onNavigateToLanding,
 }) => {
   const {
     students,
@@ -51,7 +55,13 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
   const { allStaff } = useAuth();
 
   // Primary toggle: Children vs Staff
-  const [activeTarget, setActiveTarget] = useState<'children' | 'staff'>('children');
+  const [activeTarget, setActiveTarget] = useState<'children' | 'staff'>(initialTarget);
+
+  useEffect(() => {
+    if (initialTarget) {
+      setActiveTarget(initialTarget);
+    }
+  }, [initialTarget]);
 
   // Action toggle: Check-In vs Check-Out
   const [actionType, setActionType] = useState<'check_in' | 'check_out'>('check_in');
@@ -468,6 +478,33 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
 
   return (
     <div className="space-y-4 max-w-lg mx-auto pb-10">
+      {/* Top Navigation Bar: Return to Main Landing Menu or Portal Access */}
+      {(onNavigateToLanding || onNavigateToDashboard) && (
+        <div className="flex items-center justify-between gap-2 px-1">
+          {onNavigateToLanding && (
+            <button
+              type="button"
+              onClick={onNavigateToLanding}
+              className="inline-flex items-center space-x-1.5 bg-[#A71C21] hover:bg-[#88151a] text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>← Main Menu</span>
+            </button>
+          )}
+
+          {onNavigateToDashboard && (
+            <button
+              type="button"
+              onClick={onNavigateToDashboard}
+              className="inline-flex items-center space-x-1.5 bg-[#3e3d40] hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ml-auto"
+            >
+              <span>Portal Access</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Top Mobile Header & Quick Campus Selector */}
       <div className="bg-slate-900 text-white rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-800">
         <div className="flex items-center justify-between">

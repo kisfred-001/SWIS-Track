@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, BatteryMedium, Sparkles, Smartphone, Monitor } from 'lucide-react';
+import { Wifi, BatteryMedium, Smartphone, Monitor } from 'lucide-react';
 import { useViewport } from '../context/ViewportContext';
 
 interface MobileDeviceShellProps {

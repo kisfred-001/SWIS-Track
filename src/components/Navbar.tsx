@@ -365,21 +365,36 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* ROW 4: On the Left ( Sign In Children and Staff ) | On the Right ( Administrative Setup ) */}
-          <div className="flex items-center justify-between py-2 gap-3 text-xs font-bold">
-            {/* On the Left: Sign In Children and Staff */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('signin')}
-              className={`px-4 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-2 font-black shadow-md ${
-                activeTab === 'signin'
-                  ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50'
-                  : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
-              }`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-sm">Sign In Children and Staff</span>
-            </button>
+          {/* ROW 4: On the Left ( Main Landing Page & Sign In Station ) | On the Right ( Administrative Setup ) */}
+          <div className="flex items-center justify-between py-2 gap-2 text-xs font-bold flex-wrap sm:flex-nowrap">
+            {/* On the Left: Main Landing Menu & Sign In Station */}
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('landing')}
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 font-extrabold shadow-md ${
+                  activeTab === 'landing'
+                    ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50'
+                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                }`}
+                title="Return to Simplified Main Landing Page"
+              >
+                <span>← Main Landing Menu</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('signin')}
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-2 font-black shadow-md ${
+                  activeTab === 'signin' || activeTab === 'signin_children' || activeTab === 'signin_staff'
+                    ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Sign In Station</span>
+              </button>
+            </div>
 
             {/* On the Right: Administrative Setup */}
             {canAccessSetup && (

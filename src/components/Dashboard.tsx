@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { handleFirestoreError, OperationType } from '../firebase/errors';
 import { useAttendance } from '../context/AttendanceContext';
@@ -12,7 +12,6 @@ import {
   Clock,
   LogOut,
   LogIn,
-  AlertCircle,
   Search,
   Scan,
   UserCheck,
@@ -21,10 +20,7 @@ import {
   School,
   RefreshCw,
   Activity,
-  Filter,
   Users,
-  ShieldCheck,
-  ArrowUpRight,
   Radio,
 } from 'lucide-react';
 import { AttendanceLog, Student, Staff } from '../types';
