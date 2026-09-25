@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import {
   collection,
   onSnapshot,
+  getDocs,
   doc,
   setDoc,
   updateDoc,
@@ -118,6 +119,11 @@ interface AttendanceContextType {
   updateSystemLogo: (logoDataUrlOrUrl: string | null) => Promise<{ success: boolean; message: string }>;
   operationalPolicies: OperationalPolicySettings;
   updateOperationalPolicies: (policies: OperationalPolicySettings) => Promise<{ success: boolean; message: string }>;
+  // Real-Time Data Sync & Manual Force Sync
+  forceSyncLogs: () => Promise<{ success: boolean; message: string; count: number }>;
+  isRealtimeActive: boolean;
+  lastSyncTime: string;
+  isRefreshingLogs: boolean;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(undefined);
@@ -135,6 +141,60 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  // Real-time synchronization & manual force refresh state
+  const [isRealtimeActive, setIsRealtimeActive] = useState<boolean>(true);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('');
+  const [isRefreshingLogs, setIsRefreshingLogs] = useState<boolean>(false);
+
+  // Force sync handler: invalidates cache, re-fetches from database, and re-hydrates state
+  const forceSyncLogs = useCallback(async () => {
+    setIsRefreshingLogs(true);
+    try {
+      // Invalidate local storage cache explicitly
+      try {
+        localStorage.removeItem('swis_cached_logs');
+      } catch {}
+
+      const q = query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'), limit(150));
+      const snap = await getDocs(q);
+      const fetchedLogs: AttendanceLog[] = [];
+      snap.forEach((docSnap) => {
+        fetchedLogs.push({ id: docSnap.id, ...docSnap.data() } as AttendanceLog);
+      });
+
+      if (fetchedLogs.length > 0) {
+        setLogs(fetchedLogs);
+        try {
+          localStorage.setItem('swis_cached_logs', JSON.stringify(fetchedLogs.slice(0, 100)));
+        } catch {}
+      }
+      setIsRealtimeActive(true);
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSyncTime(timeStr);
+      return {
+        success: true,
+        message: `Logs re-synchronized cleanly (${fetchedLogs.length} logs active at ${timeStr})`,
+        count: fetchedLogs.length,
+      };
+    } catch (err) {
+      console.warn('forceSyncLogs error, relying on current state:', err);
+      try {
+        const cached = localStorage.getItem('swis_cached_logs');
+        if (cached) {
+          setLogs(JSON.parse(cached));
+        }
+      } catch {}
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSyncTime(timeStr);
+      return {
+        success: false,
+        message: `Network error during sync, using active session logs (${timeStr})`,
+        count: logs.length,
+      };
+    } finally {
+      setIsRefreshingLogs(false);
+    }
+  }, [logs.length]);
   const [systemLogo, setSystemLogo] = useState<string | null>(() => {
     try {
       return localStorage.getItem('swis_custom_logo') || null;
@@ -351,7 +411,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => unsubStudents();
   }, []);
 
-  // Subscribe to recent attendance logs with bounded query and local cache fallback
+  // 1. Real-Time Database Listener: Subscribe to attendance_logs with Firestore onSnapshot
   useEffect(() => {
     const q = query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'), limit(150));
     const unsubLogs = onSnapshot(
@@ -359,12 +419,15 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
         setLogs(list);
+        setIsRealtimeActive(true);
+        setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
         try {
           localStorage.setItem('swis_cached_logs', JSON.stringify(list.slice(0, 100)));
         } catch {}
       },
-      () => {
-        // Load from local storage cache if quota exhausted
+      (error) => {
+        console.warn('Real-time listener disconnected or quota hit, falling back to cache:', error);
+        setIsRealtimeActive(false);
         try {
           const cached = localStorage.getItem('swis_cached_logs');
           if (cached) {
@@ -374,6 +437,33 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     );
     return () => unsubLogs();
+  }, []);
+
+  // 3. Fallback Mechanism: Lightweight background polling safety net (every 30s) for unstable mobile connections
+  useEffect(() => {
+    const pollingTimer = setInterval(() => {
+      getDocs(query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'), limit(50)))
+        .then((snap) => {
+          const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
+          if (list.length > 0) {
+            setLogs((prevLogs) => {
+              const map = new Map<string, AttendanceLog>();
+              prevLogs.forEach((l) => map.set(l.id, l));
+              list.forEach((l) => map.set(l.id, l));
+              return Array.from(map.values()).sort(
+                (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+              );
+            });
+            setIsRealtimeActive(true);
+            setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+          }
+        })
+        .catch((err) => {
+          console.debug('Background polling check offline or cached:', err);
+        });
+    }, 30000); // 30-second interval
+
+    return () => clearInterval(pollingTimer);
   }, []);
 
   // Subscribe to edit requests with bounded limit and error fallback
@@ -1589,6 +1679,10 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       updateSystemLogo,
       operationalPolicies,
       updateOperationalPolicies,
+      forceSyncLogs,
+      isRealtimeActive,
+      lastSyncTime,
+      isRefreshingLogs,
     }),
     [
       students,
@@ -1624,6 +1718,10 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       purgeDummyParentsAndPickups,
       systemLogo,
       operationalPolicies,
+      forceSyncLogs,
+      isRealtimeActive,
+      lastSyncTime,
+      isRefreshingLogs,
     ]
   );
 

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { AttendanceLog, Student, Staff } from '../types';
 import { getSchoolSchedule } from '../utils/schedule';
+import { RefreshButton } from './RefreshButton';
 
 interface DashboardProps {
   onOpenScanner: () => void;
@@ -44,6 +45,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     operationalPolicies,
     todayLogs: contextTodayLogs,
     logs: contextAllLogs,
+    forceSyncLogs,
   } = useAttendance();
   const { allStaff, canScanTeachers } = useAuth();
   const { isForcedMobile } = useViewport();
@@ -60,6 +62,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
     try {
+      // 1. Force sync context level logs and invalidate local cache
+      const syncRes = await forceSyncLogs();
+
+      // 2. Query Firestore directly for immediate local component state re-hydration
       const logsQuery = query(
         collection(db, 'attendance_logs'),
         orderBy('created_at', 'desc'),
@@ -77,18 +83,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setIsRealtimeActive(true);
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       setLastSyncTime(timeStr);
-      setRefreshNotification(`Dashboard synchronized (Log sync, Target matching & Campus filters re-aligned at ${timeStr})`);
+      setRefreshNotification(
+        syncRes.success
+          ? `Dashboard synchronized (${syncRes.count} logs active at ${timeStr})`
+          : `Dashboard synchronized with active session (${timeStr})`
+      );
       setTimeout(() => setRefreshNotification(null), 4000);
     } catch (err) {
       console.warn('Manual refresh notice:', err);
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       setLastSyncTime(timeStr);
-      setRefreshNotification(`Dashboard re-aligned with active session state (${timeStr})`);
+      setRefreshNotification(`Dashboard aligned with active session state (${timeStr})`);
       setTimeout(() => setRefreshNotification(null), 3000);
     } finally {
       setTimeout(() => {
         setIsRefreshing(false);
-      }, 500);
+      }, 400);
     }
   };
 
@@ -158,6 +168,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
 
+  // Helper to parse numeric timestamp safely without NaN
+  const parseLogTime = (log: AttendanceLog): number => {
+    if (!log) return 0;
+    if (log.created_at) {
+      const t = new Date(log.created_at).getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (log.date) {
+      const t = new Date(log.date).getTime();
+      if (!isNaN(t)) return t;
+    }
+    return 0;
+  };
+
+  // Reset all filters helper
+  const resetAllFilters = () => {
+    setAudienceFilter('all');
+    setStatusFilter('all');
+    setSelectedCampus('All Campuses');
+    setSelectedClassroom('all');
+    setSearchQuery('');
+  };
+
   // Combined active logs: direct Firestore real-time logs merged with context logs to ensure immediate visibility of new scans
   const activeLogs = useMemo(() => {
     const map = new Map<string, AttendanceLog>();
@@ -182,30 +215,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     const merged = Array.from(map.values());
-    return merged.sort((a, b) => {
-      const timeA = new Date(a.created_at || a.date || 0).getTime();
-      const timeB = new Date(b.created_at || b.date || 0).getTime();
-      return timeB - timeA;
-    });
+    return merged.sort((a, b) => parseLogTime(b) - parseLogTime(a));
   }, [realtimeLogs, contextTodayLogs, contextAllLogs]);
 
   // Filter logs by selected campus if not 'All Campuses'
   const campusFilteredLogs = useMemo(() => {
-    if (selectedCampus === 'All Campuses') return activeLogs;
+    if (!selectedCampus || selectedCampus === 'All Campuses') return activeLogs;
+    const targetCampus = selectedCampus.trim().toLowerCase();
     return activeLogs.filter((log) => {
-      if (!log.campus || log.campus === 'All Campuses') return true;
-      return log.campus.toLowerCase() === selectedCampus.toLowerCase();
+      if (!log.campus || log.campus === 'All Campuses' || log.campus.trim().toLowerCase() === 'all campuses') return true;
+      return log.campus.trim().toLowerCase() === targetCampus;
     });
   }, [activeLogs, selectedCampus]);
 
   // Fast O(1) lookup map of latest log per target (student_id or staff_id)
   const targetLatestLogMap = useMemo(() => {
     const map = new Map<string, AttendanceLog>();
-    const sorted = [...activeLogs].sort((a, b) => {
-      const timeA = new Date(a.created_at || a.date || 0).getTime();
-      const timeB = new Date(b.created_at || b.date || 0).getTime();
-      return timeA - timeB;
-    });
+    const sorted = [...activeLogs].sort((a, b) => parseLogTime(a) - parseLogTime(b));
 
     for (let i = 0; i < sorted.length; i++) {
       const log = sorted[i];
@@ -294,29 +320,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const queryStr = searchQuery.trim().toLowerCase();
 
     return campusFilteredLogs.filter((log) => {
+      if (!log) return false;
+
       // Audience filter
-      if (audienceFilter === 'students' && log.target_type !== 'Student') return false;
-      if (audienceFilter === 'staff' && log.target_type !== 'Teacher') return false;
+      if (audienceFilter === 'students') {
+        const type = (log.target_type || '').toLowerCase();
+        if (type !== 'student' && type !== 'child') return false;
+      }
+      if (audienceFilter === 'staff') {
+        const type = (log.target_type || '').toLowerCase();
+        if (type !== 'teacher' && type !== 'staff' && type !== 'supervisor' && type !== 'monitor') return false;
+      }
 
       // Status filter
       if (statusFilter === 'on_premises' && log.check_out_time) return false;
       if (statusFilter === 'checked_out' && !log.check_out_time) return false;
+      if (statusFilter === 'absent') return false; // Activity stream only logs actual check-in/out events
 
       // Classroom filter
-      if (
-        selectedClassroom !== 'all' &&
-        log.classroom !== selectedClassroom &&
-        log.grade_or_role !== selectedClassroom
-      ) {
-        return false;
+      if (selectedClassroom !== 'all') {
+        const sc = selectedClassroom.toLowerCase();
+        const logC = (log.classroom || '').toLowerCase();
+        const logG = (log.grade_or_role || '').toLowerCase();
+        if (logC !== sc && logG !== sc) return false;
       }
 
       // Search query
       if (queryStr) {
-        const matchesName = log.target_name.toLowerCase().includes(queryStr);
-        const matchesId = log.target_id.toLowerCase().includes(queryStr);
-        const matchesClass = (log.classroom || '').toLowerCase().includes(queryStr);
-        const matchesParty = log.pickup_dropoff_party?.name?.toLowerCase().includes(queryStr);
+        const matchesName = (log.target_name || '').toLowerCase().includes(queryStr);
+        const matchesId = (log.target_id || '').toLowerCase().includes(queryStr);
+        const matchesClass = (log.classroom || log.grade_or_role || '').toLowerCase().includes(queryStr);
+        const matchesParty = (log.pickup_dropoff_party?.name || '').toLowerCase().includes(queryStr);
         if (!matchesName && !matchesId && !matchesClass && !matchesParty) return false;
       }
 
@@ -422,16 +456,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {schoolSchedule.statusBadgeText}
           </span>
 
-          <button
-            type="button"
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            className="min-h-[38px] px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 border border-slate-700 font-bold rounded-xl shadow-xs text-xs flex items-center space-x-1.5 transition active:scale-95 cursor-pointer touch-manipulation disabled:opacity-50"
-            title="Refresh Log Sync, Flexible Target Matching & Campus Filter Alignment"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
-          </button>
+          <RefreshButton
+            onRefresh={handleManualRefresh}
+            isRefreshing={isRefreshing}
+            label="Refresh"
+            variant="dark"
+            size="md"
+            title="Force sync daily attendance logs and re-align target matching and campus filters"
+          />
 
           <button
             type="button"
@@ -595,16 +627,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             ))}
           </select>
 
-          <button
-            type="button"
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold rounded-xl border border-slate-300 text-xs flex items-center space-x-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
-            title="Refresh Log Sync, Flexible Target Matching & Campus Filter Alignment"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Re-sync Dashboard</span>
-          </button>
+          <RefreshButton
+            onRefresh={handleManualRefresh}
+            isRefreshing={isRefreshing}
+            label="Re-sync"
+            variant="outline"
+            size="sm"
+            title="Force sync daily attendance logs and re-align target matching and campus filters"
+          />
         </div>
 
         {pendingRequestsCount > 0 ? (
@@ -792,12 +822,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {filteredActivityStream.length === 0 ? (
-              <div className="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs font-bold text-slate-600">No attendance movements match current filters.</p>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  When a student or teacher scans their badge, their event appears here live instantly.
-                </p>
+              <div className="py-10 px-4 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                <Clock className="w-8 h-8 text-slate-300 mx-auto" />
+                <div>
+                  <p className="text-xs font-bold text-slate-700">No activity feed logs match the selected filters.</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {activeLogs.length > 0
+                      ? `${activeLogs.length} total scan log(s) exist in the system, but active campus/audience/status filters are hiding them.`
+                      : 'When a student or staff scans their QR badge or PIN, their check-in appears here live instantly.'}
+                  </p>
+                </div>
+                {(audienceFilter !== 'all' || statusFilter !== 'all' || selectedCampus !== 'All Campuses' || selectedClassroom !== 'all' || searchQuery !== '') && (
+                  <button
+                    type="button"
+                    onClick={resetAllFilters}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#A71C21] hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Clear All Filters &amp; Show All Scanned Events</span>
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
