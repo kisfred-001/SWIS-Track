@@ -7,11 +7,9 @@ import { sound } from '../utils/sound';
 import {
   Camera,
   Keyboard,
-  UserCheck,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Sparkles,
   Search,
   School,
   Users,
@@ -19,17 +17,11 @@ import {
   ArrowRight,
   Delete,
   X,
-  Phone,
   ShieldCheck,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
   LogOut,
   LogIn,
-  Sun,
-  Bed,
 } from 'lucide-react';
-import { Student, Staff, PickupDropoffParty } from '../types';
+import { Student, PickupDropoffParty } from '../types';
 import { SchoolLogo } from './SchoolLogo';
 
 interface MobileSignInHubProps {
@@ -42,7 +34,6 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
   const {
     students,
     campuses,
-    learningCenters,
     selectedCampus,
     setSelectedCampus,
     todayLogs,
@@ -50,7 +41,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
     findTargetByCode,
     filteredPremisesSummary,
   } = useAttendance();
-  const { currentUser, allStaff, canScanTeachers } = useAuth();
+  const { allStaff } = useAuth();
 
   // Primary toggle: Children vs Staff
   const [activeTarget, setActiveTarget] = useState<'children' | 'staff'>('children');
@@ -67,10 +58,10 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
 
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCenter, setSelectedCenter] = useState<string>('all');
+  const [selectedCenter] = useState<string>('all');
 
   // Camera state
-  const [cameraActive, setCameraActive] = useState<boolean>(false);
+  const [, setCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const lastScannedCodeRef = useRef<{ code: string; time: number } | null>(null);

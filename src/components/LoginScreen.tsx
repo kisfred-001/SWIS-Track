@@ -6,7 +6,6 @@ import {
   KeyRound,
   Mail,
   ShieldCheck,
-  ShieldAlert,
   ArrowRight,
   Eye,
   EyeOff,
@@ -18,8 +17,6 @@ import {
   ChevronUp,
   Delete,
   Building2,
-  MapPin,
-  CheckCircle2,
 } from 'lucide-react';
 import { sound } from '../utils/sound';
 import { Staff } from '../types';
@@ -33,7 +30,6 @@ export const LoginScreen: React.FC = () => {
     loginWithEmailPassword,
     switchUser,
     idleTimeoutMinutes,
-    superUserCredentials,
   } = useAuth();
 
   const [authMode, setAuthMode] = useState<'pin' | 'email' | 'roster' | 'signin_station'>('pin');
@@ -152,14 +148,6 @@ export const LoginScreen: React.FC = () => {
   const handleSelectStaff = (staff: Staff) => {
     switchUser(staff);
     sound.playSuccessChime();
-  };
-
-  // Quick fill Super User credentials
-  const handleFillSuperUser = () => {
-    setAuthMode('email');
-    setEmailInput(superUserCredentials.email);
-    setPasswordInput('P@haneroo@555');
-    setErrorMessage('');
   };
 
   // Quick fill PIN for Fredrick

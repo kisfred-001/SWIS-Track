@@ -8,8 +8,6 @@ import {
   deleteDoc,
   query,
   orderBy,
-  where,
-  getDocs,
   limit,
   writeBatch,
 } from 'firebase/firestore';
@@ -19,7 +17,6 @@ import {
   INITIAL_STUDENTS,
   INITIAL_CAMPUSES,
   INITIAL_LEARNING_CENTERS,
-  forceSyncOfficialData,
   purgeAllDummyDataAndCleanSystem,
 } from '../firebase/seed';
 import {

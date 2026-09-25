@@ -7,7 +7,6 @@ import {
   Settings,
   Building,
   Layers,
-  Users,
   KeyRound,
   Database,
   RefreshCw,
@@ -16,31 +15,22 @@ import {
   Lock,
   Download,
   AlertTriangle,
-  Sparkles,
-  School,
   Edit,
   Save,
   X,
-  Phone,
-  Mail,
-  MapPin,
   Check,
   Trash2,
   Image as ImageIcon,
   Upload,
   RotateCcw,
   Eye,
-  FileCheck,
   Info,
-  ExternalLink,
   Bed,
-  Calendar,
   Sliders,
-  AlertCircle,
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react';
-import { Campus, LearningCenter, UserRole, OperationalPolicySettings } from '../types';
+import { Campus, LearningCenter, OperationalPolicySettings } from '../types';
 import { SchoolLogo } from './SchoolLogo';
 import { formatTime24to12, DEFAULT_OPERATIONAL_POLICIES } from '../utils/schedule';
 
@@ -176,7 +166,6 @@ export const AdminSetupView: React.FC = () => {
   const [campusLocation, setCampusLocation] = useState('');
   const [campusPhone, setCampusPhone] = useState('');
   const [campusEmail, setCampusEmail] = useState('');
-  const [campusHours, setCampusHours] = useState('');
   const [campusCapacity, setCampusCapacity] = useState<number>(100);
 
   // Edit Learning Center Modal state

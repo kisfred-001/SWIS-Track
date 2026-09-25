@@ -2,26 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  Users,
-  GraduationCap,
   Plus,
   QrCode,
   Search,
-  Filter,
   CheckCircle2,
   AlertCircle,
-  Shield,
   Phone,
   UserPlus,
-  Briefcase,
-  KeyRound,
   FileSpreadsheet,
   Bed,
   Sun,
   Edit,
   Eye,
-  Camera,
-  Trash2,
 } from 'lucide-react';
 import { Student, Staff, UserRole } from '../types';
 import { BadgeModal } from './BadgeModal';
@@ -400,7 +392,6 @@ export const RosterManagement: React.FC = () => {
                     </tr>
                   ) : (
                     filteredStudents.map((s) => {
-                      const isBethany = s.learning_center_id === 'Bethany';
                       const isBoarding = s.enrollment_type === 'Boarding';
                       const pickupCount = s.designated_pickups?.length || 0;
 
@@ -535,7 +526,6 @@ export const RosterManagement: React.FC = () => {
                 </div>
               ) : (
                 filteredStudents.map((s) => {
-                  const isBethany = s.learning_center_id === 'Bethany';
                   const isBoarding = s.enrollment_type === 'Boarding';
                   const pickupCount = s.designated_pickups?.length || 0;
 

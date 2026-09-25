@@ -7,32 +7,18 @@ import {
   UserPlus,
   Shield,
   Search,
-  Filter,
   CheckCircle2,
   AlertCircle,
   QrCode,
   Clock,
-  Phone,
-  Mail,
-  KeyRound,
   Edit,
   Trash2,
-  Calendar,
-  Building2,
-  Sparkles,
   Download,
   Eye,
   EyeOff,
-  UserCheck,
-  UserX,
   RefreshCw,
-  FileSpreadsheet,
-  Check,
   X,
-  AlertTriangle,
   Briefcase,
-  Layers,
-  ChevronRight,
 } from 'lucide-react';
 import { sound } from '../utils/sound';
 import { SchoolLogo } from './SchoolLogo';
@@ -43,19 +29,14 @@ export const StaffManagementView: React.FC = () => {
   const {
     saveStaff,
     deleteStaff,
-    campuses,
-    learningCenters,
     selectedCampus,
-    setSelectedCampus,
     todayLogs,
     logs,
     processScan,
   } = useAttendance();
   const {
-    currentUser,
     allStaff,
     canManageStaff,
-    isSuperUser,
     idleTimeoutMinutes,
     setIdleTimeoutMinutes,
   } = useAuth();
@@ -72,7 +53,6 @@ export const StaffManagementView: React.FC = () => {
   const [badgeTarget, setBadgeTarget] = useState<Staff | null>(null);
   const [isIDGeneratorOpen, setIsIDGeneratorOpen] = useState(false);
   const [deletingStaff, setDeletingStaff] = useState<Staff | null>(null);
-  const [viewingHistoryStaff, setViewingHistoryStaff] = useState<Staff | null>(null);
 
   // Quick PIN reveal states
   const [revealedPins, setRevealedPins] = useState<Record<string, boolean>>({});

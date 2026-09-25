@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import confetti from 'canvas-confetti';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
@@ -8,14 +8,10 @@ import {
   Camera,
   X,
   Keyboard,
-  UserCheck,
   AlertTriangle,
   CheckCircle2,
   Clock,
   ShieldCheck,
-  Sparkles,
-  RefreshCw,
-  Info,
   LogOut,
   LogIn,
   Bed,
@@ -29,7 +25,7 @@ interface ScannerModalProps {
 }
 
 export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) => {
-  const { processScan, findTargetByCode, todayLogs, operationalPolicies } = useAttendance();
+  const { processScan, findTargetByCode, operationalPolicies } = useAttendance();
   const { currentUser, canScanTeachers } = useAuth();
 
   const [scanMode, setScanMode] = useState<'camera' | 'manual'>('manual');

@@ -20,9 +20,7 @@ import {
   X,
   Briefcase,
 } from 'lucide-react';
-import { Staff } from '../types';
 import { SchoolLogo } from './SchoolLogo';
-import { getSchoolSchedule } from '../utils/schedule';
 
 interface NavbarProps {
   onOpenScanner: () => void;
@@ -50,7 +48,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     setIdleTimeoutMinutes,
   } = useAuth();
   const {
-    premisesSummary,
     filteredPremisesSummary,
     pendingRequestsCount,
     campuses,

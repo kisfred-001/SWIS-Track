@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Clock, ShieldAlert, CheckCircle, RefreshCw } from 'lucide-react';
+import { Clock, ShieldAlert, RefreshCw } from 'lucide-react';
 
 export const InactivityWarningBanner: React.FC = () => {
   const { showIdleWarning, remainingIdleSeconds, resetIdleTimer, currentUser } = useAuth();

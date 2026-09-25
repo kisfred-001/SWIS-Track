@@ -3,17 +3,11 @@ import { useAttendance } from '../context/AttendanceContext';
 import {
   BarChart3,
   Download,
-  Calendar,
   AlertTriangle,
-  CheckCircle2,
   TrendingUp,
   Clock,
   Printer,
-  Users,
-  Search,
-  Filter,
 } from 'lucide-react';
-import { AttendanceLog } from '../types';
 
 export const ReportingView: React.FC = () => {
   const { logs, students, todayLogs } = useAttendance();
@@ -78,18 +72,6 @@ export const ReportingView: React.FC = () => {
     const loggedStudentIds = new Set(todayLogs.map((l) => l.target_id));
     return students.filter((s) => !loggedStudentIds.has(s.student_id));
   }, [students, todayLogs]);
-
-  // Early departures frequency (memoized)
-  const earlyDepartureCountsByStudent = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (let i = 0; i < studentLogs.length; i++) {
-      const l = studentLogs[i];
-      if (l.early_departure_reason) {
-        counts[l.target_name] = (counts[l.target_name] || 0) + 1;
-      }
-    }
-    return counts;
-  }, [studentLogs]);
 
   // Late arrivals (memoized)
   const lateArrivals = useMemo(() => {

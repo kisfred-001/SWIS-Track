@@ -3,13 +3,10 @@ import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
   School,
-  Users,
   GraduationCap,
   Building,
   CheckCircle2,
   Clock,
-  LogOut,
-  LogIn,
   Search,
   Filter,
   Phone,
@@ -18,11 +15,9 @@ import {
   Shield,
   Layers,
   ArrowRight,
-  Sparkles,
   MapPin,
-  Calendar,
 } from 'lucide-react';
-import { Campus, LearningCenter, Student, AttendanceLog } from '../types';
+import { Student, AttendanceLog } from '../types';
 
 export const CampusesView: React.FC = () => {
   const {
@@ -34,7 +29,7 @@ export const CampusesView: React.FC = () => {
     setSelectedCampus,
     processScan,
   } = useAttendance();
-  const { currentUser, allStaff, canScanStudents, isSupportStaff } = useAuth();
+  const { currentUser, allStaff, canScanStudents } = useAuth();
 
   // Active campus selection within this module
   const [activeCampusId, setActiveCampusId] = useState<string>(() => {

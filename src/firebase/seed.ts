@@ -1,6 +1,6 @@
 import { collection, getDocs, setDoc, doc, writeBatch } from 'firebase/firestore';
 import { db } from './config';
-import { Staff, Student, Campus, LearningCenter, AttendanceLog, EditRequest } from '../types';
+import { Staff, Student, Campus, LearningCenter } from '../types';
 
 export const SUPER_USER_ACCOUNT: Staff = {
   staff_id: 'STF-001',
@@ -419,7 +419,7 @@ export const REMOVED_STAFF_NAMES_OR_IDS = new Set([
 ]);
 
 // Helper to look up assigned supervisor for a learning center
-export function getSupervisorForCenter(campus: string, center: string): string {
+export function getSupervisorForCenter(_campus: string, center: string): string {
   if (center === 'Kayil') return 'Mrs. Irene Oryem';
   if (center === 'Doxa') return 'Mr. David Kimbugwe';
   if (center === 'Splendor') return 'Mr. Arthur Mutebi';
@@ -431,7 +431,7 @@ export function getSupervisorForCenter(campus: string, center: string): string {
 }
 
 // Helper to look up assigned monitor for a learning center (Only Bethany has Mrs. Joan Nandhego)
-export function getMonitorForCenter(campus: string, center: string): string {
+export function getMonitorForCenter(_campus: string, center: string): string {
   if (center === 'Bethany') return 'Mrs. Joan Nandhego';
   return '';
 }

@@ -9,12 +9,9 @@ import {
   CheckCircle2,
   RefreshCw,
   X,
-  FileText,
   HelpCircle,
-  Sparkles,
   ArrowRight,
   ClipboardPaste,
-  Filter,
 } from 'lucide-react';
 import { Student } from '../types';
 import { sound } from '../utils/sound';
@@ -225,7 +222,6 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
     const idIdx = findIndex(['student_id', 'id', 'studentid', 'student_code', 'code']);
     const nameIdx = findIndex(['full_name', 'name', 'student_name', 'studentname', 'fullname']);
     const gradeIdx = findIndex(['grade', 'grade_level', 'class', 'year']);
-    const campusIdx = findIndex(['campus', 'school_campus', 'branch', 'location']);
     const centerIdx = findIndex([
       'learning_center_id',
       'learning_center',

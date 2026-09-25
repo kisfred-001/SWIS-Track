@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
   BellRing,
-  AlertTriangle,
   ArrowRight,
   X,
   Volume2,
-  ShieldAlert,
   Flame,
-  CheckCircle2,
 } from 'lucide-react';
 import { sound } from '../utils/sound';
 
@@ -19,7 +16,7 @@ interface UrgentAlertBannerProps {
 
 export const UrgentAlertBanner: React.FC<UrgentAlertBannerProps> = ({ onNavigateToApprovals }) => {
   const { activeUrgentAlerts, dismissAlert } = useAttendance();
-  const { canApproveEditRequests, currentUser } = useAuth();
+  const { canApproveEditRequests } = useAuth();
 
   const isTopWindow = typeof window !== 'undefined' && window.self === window.top;
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => {

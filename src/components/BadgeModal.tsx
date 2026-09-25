@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { Student, Staff } from '../types';
-import { School, Printer, X, Download, ShieldCheck, Loader2, Bed } from 'lucide-react';
+import { Printer, X, Download, Loader2, Bed } from 'lucide-react';
 import { generateSingleCardPDF } from '../utils/pdfGenerator';
 import { sound } from '../utils/sound';
 import { SchoolLogo } from './SchoolLogo';

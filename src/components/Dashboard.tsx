@@ -2,25 +2,19 @@ import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  Users,
   GraduationCap,
   Briefcase,
   CheckCircle2,
   Clock,
   LogOut,
-  LogIn,
   AlertCircle,
   Search,
-  Filter,
   Scan,
-  ShieldCheck,
   UserCheck,
   ChevronRight,
   Sparkles,
-  School,
-  Bed,
 } from 'lucide-react';
-import { Student, Staff, AttendanceLog } from '../types';
+import { AttendanceLog } from '../types';
 import { getSchoolSchedule } from '../utils/schedule';
 
 interface DashboardProps {
@@ -37,14 +31,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     todayLogs,
     premisesSummary,
     filteredPremisesSummary,
-    campuses,
     selectedCampus,
-    setSelectedCampus,
     pendingRequestsCount,
-    processScan,
     operationalPolicies,
   } = useAttendance();
-  const { currentUser, allStaff, canScanTeachers } = useAuth();
+  const { allStaff, canScanTeachers } = useAuth();
 
   const [activeModule, setActiveModule] = useState<'students' | 'teachers'>('students');
   const [selectedClassroom, setSelectedClassroom] = useState<string>('all');

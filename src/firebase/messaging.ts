@@ -1,5 +1,5 @@
 import { getMessaging, getToken, onMessage, isSupported, Messaging } from 'firebase/messaging';
-import { collection, doc, setDoc, onSnapshot, query, orderBy, limit, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import app, { db } from './config';
 import { UrgentAlert } from '../types';
 import { sound } from '../utils/sound';

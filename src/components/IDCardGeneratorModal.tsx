@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,15 +13,9 @@ import {
   Printer,
   Download,
   X,
-  CheckSquare,
-  Square,
   Search,
-  Filter,
   Users,
   Briefcase,
-  Layers,
-  Sparkles,
-  School,
   Scissors,
   CheckCircle2,
   FileText,
@@ -29,7 +23,6 @@ import {
 } from 'lucide-react';
 import { sound } from '../utils/sound';
 import { SchoolLogo } from './SchoolLogo';
-import { Bed, Sun, User } from 'lucide-react';
 
 interface IDCardGeneratorModalProps {
   isOpen: boolean;

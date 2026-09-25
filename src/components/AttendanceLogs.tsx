@@ -2,25 +2,19 @@ import React, { useState, useMemo } from 'react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  Calendar,
-  Filter,
   Search,
   Edit,
   Trash2,
   AlertCircle,
   CheckCircle2,
   Clock,
-  Send,
-  ShieldCheck,
-  User,
-  Info,
   X,
 } from 'lucide-react';
-import { AttendanceLog, AttendanceLogStatus } from '../types';
+import { AttendanceLog } from '../types';
 
 export const AttendanceLogs: React.FC = () => {
   const { logs, directEditLog, deleteLog, submitEditRequest, selectedDate, setSelectedDate } = useAttendance();
-  const { currentUser, canDirectlyEditLogs, isTeacherOnly } = useAuth();
+  const { canDirectlyEditLogs } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'Student' | 'Teacher'>('all');
@@ -69,7 +63,7 @@ export const AttendanceLogs: React.FC = () => {
         log.target_id.toLowerCase().includes(q) ||
         log.log_id.toLowerCase().includes(q);
 
-      return matchesDate && matchesType && matchesStatus && matchesClass && log.status !== 'Deleted';
+      return matchesDate && matchesType && matchesStatus && matchesClass && matchesSearch && log.status !== 'Deleted';
     });
   }, [logs, selectedDate, filterType, filterStatus, filterClass, searchQuery]);
 

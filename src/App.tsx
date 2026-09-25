@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AttendanceProvider, useAttendance } from './context/AttendanceContext';
 import { Navbar } from './components/Navbar';

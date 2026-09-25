@@ -6,13 +6,11 @@ import {
   Mail,
   MapPin,
   Shield,
-  KeyRound,
   Edit,
   QrCode,
   Bed,
   Sun,
   Trash2,
-  CheckCircle,
   Building,
 } from 'lucide-react';
 import { Student } from '../types';
@@ -37,7 +35,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 }) => {
   if (!isOpen || !student) return null;
 
-  const isBethany = student.learning_center_id === 'Bethany';
   const isBoarding = student.enrollment_type === 'Boarding';
   const pInfo = student.parent_info;
   const designatedPickups = student.designated_pickups || [];

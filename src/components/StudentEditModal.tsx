@@ -4,9 +4,7 @@ import {
   Upload,
   User,
   Phone,
-  Mail,
   MapPin,
-  Shield,
   KeyRound,
   Trash2,
   Plus,
@@ -23,8 +21,8 @@ interface StudentEditModalProps {
   onClose: () => void;
   student?: Student | null;
   onSave: (studentData: Omit<Student, 'id'>, existingId?: string) => Promise<{ success: boolean; message: string }>;
-  campuses: Campus[];
-  learningCenters: LearningCenter[];
+  campuses?: Campus[];
+  learningCenters?: LearningCenter[];
 }
 
 export const StudentEditModal: React.FC<StudentEditModalProps> = ({
@@ -32,8 +30,6 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
   onClose,
   student,
   onSave,
-  campuses,
-  learningCenters,
 }) => {
   const isEditing = Boolean(student);
 
@@ -47,10 +43,8 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
   const [pinCode, setPinCode] = useState('');
   const [campus, setCampus] = useState('Spring Campus');
   const [learningCenterId, setLearningCenterId] = useState('Kayil');
-  const [grade, setGrade] = useState('Primary');
   const [enrollmentType, setEnrollmentType] = useState<'Day' | 'Boarding'>('Day');
   const [photoUrl, setPhotoUrl] = useState<string>('');
-  const [monitorName, setMonitorName] = useState('');
 
   // Parent Contact Fields
   const [fatherName, setFatherName] = useState('');
@@ -77,10 +71,8 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       setPinCode(student.pin_code || '');
       setCampus(student.campus || 'Spring Campus');
       setLearningCenterId(student.learning_center_id || 'Kayil');
-      setGrade(student.grade || 'Primary');
       setEnrollmentType(student.enrollment_type || 'Day');
       setPhotoUrl(student.photo_url || '');
-      setMonitorName(student.monitor_name || '');
 
       // Parents
       const pInfo = student.parent_info;
@@ -101,10 +93,8 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       setPinCode(Math.floor(1000 + Math.random() * 9000).toString());
       setCampus('Spring Campus');
       setLearningCenterId('Kayil');
-      setGrade('Primary');
       setEnrollmentType('Day');
       setPhotoUrl('');
-      setMonitorName('');
 
       setFatherName('');
       setFatherPhone('');
@@ -478,12 +468,10 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                         setEnrollmentType('Day');
                         if (learningCenterId === 'Kayil' || learningCenterId === 'Doxa' || learningCenterId === 'Splendor') {
                           setLearningCenterId('Bethany');
-                          setMonitorName('Mrs. Joan Nandhego');
                         }
                       } else {
                         if (learningCenterId === 'Bethany' || learningCenterId === 'Antioch' || learningCenterId === 'Azusa') {
                           setLearningCenterId('Kayil');
-                          setMonitorName('');
                         }
                       }
                     }}
@@ -562,28 +550,21 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                       if (val === 'Bethany') {
                         setCampus('Hope Campus');
                         setEnrollmentType('Day');
-                        setMonitorName('Mrs. Joan Nandhego');
                       } else if (val === 'Antioch') {
                         setCampus('Hope Campus');
                         setEnrollmentType('Day');
-                        setMonitorName('');
                       } else if (val === 'Azusa') {
                         setCampus('Hope Campus');
                         setEnrollmentType('Day');
-                        setMonitorName('');
                       } else if (val === 'Bloom and Archie' || val === 'Blooms and Archie') {
                         setCampus('Hope Campus');
                         setEnrollmentType('Day');
-                        setMonitorName('');
                       } else if (val === 'Kayil') {
                         setCampus('Spring Campus');
-                        setMonitorName('');
                       } else if (val === 'Doxa') {
                         setCampus('Spring Campus');
-                        setMonitorName('');
                       } else if (val === 'Splendor') {
                         setCampus('Spring Campus');
-                        setMonitorName('');
                       }
                     }}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#8B1E2F] focus:outline-none bg-white font-medium"

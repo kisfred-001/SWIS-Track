@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { Staff, UserRole } from '../types';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import {
   INITIAL_STAFF,
   SUPER_USER_ACCOUNT,
