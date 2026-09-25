@@ -8,13 +8,21 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  ShieldAlert,
   X,
 } from 'lucide-react';
 import { AttendanceLog } from '../types';
+import { EditRequestsTab } from './EditRequestsTab';
 
-export const AttendanceLogs: React.FC = () => {
-  const { logs, directEditLog, deleteLog, submitEditRequest, selectedDate, setSelectedDate } = useAttendance();
-  const { canDirectlyEditLogs } = useAuth();
+interface AttendanceLogsProps {
+  initialSubTab?: 'logs' | 'approvals';
+}
+
+export const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ initialSubTab = 'logs' }) => {
+  const { logs, directEditLog, deleteLog, submitEditRequest, selectedDate, setSelectedDate, pendingRequestsCount } = useAttendance();
+  const { canDirectlyEditLogs, isSupportStaff } = useAuth();
+
+  const [activeSubTab, setActiveSubTab] = useState<'logs' | 'approvals'>(initialSubTab);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'Student' | 'Teacher'>('all');
@@ -176,28 +184,71 @@ export const AttendanceLogs: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      {/* Banner / Success alerts */}
-      {actionSuccess && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl text-xs flex items-center space-x-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{actionSuccess}</span>
-        </div>
-      )}
+      {/* Combined Module Sub-tab Switcher Header */}
+      <div className="flex flex-wrap items-center gap-2 bg-[#3e3d40] p-1.5 rounded-2xl shadow-sm border border-slate-700">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('logs')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer ${
+            activeSubTab === 'logs'
+              ? 'bg-[#FCCB0D] text-slate-900 font-extrabold shadow-sm ring-2 ring-white/30'
+              : 'text-white hover:bg-slate-700'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>Attendance Movement Logs</span>
+          <span className="ml-1 text-[10px] bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded-full font-mono">
+            {filteredLogs.length}
+          </span>
+        </button>
 
-      {/* Header & Filter Controls */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div>
-            <h2 className="font-bold text-base text-slate-900 flex items-center space-x-2">
-              <span>Attendance Logs & Audit Trail</span>
-              <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-mono">
-                {filteredLogs.length} Records
+        {!isSupportStaff && (
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('approvals')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer ${
+              activeSubTab === 'approvals'
+                ? 'bg-[#FCCB0D] text-slate-900 font-extrabold shadow-sm ring-2 ring-white/30'
+                : 'text-white hover:bg-slate-700'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            <span>Audit &amp; Edit Requests</span>
+            {pendingRequestsCount > 0 && (
+              <span className="px-1.5 py-0.2 bg-[#A71C21] text-white text-[10px] font-black rounded-full animate-bounce">
+                {pendingRequestsCount}
               </span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Comprehensive audit trail of all student arrivals, dismissals, and faculty check-ins.
-            </p>
-          </div>
+            )}
+          </button>
+        )}
+      </div>
+
+      {activeSubTab === 'approvals' ? (
+        <EditRequestsTab />
+      ) : (
+        <>
+          {/* Banner / Success alerts */}
+          {actionSuccess && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl text-xs flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{actionSuccess}</span>
+            </div>
+          )}
+
+          {/* Header & Filter Controls */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="font-bold text-base text-slate-900 flex items-center space-x-2">
+                  <span>Attendance Movement Logs &amp; Audit Trail</span>
+                  <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-mono">
+                    {filteredLogs.length} Records
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Comprehensive audit trail of all student arrivals, dismissals, and faculty check-ins.
+                </p>
+              </div>
 
           {/* Quick RBAC indicator */}
           <div className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-600">
@@ -824,6 +875,8 @@ export const AttendanceLogs: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

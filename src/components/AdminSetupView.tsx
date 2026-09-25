@@ -603,16 +603,6 @@ export const AdminSetupView: React.FC = () => {
             <Download className="w-3.5 h-3.5 text-indigo-400" />
             <span>Export Snapshot</span>
           </button>
-
-          <button
-            type="button"
-            onClick={handleForceSync}
-            disabled={syncLoading}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
-            <span>{syncLoading ? 'Synchronizing...' : 'Sync Official Roster'}</span>
-          </button>
         </div>
       </div>
 
@@ -2166,64 +2156,8 @@ export const AdminSetupView: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {/* Primary Action 3: Sync Official School CSV Data */}
-          <div className="p-5 bg-indigo-50/50 border border-indigo-200 rounded-xl space-y-3">
-            <div className="flex items-start space-x-3">
-              <RefreshCw className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-indigo-900">
-                  Re-Sync Official School CSV Roster
-                </h4>
-                <p className="text-[11px] text-slate-600 mt-0.5">
-                  Synchronizes official students, learning centers, and administrative credentials without touching active operational data.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleForceSync}
-                disabled={syncLoading || cleanLoading}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50 flex items-center space-x-2 cursor-pointer"
-              >
-                <RefreshCw className={`w-4 h-4 ${syncLoading ? 'animate-spin' : ''}`} />
-                <span>{syncLoading ? 'Executing Roster Sync...' : 'Sync Official Roster Now'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Primary Action 4: Bulk Export System Data & Student Badges */}
-          <div className="p-5 bg-emerald-50/50 border border-emerald-200 rounded-xl space-y-3">
-            <div className="flex items-start space-x-3">
-              <Download className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-emerald-950">
-                  Bulk System Data &amp; Badges Export Center
-                </h4>
-                <p className="text-[11px] text-slate-600 mt-0.5">
-                  Export complete student lists, staff members, administrators, printable student QR badges, live attendance movement logs, and full database ZIP archives.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setIsBulkExportOpen(true)}
-                className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Launch Bulk Export Center</span>
-              </button>
-            </div>
-          </div>
         </div>
       )}
-
-      {/* Bulk Export Modal */}
-      <BulkExportModal isOpen={isBulkExportOpen} onClose={() => setIsBulkExportOpen(false)} />
 
       {/* Modal: Edit Campus */}
       {editingCampus && (

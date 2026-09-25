@@ -140,12 +140,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 onClick={handleToggleSound}
                 title={soundEnabled ? 'Mute Audio Chimes' : 'Enable Audio Chimes'}
-                className="p-2 rounded-xl bg-[#3e3d40] hover:bg-[#FCCB0D] hover:text-slate-900 text-white transition cursor-pointer shadow-xs"
+                className="p-2 rounded-xl bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D] transition cursor-pointer shadow-xs"
               >
                 {soundEnabled ? (
-                  <Volume2 className="w-4 h-4 text-emerald-400" />
+                  <Volume2 className="w-4 h-4 text-emerald-600" />
                 ) : (
-                  <VolumeX className="w-4 h-4 text-slate-400" />
+                  <VolumeX className="w-4 h-4 text-slate-500" />
                 )}
               </button>
 
@@ -153,9 +153,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenScanner}
-                className="inline-flex items-center space-x-1.5 bg-[#3e3d40] hover:bg-[#FCCB0D] hover:text-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition cursor-pointer shadow-xs"
+                className="inline-flex items-center space-x-1.5 bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D] text-xs font-bold px-3.5 py-2 rounded-xl transition cursor-pointer shadow-xs"
               >
-                <Scan className="w-4 h-4 text-amber-300" />
+                <Scan className="w-4 h-4 text-[#A71C21]" />
                 <span className="hidden sm:inline">Launch Scanner</span>
               </button>
 
@@ -163,28 +163,28 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setShowSwitchModal(true)}
-                className="flex items-center space-x-2 bg-[#3e3d40] hover:bg-[#FCCB0D] hover:text-slate-900 text-white rounded-xl px-3 py-1.5 transition cursor-pointer text-left shadow-xs"
+                className="flex items-center space-x-2 bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D] rounded-xl px-3 py-1.5 transition cursor-pointer text-left shadow-xs"
                 title="Person Logged In - Switch Staff Persona"
               >
                 <div className="w-6.5 h-6.5 rounded-full bg-[#A71C21] text-white flex items-center justify-center text-xs font-extrabold border border-white/40 shrink-0">
                   {currentUser?.full_name?.charAt(0) || 'U'}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[120px]">
+                  <div className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">
                     {currentUser?.full_name}
                   </div>
-                  <div className="text-[10px] text-amber-200 leading-none">
+                  <div className="text-[10px] text-[#A71C21] font-extrabold leading-none">
                     {currentUser?.role}
                   </div>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-600" />
               </button>
 
               {/* Lock Terminal */}
               <button
                 type="button"
                 onClick={() => logout(false)}
-                className="p-2 bg-[#3e3d40] hover:bg-[#FCCB0D] hover:text-slate-900 text-white rounded-xl transition cursor-pointer shadow-xs"
+                className="p-2 bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D] rounded-xl transition cursor-pointer shadow-xs"
                 title="Lock Terminal"
               >
                 <Lock className="w-4 h-4" />
@@ -197,17 +197,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Left Group: Campus Selector, Students Count, Staff Count */}
             <div className="flex flex-wrap items-center gap-2">
               {/* All Campuses */}
-              <div className="flex items-center space-x-1.5 bg-[#3e3d40] text-white px-3 py-1.5 rounded-xl shadow-xs">
-                <School className="w-4 h-4 text-amber-300 shrink-0" />
-                <span className="text-slate-300 font-bold text-[11px]">Campus:</span>
+              <div className="flex items-center space-x-1.5 bg-[#ebebeb] text-slate-900 px-3 py-1.5 rounded-xl shadow-xs">
+                <School className="w-4 h-4 text-[#A71C21] shrink-0" />
+                <span className="text-slate-700 font-bold text-[11px]">Campus:</span>
                 <select
                   value={selectedCampus}
                   onChange={(e) => setSelectedCampus(e.target.value)}
-                  className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer pr-1"
+                  className="bg-transparent text-slate-900 font-bold text-xs focus:outline-none cursor-pointer pr-1"
                 >
-                  <option value="All Campuses" className="bg-[#3e3d40] text-white">All Campuses</option>
+                  <option value="All Campuses" className="bg-white text-slate-900">All Campuses</option>
                   {campuses.map((c) => (
-                    <option key={c.id} value={c.name} className="bg-[#3e3d40] text-white">
+                    <option key={c.id} value={c.name} className="bg-white text-slate-900">
                       {c.name}
                     </option>
                   ))}
@@ -215,23 +215,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               {/* Students Stats */}
-              <div className="flex items-center space-x-1.5 bg-[#3e3d40] text-white px-3 py-1.5 rounded-xl shadow-xs">
-                <Users className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-slate-300">Students:</span>
-                <strong className="text-emerald-400 font-extrabold">
+              <div className="flex items-center space-x-1.5 bg-[#ebebeb] text-slate-900 px-3 py-1.5 rounded-xl shadow-xs">
+                <Users className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="text-slate-700">Students:</span>
+                <strong className="text-emerald-700 font-extrabold">
                   {filteredPremisesSummary.studentsOnPremises}
                 </strong>
-                <span className="text-slate-400 font-mono">/{filteredPremisesSummary.studentsTotal}</span>
+                <span className="text-slate-500 font-mono">/{filteredPremisesSummary.studentsTotal}</span>
               </div>
 
               {/* Staff Stats */}
-              <div className="flex items-center space-x-1.5 bg-[#3e3d40] text-white px-3 py-1.5 rounded-xl shadow-xs">
-                <Briefcase className="w-4 h-4 text-sky-400 shrink-0" />
-                <span className="text-slate-300">Staff:</span>
-                <strong className="text-sky-400 font-extrabold">
+              <div className="flex items-center space-x-1.5 bg-[#ebebeb] text-slate-900 px-3 py-1.5 rounded-xl shadow-xs">
+                <Briefcase className="w-4 h-4 text-sky-600 shrink-0" />
+                <span className="text-slate-700">Staff:</span>
+                <strong className="text-sky-700 font-extrabold">
                   {filteredPremisesSummary.staffOnPremises}
                 </strong>
-                <span className="text-slate-400 font-mono">/{filteredPremisesSummary.staffTotal}</span>
+                <span className="text-slate-500 font-mono">/{filteredPremisesSummary.staffTotal}</span>
               </div>
             </div>
 
@@ -243,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs ${
                   viewportMode === 'auto'
                     ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
                 title="Responsive auto view"
               >
@@ -257,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs ${
                   viewportMode === 'mobile'
                     ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
                 title="Mobile View Phone Shell"
               >
@@ -267,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* ROW 3: Real-Time Dashboard, Campus Modules, Staff Module, Attendance Logs, Edit Requests, Roster & Badges, Analytics & Reports */}
+          {/* ROW 3: Real-Time Dashboard, Campus Modules, Staff Module, Attendance Logs & Edit Requests, Roster & Badges, Analytics & Reports */}
           <div className="flex items-center justify-between py-2 border-b border-white/20 gap-1.5 overflow-x-auto scrollbar-none text-xs font-bold">
             <div className="flex items-center space-x-2 shrink-0 flex-wrap sm:flex-nowrap gap-y-2">
               {/* Real-Time Dashboard */}
@@ -277,10 +277,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                   activeTab === 'dashboard'
                     ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
               >
-                <School className="w-4 h-4 text-slate-900" />
+                <School className="w-4 h-4" />
                 <span>Real-Time Dashboard</span>
               </button>
 
@@ -291,7 +291,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                   activeTab === 'campuses'
                     ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
               >
                 <span>Campus Modules</span>
@@ -305,47 +305,31 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'staff'
                       ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                      : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                      : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                   }`}
                 >
                   <span>Staff Module</span>
                 </button>
               )}
 
-              {/* Attendance Logs */}
+              {/* Combined Module: Attendance Logs & Edit Requests */}
               <button
                 type="button"
                 onClick={() => setActiveTab('attendance')}
                 className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
-                  activeTab === 'attendance'
+                  activeTab === 'attendance' || activeTab === 'approvals'
                     ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
               >
                 <Clock className="w-4 h-4" />
-                <span>Attendance Logs</span>
+                <span>Attendance Logs &amp; Edit Requests</span>
+                {pendingRequestsCount > 0 && (
+                  <span className="px-1.5 py-0.2 bg-[#A71C21] text-white text-[10px] font-black rounded-full animate-bounce">
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </button>
-
-              {/* Edit Requests */}
-              {!isSupportStaff && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('approvals')}
-                  className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
-                    activeTab === 'approvals'
-                      ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                      : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
-                  }`}
-                >
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Edit Requests</span>
-                  {pendingRequestsCount > 0 && (
-                    <span className="px-1.5 py-0.2 bg-[#A71C21] text-white text-[10px] font-black rounded-full animate-bounce">
-                      {pendingRequestsCount}
-                    </span>
-                  )}
-                </button>
-              )}
 
               {/* Roster & Badges */}
               {!isSupportStaff && (
@@ -355,7 +339,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'roster'
                       ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                      : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                      : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -371,7 +355,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
                     activeTab === 'reports'
                       ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
-                      : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                      : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                   }`}
                 >
                   <UserCheck className="w-4 h-4" />
@@ -390,10 +374,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`px-4 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-2 font-black shadow-md ${
                 activeTab === 'signin'
                   ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50'
-                  : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                  : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="text-sm">Sign In Children and Staff</span>
             </button>
 
@@ -405,7 +389,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`px-4 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-2 font-black shadow-md ${
                   activeTab === 'setup'
                     ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50'
-                    : 'bg-[#3e3d40] text-white hover:bg-[#FCCB0D] hover:text-slate-900'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
