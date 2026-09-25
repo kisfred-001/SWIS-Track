@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { SchoolLogo } from './SchoolLogo';
 import { Users, Briefcase, LayoutDashboard, LogOut, UserCheck, KeyRound, CheckCircle2, X } from 'lucide-react';
 
 interface SimplifiedLandingPageProps {
@@ -44,7 +43,6 @@ export const SimplifiedLandingPage: React.FC<SimplifiedLandingPageProps> = ({
       {/* Top Header Row: System Branding & Quick User Action */}
       <header className="relative z-10 max-w-lg w-full mx-auto flex items-center justify-between pt-2 pb-4 border-b border-white/10">
         <div className="flex items-center space-x-2.5">
-          <SchoolLogo variant="emblem" size="md" className="bg-white p-1 rounded-2xl shadow-lg shrink-0 border border-white/20" />
           <div>
             <div className="text-xs font-black uppercase tracking-wider text-amber-400">
               Spirit &amp; Word

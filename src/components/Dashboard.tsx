@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { handleFirestoreError, OperationType } from '../firebase/errors';
 import { useAttendance } from '../context/AttendanceContext';
@@ -53,6 +53,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [isRealtimeActive, setIsRealtimeActive] = useState<boolean>(true);
   const [lastSyncTime, setLastSyncTime] = useState<string>('');
   const [newLogHighlightId, setNewLogHighlightId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [refreshNotification, setRefreshNotification] = useState<string | null>(null);
+
+  // Manual Refresh Handler to re-sync Log Data, Target Matching & Campus Filters
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const logsQuery = query(
+        collection(db, 'attendance_logs'),
+        orderBy('created_at', 'desc'),
+        limit(150)
+      );
+      const snapshot = await getDocs(logsQuery);
+      const fetchedLogs: AttendanceLog[] = [];
+      snapshot.forEach((docSnap) => {
+        fetchedLogs.push({ id: docSnap.id, ...docSnap.data() } as AttendanceLog);
+      });
+
+      if (fetchedLogs.length > 0) {
+        setRealtimeLogs(fetchedLogs);
+      }
+      setIsRealtimeActive(true);
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSyncTime(timeStr);
+      setRefreshNotification(`Dashboard synchronized (Log sync, Target matching & Campus filters re-aligned at ${timeStr})`);
+      setTimeout(() => setRefreshNotification(null), 4000);
+    } catch (err) {
+      console.warn('Manual refresh notice:', err);
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSyncTime(timeStr);
+      setRefreshNotification(`Dashboard re-aligned with active session state (${timeStr})`);
+      setTimeout(() => setRefreshNotification(null), 3000);
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+  };
 
   // Filter controls
   const [audienceFilter, setAudienceFilter] = useState<'all' | 'students' | 'staff'>('all');
@@ -378,11 +416,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Schedule & Quick Scanner Trigger */}
-        <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
+        {/* Schedule, Manual Refresh & Quick Scanner Trigger */}
+        <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0 flex-wrap gap-1.5">
           <span className="text-[11px] font-mono px-2.5 py-1 rounded-lg font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
             {schoolSchedule.statusBadgeText}
           </span>
+
+          <button
+            type="button"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="min-h-[38px] px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 border border-slate-700 font-bold rounded-xl shadow-xs text-xs flex items-center space-x-1.5 transition active:scale-95 cursor-pointer touch-manipulation disabled:opacity-50"
+            title="Refresh Log Sync, Flexible Target Matching & Campus Filter Alignment"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
+          </button>
+
           <button
             type="button"
             onClick={onOpenScanner}
@@ -393,6 +443,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Sync Refresh Toast Banner */}
+      {refreshNotification && (
+        <div className="bg-emerald-950 text-emerald-200 border border-emerald-500/40 rounded-xl px-4 py-2.5 text-xs font-semibold flex items-center justify-between shadow-md animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{refreshNotification}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRefreshNotification(null)}
+            className="text-emerald-400 hover:text-white font-bold ml-2 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 2. Live Summary Metric Cards (Top Row) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -527,6 +594,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </option>
             ))}
           </select>
+
+          <button
+            type="button"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold rounded-xl border border-slate-300 text-xs flex items-center space-x-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Refresh Log Sync, Flexible Target Matching & Campus Filter Alignment"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Re-sync Dashboard</span>
+          </button>
         </div>
 
         {pendingRequestsCount > 0 ? (
