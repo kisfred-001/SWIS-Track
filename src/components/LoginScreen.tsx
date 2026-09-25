@@ -726,7 +726,26 @@ export const LoginScreen: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mrs. Khasoma</strong> (Administrator)
+                      <strong className="text-slate-800">Mrs. Irene Lulika</strong> (Principal • Springs)
+                      <span className="text-[10px] text-slate-500 block font-mono">principal@spiritandword.ug</span>
+                    </div>
+                    <span className="font-mono bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 101
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mr. Jaxon Lulika</strong> (Director • Springs)
+                      <span className="text-[10px] text-slate-500 block font-mono">pastor@spiritandword.ug</span>
+                    </div>
+                    <span className="font-mono bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 102
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Khasoma Susan</strong> (Administrator • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">susan.khasoma@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 103
@@ -734,7 +753,8 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mrs. Julie Arinaitwe</strong> (Admin Assistant)
+                      <strong className="text-slate-800">Mrs. Juliet Arinaitwe</strong> (Admin Assistant • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">jarineitwe@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 104
@@ -743,6 +763,7 @@ export const LoginScreen: React.FC = () => {
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
                       <strong className="text-slate-800">Miss. Anette Mugala</strong> (Support Staff • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">annet@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 105
@@ -750,31 +771,8 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mrs. Julie Mayanja</strong> (Bloom & Archie Supervisor)
-                    </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 207
-                    </span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <strong className="text-slate-800">Mrs. Eunice Mutebe</strong> (Bethany Supervisor)
-                    </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 203
-                    </span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <strong className="text-slate-800">Mrs. Joan Nandhego</strong> (Bethany Monitor)
-                    </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 208
-                    </span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <strong className="text-slate-800">Mrs. Irene Oryem</strong> (Kayil Supervisor)
+                      <strong className="text-slate-800">Mrs. Irene Oryem</strong> (Kayil Supervisor • Springs)
+                      <span className="text-[10px] text-slate-500 block font-mono">irene.auma@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 201
@@ -782,15 +780,8 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mr. David Kimbugwe</strong> (Doxa Supervisor)
-                    </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 206
-                    </span>
-                  </div>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <strong className="text-slate-800">Mr. Arthur Mutebi</strong> (Splendor Supervisor)
+                      <strong className="text-slate-800">Mr. Arthur Mutebi</strong> (Splendor Supervisor • Springs)
+                      <span className="text-[10px] text-slate-500 block font-mono">arthur@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 202
@@ -798,7 +789,26 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mrs. Doreen Mugaga</strong> (Antioch Supervisor)
+                      <strong className="text-slate-800">Mrs. Eunice Mutebe</strong> (Bethany Supervisor • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">eunice@spiritandword.ug</span>
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 203
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mr. Shafic Musika</strong> (Azusa Supervisor • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">shafic@spiritandword.ug</span>
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 204
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Doreen Mugaga</strong> (Antioch Supervisor • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">doreen.amali@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
                       PIN: 205
@@ -806,10 +816,29 @@ export const LoginScreen: React.FC = () => {
                   </div>
                   <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                     <div>
-                      <strong className="text-slate-800">Mr. Shafic Musika</strong> (Azusa Supervisor)
+                      <strong className="text-slate-800">Mr. David Kimbugwe Mugaga</strong> (Doxa Supervisor • Springs)
+                      <span className="text-[10px] text-slate-500 block font-mono">david.kimbugwe@spiritandword.ug</span>
                     </div>
                     <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
-                      PIN: 204
+                      PIN: 206
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Julie Mayanja</strong> (Bloom & Archie Supervisor • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">julie.mayanja@spiritandword.ug</span>
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 207
+                    </span>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <strong className="text-slate-800">Mrs. Joan Nandhego</strong> (Bethany Monitor • Hope)
+                      <span className="text-[10px] text-slate-500 block font-mono">joan@spiritandword.ug</span>
+                    </div>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                      PIN: 208
                     </span>
                   </div>
                 </div>

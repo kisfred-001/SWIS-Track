@@ -1789,7 +1789,7 @@ export const AdminSetupView: React.FC = () => {
 
               <div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700">Administration</span>
-                <div className="font-extrabold text-sky-900">Mrs. Khasoma & Mrs. Julie Arinaitwe</div>
+                <div className="font-extrabold text-sky-900">Mrs. Khasoma Susan & Mrs. Juliet Arinaitwe</div>
                 <div className="text-sky-700 font-semibold">Administrator & Admin Assistant</div>
                 <div className="text-[11px] text-slate-600 pt-1">
                   Administrative rights: Manage student rosters, teacher sign in/out, approvals.
@@ -1867,7 +1867,7 @@ export const AdminSetupView: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="px-4 py-2.5 font-bold text-slate-800">Administrator (Mrs. Khasoma)</td>
+                    <td className="px-4 py-2.5 font-bold text-slate-800">Administrator (Mrs. Khasoma Susan)</td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>
                     <td className="px-3 py-2.5 text-center text-emerald-600"><Check className="w-4 h-4 mx-auto" /></td>

@@ -142,14 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Check for Super User credentials (kisfred@gmail.com / P@haneroo@555)
       if (
-        cleanEmail === SUPER_USER_ACCOUNT.email.toLowerCase() &&
-        cleanPass === SUPER_USER_ACCOUNT.password
+        (cleanEmail === SUPER_USER_ACCOUNT.email.toLowerCase() || cleanEmail === 'kisfred') &&
+        (cleanPass === SUPER_USER_ACCOUNT.password || cleanPass === SUPER_USER_ACCOUNT.pin_code)
       ) {
         try {
-          await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
+          await signInWithEmailAndPassword(auth, SUPER_USER_ACCOUNT.email, SUPER_USER_ACCOUNT.password || 'P@haneroo@555');
         } catch {
           try {
-            await createUserWithEmailAndPassword(auth, cleanEmail, cleanPass);
+            await createUserWithEmailAndPassword(auth, SUPER_USER_ACCOUNT.email, SUPER_USER_ACCOUNT.password || 'P@haneroo@555');
           } catch {
             // Firebase Auth error fallback: local super user authenticated
           }
@@ -161,12 +161,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true };
       }
 
-      // Check other staff accounts by email and password/PIN
-      const foundStaff = allStaff.find(
-        (s) =>
-          s.email.toLowerCase() === cleanEmail &&
-          (s.password === cleanPass || s.pin_code === cleanPass)
-      );
+      // Check other staff accounts by email, username prefix, and password/PIN
+      const foundStaff = allStaff.find((s) => {
+        const staffEmail = (s.email || '').toLowerCase();
+        const usernamePrefix = staffEmail.split('@')[0];
+        const isEmailMatch =
+          staffEmail === cleanEmail ||
+          usernamePrefix === cleanEmail ||
+          staffEmail === `${cleanEmail}@spiritandword.ug`;
+
+        const isPassMatch =
+          s.password === cleanPass ||
+          s.pin_code === cleanPass ||
+          (s.password && s.password.trim() === cleanPass);
+
+        return isEmailMatch && isPassMatch;
+      });
 
       if (foundStaff) {
         switchUser(foundStaff);
@@ -176,7 +186,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Try Firebase Auth
       try {
         await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
-        const match = allStaff.find((s) => s.email.toLowerCase() === cleanEmail);
+        const match = allStaff.find(
+          (s) =>
+            s.email.toLowerCase() === cleanEmail ||
+            s.email.toLowerCase().split('@')[0] === cleanEmail
+        );
         if (match) {
           switchUser(match);
           return { success: true };
@@ -187,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return {
         success: false,
-        message: 'Invalid credentials. Please verify your email and password.',
+        message: 'Invalid credentials. Please verify your username/email and password.',
       };
     },
     [allStaff, switchUser]
