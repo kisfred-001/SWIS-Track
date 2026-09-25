@@ -84,35 +84,27 @@ function AppContent() {
     );
   }
 
-  // Core view content inside the Portal
+  // Standalone Sign-In Station Views (No top Navbar or menu bar items shown)
+  if (activeTab === 'signin_children' || activeTab === 'signin_staff' || activeTab === 'signin') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans selection:bg-[#FCCB0D] selection:text-slate-900 p-3 sm:p-6 relative">
+        <main className="flex-1 max-w-xl w-full mx-auto py-2 sm:py-4">
+          <MobileSignInHub
+            initialTarget={activeTab === 'signin_staff' ? 'staff' : 'children'}
+            onNavigateToLanding={() => handleSetActiveTab('landing')}
+            onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
+          />
+        </main>
+
+        <IdleLockModal />
+        <InactivityWarningBanner />
+      </div>
+    );
+  }
+
+  // Core view content inside the Portal (Portal Access Active)
   const renderActiveTabContent = () => (
     <>
-      {/* Mobile / Primary Sign In Station for Children */}
-      {activeTab === 'signin_children' && (
-        <MobileSignInHub
-          initialTarget="children"
-          onNavigateToLanding={() => handleSetActiveTab('landing')}
-          onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
-        />
-      )}
-
-      {/* Mobile / Primary Sign In Station for Staff */}
-      {activeTab === 'signin_staff' && (
-        <MobileSignInHub
-          initialTarget="staff"
-          onNavigateToLanding={() => handleSetActiveTab('landing')}
-          onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
-        />
-      )}
-
-      {/* Generic Sign In Station */}
-      {activeTab === 'signin' && (
-        <MobileSignInHub
-          onNavigateToLanding={() => handleSetActiveTab('landing')}
-          onNavigateToDashboard={() => handleSetActiveTab('dashboard')}
-        />
-      )}
-
       {activeTab === 'dashboard' && (
         <Dashboard
           onOpenScanner={() => setIsScannerOpen(true)}
