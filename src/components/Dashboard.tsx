@@ -120,28 +120,61 @@ export const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
 
-  // Combined active logs: direct Firestore real-time logs, with reliable fallback to context logs
+  // Combined active logs: direct Firestore real-time logs merged with context logs to ensure immediate visibility of new scans
   const activeLogs = useMemo(() => {
-    if (realtimeLogs.length > 0) return realtimeLogs;
-    if (contextTodayLogs && contextTodayLogs.length > 0) return contextTodayLogs;
-    return (contextAllLogs || []).filter((l) => l.status !== 'Deleted');
+    const map = new Map<string, AttendanceLog>();
+
+    // 1. Add context logs first (from React state & cache)
+    if (contextAllLogs) {
+      contextAllLogs.forEach((l) => {
+        if (l && l.id && l.status !== 'Deleted') map.set(l.id, l);
+      });
+    }
+    if (contextTodayLogs) {
+      contextTodayLogs.forEach((l) => {
+        if (l && l.id && l.status !== 'Deleted') map.set(l.id, l);
+      });
+    }
+
+    // 2. Add/override with realtime logs from direct Firestore onSnapshot
+    if (realtimeLogs) {
+      realtimeLogs.forEach((l) => {
+        if (l && l.id && l.status !== 'Deleted') map.set(l.id, l);
+      });
+    }
+
+    const merged = Array.from(map.values());
+    return merged.sort((a, b) => {
+      const timeA = new Date(a.created_at || a.date || 0).getTime();
+      const timeB = new Date(b.created_at || b.date || 0).getTime();
+      return timeB - timeA;
+    });
   }, [realtimeLogs, contextTodayLogs, contextAllLogs]);
 
   // Filter logs by selected campus if not 'All Campuses'
   const campusFilteredLogs = useMemo(() => {
     if (selectedCampus === 'All Campuses') return activeLogs;
-    const filtered = activeLogs.filter((log) => log.campus === selectedCampus);
-    return filtered.length > 0 ? filtered : activeLogs;
+    return activeLogs.filter((log) => {
+      if (!log.campus || log.campus === 'All Campuses') return true;
+      return log.campus.toLowerCase() === selectedCampus.toLowerCase();
+    });
   }, [activeLogs, selectedCampus]);
 
   // Fast O(1) lookup map of latest log per target (student_id or staff_id)
   const targetLatestLogMap = useMemo(() => {
     const map = new Map<string, AttendanceLog>();
-    const sorted = [...activeLogs].sort(
-      (a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
-    );
+    const sorted = [...activeLogs].sort((a, b) => {
+      const timeA = new Date(a.created_at || a.date || 0).getTime();
+      const timeB = new Date(b.created_at || b.date || 0).getTime();
+      return timeA - timeB;
+    });
+
     for (let i = 0; i < sorted.length; i++) {
-      map.set(sorted[i].target_id, sorted[i]);
+      const log = sorted[i];
+      if (log.target_id) {
+        map.set(log.target_id, log);
+        map.set(log.target_id.trim().toUpperCase(), log);
+      }
     }
     return map;
   }, [activeLogs]);
@@ -172,7 +205,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     let studentsAbsent = 0;
 
     relevantStudents.forEach((student) => {
-      const log = targetLatestLogMap.get(student.student_id);
+      const log =
+        targetLatestLogMap.get(student.student_id) ||
+        targetLatestLogMap.get(student.student_id.trim().toUpperCase());
       if (!log) {
         studentsAbsent++;
       } else if (log.check_out_time) {
@@ -187,7 +222,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     let staffOffCampus = 0;
 
     relevantStaff.forEach((staff) => {
-      const log = targetLatestLogMap.get(staff.staff_id);
+      const log =
+        targetLatestLogMap.get(staff.staff_id) ||
+        targetLatestLogMap.get(staff.staff_id.trim().toUpperCase());
       if (!log) {
         staffOffCampus++;
       } else if (log.check_out_time) {
@@ -259,7 +296,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     return relevantStudents
       .map((student) => {
-        const log = targetLatestLogMap.get(student.student_id);
+        const log =
+          targetLatestLogMap.get(student.student_id) ||
+          targetLatestLogMap.get(student.student_id.trim().toUpperCase());
         let status: 'on_premises' | 'checked_out' | 'absent' = 'absent';
         if (log) {
           status = log.check_out_time ? 'checked_out' : 'on_premises';
@@ -290,7 +329,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     return relevantStaff
       .map((staff) => {
-        const log = targetLatestLogMap.get(staff.staff_id);
+        const log =
+          targetLatestLogMap.get(staff.staff_id) ||
+          targetLatestLogMap.get(staff.staff_id.trim().toUpperCase());
         let status: 'on_premises' | 'checked_out' | 'off_campus' = 'off_campus';
         if (log) {
           status = log.check_out_time ? 'checked_out' : 'on_premises';
