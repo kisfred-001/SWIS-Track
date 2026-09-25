@@ -73,6 +73,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
   const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const lastScannedCodeRef = useRef<{ code: string; time: number } | null>(null);
 
   // Success / Confirmation overlay state
   const [lastProcessed, setLastProcessed] = useState<{
@@ -126,6 +127,15 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
           aspectRatio: 1.0,
         },
         (decodedText) => {
+          const now = Date.now();
+          if (
+            lastScannedCodeRef.current &&
+            lastScannedCodeRef.current.code === decodedText &&
+            now - lastScannedCodeRef.current.time < 3500
+          ) {
+            return;
+          }
+          lastScannedCodeRef.current = { code: decodedText, time: now };
           handleDirectCodeScan(decodedText);
         },
         () => {}
@@ -173,11 +183,11 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
         setPinInput('');
         if (!existingLog.check_out_time) {
           setPinError(
-            `Duplicate PIN Entry: ${student.full_name} is already checked IN today at ${existingLog.check_in_time}. Student PIN cannot be entered twice for check-in.`
+            `Duplicate Sign-In / QR Scan Error: ${student.full_name} is already signed IN today at ${existingLog.check_in_time}. A student or QR code cannot be scanned or signed in more than once.`
           );
         } else {
           setPinError(
-            `Duplicate PIN Entry: ${student.full_name} has already completed attendance today (In: ${existingLog.check_in_time}, Out: ${existingLog.check_out_time}).`
+            `Duplicate Attendance Record: ${student.full_name} has already completed attendance today (Signed In: ${existingLog.check_in_time}, Signed Out: ${existingLog.check_out_time}). A QR code cannot be scanned again today.`
           );
         }
         return;
@@ -188,14 +198,14 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
         if (!existingLog) {
           sound.playError();
           setPinInput('');
-          setPinError(`Cannot Check Out: ${student.full_name} has not checked in today yet.`);
+          setPinError(`Cannot Check Out: ${student.full_name} has not been signed in today yet. Please sign in the student first.`);
           return;
         }
         if (existingLog.check_out_time) {
           sound.playError();
           setPinInput('');
           setPinError(
-            `Duplicate PIN Entry: ${student.full_name} was already checked OUT today at ${existingLog.check_out_time}.`
+            `Duplicate Check-Out / QR Scan Error: ${student.full_name} was already signed OUT today at ${existingLog.check_out_time}. A QR code cannot be scanned for checkout more than once.`
           );
           return;
         }
@@ -234,11 +244,11 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
         setPinInput('');
         if (!existingLog.check_out_time) {
           setPinError(
-            `Duplicate PIN Entry: ${staff.full_name} is already clocked IN today at ${existingLog.check_in_time}. PIN cannot be entered twice for check-in.`
+            `Duplicate Sign-In / QR Scan Error: ${staff.full_name} is already clocked IN today at ${existingLog.check_in_time}. QR code cannot be scanned more than once for check-in.`
           );
         } else {
           setPinError(
-            `Duplicate PIN Entry: ${staff.full_name} has already clocked out today (${existingLog.check_out_time}).`
+            `Duplicate Attendance Record: ${staff.full_name} has already completed attendance today (${existingLog.check_out_time}). QR code cannot be scanned again today.`
           );
         }
         return;
@@ -255,7 +265,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
           sound.playError();
           setPinInput('');
           setPinError(
-            `Duplicate PIN Entry: ${staff.full_name} was already clocked OUT today at ${existingLog.check_out_time}.`
+            `Duplicate Check-Out Error: ${staff.full_name} was already clocked OUT today at ${existingLog.check_out_time}.`
           );
           return;
         }

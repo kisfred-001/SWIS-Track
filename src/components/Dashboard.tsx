@@ -52,11 +52,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showAllRecords, setShowAllRecords] = useState<boolean>(false);
 
-  // Fast O(1) log lookup map by target_id
+  // Fast O(1) log lookup map by target_id (maintains latest log state per person)
   const todayLogsMap = useMemo(() => {
     const map = new Map<string, AttendanceLog>();
-    for (let i = 0; i < todayLogs.length; i++) {
-      map.set(todayLogs[i].target_id, todayLogs[i]);
+    const sorted = [...todayLogs].sort(
+      (a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
+    );
+    for (let i = 0; i < sorted.length; i++) {
+      map.set(sorted[i].target_id, sorted[i]);
     }
     return map;
   }, [todayLogs]);
@@ -158,6 +161,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const displayStaff = useMemo(() => {
     return showAllRecords ? filteredStaff : filteredStaff.slice(0, 25);
   }, [filteredStaff, showAllRecords]);
+
+  // Live Movement Stream for today (memoized latest check-in/out events)
+  const todayMovementStream = useMemo(() => {
+    return [...todayLogs]
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+      .slice(0, 6);
+  }, [todayLogs]);
 
   const schoolSchedule = getSchoolSchedule(new Date(), operationalPolicies);
 
@@ -381,55 +391,122 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </select>
             )}
 
-            {/* Status Pills */}
+            {/* Status Pills with Dynamic Counts */}
             <div className="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg shrink-0">
               <button
                 type="button"
                 onClick={() => setStatusFilter('all')}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center space-x-1 ${
                   statusFilter === 'all'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                All
+                <span>All</span>
+                <span className="text-[10px] opacity-75 font-mono">
+                  ({activeModule === 'students' ? filteredStudents.length : filteredStaff.length})
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('on_premises')}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center space-x-1 ${
                   statusFilter === 'on_premises'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-emerald-700'
                 }`}
               >
-                Present
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Present</span>
+                <span className="text-[10px] opacity-90 font-mono">
+                  ({activeModule === 'students' ? filteredPremisesSummary.studentsOnPremises : filteredPremisesSummary.staffOnPremises})
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('checked_out')}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center space-x-1 ${
                   statusFilter === 'checked_out'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-blue-700'
                 }`}
               >
-                Departed
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span>Departed</span>
+                <span className="text-[10px] opacity-90 font-mono">
+                  ({activeModule === 'students' ? filteredPremisesSummary.studentsCheckedOut : filteredPremisesSummary.staffCheckedOut})
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('absent')}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center space-x-1 ${
                   statusFilter === 'absent'
                     ? 'bg-amber-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-amber-700'
                 }`}
               >
-                Absent
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span>Absent</span>
+                <span className="text-[10px] opacity-90 font-mono">
+                  ({activeModule === 'students' ? filteredPremisesSummary.studentsAbsent : filteredPremisesSummary.staffAbsent})
+                </span>
               </button>
             </div>
           </div>
         </div>
+
+        {/* Real-Time Live Movement Stream Widget */}
+        {todayMovementStream.length > 0 && (
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-xl p-3 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="font-black tracking-tight text-slate-100 flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Real-Time Attendance Movement Stream</span>
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {todayLogs.length} events logged today
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+              {todayMovementStream.map((log) => (
+                <div
+                  key={log.id}
+                  className="bg-white/10 hover:bg-white/15 backdrop-blur-xs rounded-lg p-2 border border-white/10 flex items-center justify-between transition"
+                >
+                  <div className="truncate pr-2">
+                    <div className="font-bold text-white flex items-center space-x-1.5 truncate">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          log.check_out_time ? 'bg-blue-400' : 'bg-emerald-400'
+                        }`}
+                      ></span>
+                      <span className="truncate">{log.target_name}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-300 truncate">
+                      {log.classroom || log.grade_or_role} • {log.campus}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                        log.check_out_time
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                      }`}
+                    >
+                      {log.check_out_time ? `Out ${log.check_out_time}` : `In ${log.check_in_time}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Student Module List */}
         {activeModule === 'students' && (

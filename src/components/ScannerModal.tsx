@@ -59,6 +59,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
   const [scanSuccessMessage, setScanSuccessMessage] = useState<string | null>(null);
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const lastScannedRef = useRef<{ code: string; time: number } | null>(null);
 
   // Reset state on open/close
   useEffect(() => {
@@ -99,6 +100,15 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
           aspectRatio: 1.0,
         },
         (decodedText) => {
+          const now = Date.now();
+          if (
+            lastScannedRef.current &&
+            lastScannedRef.current.code === decodedText &&
+            now - lastScannedRef.current.time < 3500
+          ) {
+            return;
+          }
+          lastScannedRef.current = { code: decodedText, time: now };
           handleCodeDetected(decodedText);
         },
         () => {
@@ -170,7 +180,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
       if (!actionType) {
         sound.playError();
         setErrorMessage(
-          `Duplicate PIN Entry: ${staff.full_name} was already clocked OUT today (${lookup.currentLog?.check_out_time || 'Completed'}).`
+          `QR Code Already Scanned: ${staff.full_name} was already clocked OUT today (${lookup.currentLog?.check_out_time || 'Completed'}). QR code cannot be scanned more than once today.`
         );
         return;
       }
@@ -191,7 +201,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
       if (!actionType) {
         sound.playError();
         setErrorMessage(
-          `Duplicate PIN Entry: ${student.full_name} was already checked OUT today (${lookup.currentLog?.check_out_time || 'Completed'}). Attendance is already complete for today.`
+          `QR Code Already Scanned: ${student.full_name} was already checked OUT today at ${lookup.currentLog?.check_out_time || 'Completed'}. Attendance is complete; QR code cannot be scanned more than once today.`
         );
         return;
       }

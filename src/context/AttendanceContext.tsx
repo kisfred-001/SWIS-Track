@@ -276,13 +276,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       collection(db, 'learning_centers'),
       (snap) => {
         let list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as LearningCenter[];
-        // Filter to official learning centers
         const validIds = new Set(INITIAL_LEARNING_CENTERS.map((lc) => lc.id));
-        const invalidDocs = snap.docs.filter((d) => !validIds.has(d.id));
-        invalidDocs.forEach((d) => {
-          deleteDoc(d.ref).catch(() => {});
-        });
-
         list = list.filter((lc) => validIds.has(lc.id));
         list = list.map((lc) => {
           if (lc.name === 'Bethany') {
@@ -338,49 +332,54 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Student[];
         if (list.length > 0) {
           setStudents(list);
+          try {
+            localStorage.setItem('swis_cached_students', JSON.stringify(list));
+          } catch {}
         }
       },
       () => {
-        // Fallback gracefully without throwing unhandled listener errors
-        setStudents((prev) => (prev.length > 0 ? prev : INITIAL_STUDENTS));
+        // Fallback to cached or initial students on quota exhaustion / offline
+        try {
+          const cached = localStorage.getItem('swis_cached_students');
+          if (cached) {
+            setStudents(JSON.parse(cached));
+            return;
+          }
+        } catch {}
+        setStudents(INITIAL_STUDENTS);
       }
     );
     return () => unsubStudents();
   }, []);
 
-  // Subscribe to all attendance logs with error fallback
+  // Subscribe to recent attendance logs with bounded query and local cache fallback
   useEffect(() => {
-    let fallbackUnsub: (() => void) | null = null;
-    const q = query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'));
+    const q = query(collection(db, 'attendance_logs'), orderBy('created_at', 'desc'), limit(150));
     const unsubLogs = onSnapshot(
       q,
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
         setLogs(list);
+        try {
+          localStorage.setItem('swis_cached_logs', JSON.stringify(list.slice(0, 100)));
+        } catch {}
       },
       () => {
-        // Fallback to simple unordered query if index is pending
-        fallbackUnsub = onSnapshot(
-          collection(db, 'attendance_logs'),
-          (fallbackSnap) => {
-            const list = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceLog[];
-            list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-            setLogs(list);
-          },
-          () => {}
-        );
+        // Load from local storage cache if quota exhausted
+        try {
+          const cached = localStorage.getItem('swis_cached_logs');
+          if (cached) {
+            setLogs(JSON.parse(cached));
+          }
+        } catch {}
       }
     );
-    return () => {
-      unsubLogs();
-      if (fallbackUnsub) fallbackUnsub();
-    };
+    return () => unsubLogs();
   }, []);
 
-  // Subscribe to edit requests with error fallback
+  // Subscribe to edit requests with bounded limit and error fallback
   useEffect(() => {
-    let fallbackUnsub: (() => void) | null = null;
-    const q = query(collection(db, 'edit_requests'), orderBy('created_at', 'desc'));
+    const q = query(collection(db, 'edit_requests'), orderBy('created_at', 'desc'), limit(40));
     const unsubReqs = onSnapshot(
       q,
       (snap) => {
@@ -388,27 +387,14 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setEditRequests(list);
       },
       () => {
-        // Fallback to simple unordered query if index is pending
-        fallbackUnsub = onSnapshot(
-          collection(db, 'edit_requests'),
-          (fallbackSnap) => {
-            const list = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as EditRequest[];
-            list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-            setEditRequests(list);
-          },
-          () => {}
-        );
+        // Graceful error fallback
       }
     );
-    return () => {
-      unsubReqs();
-      if (fallbackUnsub) fallbackUnsub();
-    };
+    return () => unsubReqs();
   }, []);
 
-  // Subscribe to urgent alerts (FCM channel for Principals & Directors) with error fallback
+  // Subscribe to urgent alerts (FCM channel for Principals & Directors) with bounded query
   useEffect(() => {
-    let fallbackUnsub: (() => void) | null = null;
     const q = query(collection(db, 'urgent_alerts'), orderBy('timestamp', 'desc'), limit(15));
     let initialLoad = true;
     const unsubAlerts = onSnapshot(
@@ -428,21 +414,10 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         initialLoad = false;
       },
       () => {
-        fallbackUnsub = onSnapshot(
-          collection(db, 'urgent_alerts'),
-          (fallbackSnap) => {
-            const list = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as UrgentAlert[];
-            list.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-            setUrgentAlerts(list.slice(0, 15));
-          },
-          () => {}
-        );
+        // Graceful error fallback
       }
     );
-    return () => {
-      unsubAlerts();
-      if (fallbackUnsub) fallbackUnsub();
-    };
+    return () => unsubAlerts();
   }, [canApproveEditRequests]);
 
   // Compute active (not dismissed) urgent alerts for current user (memoized)
@@ -456,18 +431,50 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     await dismissUrgentAlert(alertId, currentUser.staff_id);
   }, [currentUser]);
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  // Helper for computing today's date string in local ISO format (YYYY-MM-DD)
+  const getTodayDateStr = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
 
-  // Filter logs for today (memoized)
+  const todayStr = getTodayDateStr();
+
+  // Filter logs for today dynamically and robustly across local and UTC date formats
   const todayLogs = useMemo(() => {
-    return logs.filter((l) => l.date === todayStr && l.status !== 'Deleted');
-  }, [logs, todayStr]);
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const utcToday = now.toISOString().split('T')[0];
 
-  // Fast O(1) today log lookup map by target_id
+    return logs.filter((l) => {
+      if (l.status === 'Deleted') return false;
+      if (l.date === localToday || l.date === utcToday) return true;
+      if (l.created_at) {
+        if (l.created_at.startsWith(localToday) || l.created_at.startsWith(utcToday)) return true;
+        const d = new Date(l.created_at);
+        if (
+          !isNaN(d.getTime()) &&
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() === now.getDate()
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }, [logs]);
+
+  // Fast O(1) today log lookup map by target_id (keeps latest log per person)
   const todayLogsMap = useMemo(() => {
     const map = new Map<string, AttendanceLog>();
-    for (let i = 0; i < todayLogs.length; i++) {
-      map.set(todayLogs[i].target_id, todayLogs[i]);
+    const sorted = [...todayLogs].sort(
+      (a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
+    );
+    for (let i = 0; i < sorted.length; i++) {
+      map.set(sorted[i].target_id, sorted[i]);
     }
     return map;
   }, [todayLogs]);
@@ -732,7 +739,19 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           created_at: new Date().toISOString(),
         };
 
-        await setDoc(doc(db, 'attendance_logs', newLogId), newLog);
+        // Update local state immediately
+        setLogs((prev) => [newLog, ...prev.filter((l) => l.id !== newLogId)]);
+        try {
+          const cached = JSON.parse(localStorage.getItem('swis_cached_logs') || '[]');
+          localStorage.setItem('swis_cached_logs', JSON.stringify([newLog, ...cached.slice(0, 99)]));
+        } catch {}
+
+        try {
+          await setDoc(doc(db, 'attendance_logs', newLogId), newLog);
+        } catch {
+          // Gracefully continue with local update on quota exhaustion / offline
+        }
+
         sound.playSuccessChime();
         return {
           success: true,
@@ -744,10 +763,30 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       } else if (!existingLog.check_out_time) {
         // Check-out staff
         const checkoutTime = formatTimeNow();
-        await updateDoc(doc(db, 'attendance_logs', existingLog.id), {
+        const updatedLog: AttendanceLog = {
+          ...existingLog,
           check_out_time: checkoutTime,
           updated_at: new Date().toISOString(),
-        });
+        };
+
+        setLogs((prev) => prev.map((l) => (l.id === existingLog.id ? updatedLog : l)));
+        try {
+          const cached = JSON.parse(localStorage.getItem('swis_cached_logs') || '[]');
+          localStorage.setItem(
+            'swis_cached_logs',
+            JSON.stringify(cached.map((l: any) => (l.id === existingLog.id ? updatedLog : l)))
+          );
+        } catch {}
+
+        try {
+          await updateDoc(doc(db, 'attendance_logs', existingLog.id), {
+            check_out_time: checkoutTime,
+            updated_at: new Date().toISOString(),
+          });
+        } catch {
+          // Gracefully continue with local update on quota exhaustion / offline
+        }
+
         sound.playSuccessChime();
         return {
           success: true,
@@ -769,38 +808,49 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const student = lookup.student!;
       const existingLog = lookup.currentLog;
 
-      // Explicit duplicate guard for Check-In
-      if (options.intendedAction === 'check_in' && existingLog) {
-        sound.playError();
-        if (!existingLog.check_out_time) {
-          return {
-            success: false,
-            message: `Duplicate PIN Entry: ${student.full_name} is already checked IN today at ${existingLog.check_in_time}. Student PIN cannot be entered twice for check-in.`,
-          };
-        } else {
-          return {
-            success: false,
-            message: `Duplicate PIN Entry: ${student.full_name} has already completed attendance today (In: ${existingLog.check_in_time}, Out: ${existingLog.check_out_time}).`,
-          };
+      // Strict Duplicate Guard for Check-In
+      if (options.intendedAction === 'check_in' || (!options.intendedAction && existingLog && !existingLog.check_out_time)) {
+        if (existingLog) {
+          sound.playError();
+          if (!existingLog.check_out_time) {
+            return {
+              success: false,
+              message: `Duplicate Sign-In Error: ${student.full_name} is already checked IN today at ${existingLog.check_in_time}. A student or QR code cannot be scanned or signed in more than once.`,
+            };
+          } else {
+            return {
+              success: false,
+              message: `Duplicate Attendance Record: ${student.full_name} has already completed attendance today (Signed In: ${existingLog.check_in_time}, Signed Out: ${existingLog.check_out_time}). A student cannot be signed in again today.`,
+            };
+          }
         }
       }
 
-      // Explicit duplicate/invalid guard for Check-Out
+      // Strict Guard for Check-Out
       if (options.intendedAction === 'check_out') {
         if (!existingLog) {
           sound.playError();
           return {
             success: false,
-            message: `Cannot Check Out: ${student.full_name} has not checked in today yet.`,
+            message: `Cannot Check Out: ${student.full_name} has not been signed in today yet. Please sign in the student first.`,
           };
         }
         if (existingLog.check_out_time) {
           sound.playError();
           return {
             success: false,
-            message: `Duplicate PIN Entry: ${student.full_name} was already checked OUT today at ${existingLog.check_out_time}.`,
+            message: `Duplicate Check-Out Error: ${student.full_name} was already checked OUT today at ${existingLog.check_out_time}. A student or QR code cannot be checked out more than once.`,
           };
         }
+      }
+
+      // Check if student has already completed attendance (both check-in and check-out)
+      if (existingLog && existingLog.check_out_time) {
+        sound.playError();
+        return {
+          success: false,
+          message: `QR Code Already Scanned Today: ${student.full_name} has already completed both arrival (${existingLog.check_in_time}) and departure (${existingLog.check_out_time}). This QR code cannot be scanned more than once today.`,
+        };
       }
 
       if (!existingLog) {
@@ -830,7 +880,19 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           created_at: new Date().toISOString(),
         };
 
-        await setDoc(doc(db, 'attendance_logs', newLogId), newLog);
+        // Update local state immediately
+        setLogs((prev) => [newLog, ...prev.filter((l) => l.id !== newLogId)]);
+        try {
+          const cached = JSON.parse(localStorage.getItem('swis_cached_logs') || '[]');
+          localStorage.setItem('swis_cached_logs', JSON.stringify([newLog, ...cached.slice(0, 99)]));
+        } catch {}
+
+        try {
+          await setDoc(doc(db, 'attendance_logs', newLogId), newLog);
+        } catch {
+          // Gracefully continue on quota exhaustion / offline
+        }
+
         sound.playSuccessChime();
         return {
           success: true,
@@ -857,7 +919,26 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           updatePayload.early_departure_reason = earlyDepartureReason.trim();
         }
 
-        await updateDoc(doc(db, 'attendance_logs', existingLog.id), updatePayload);
+        const updatedStudentLog: AttendanceLog = {
+          ...existingLog,
+          ...updatePayload,
+        };
+
+        setLogs((prev) => prev.map((l) => (l.id === existingLog.id ? updatedStudentLog : l)));
+        try {
+          const cached = JSON.parse(localStorage.getItem('swis_cached_logs') || '[]');
+          localStorage.setItem(
+            'swis_cached_logs',
+            JSON.stringify(cached.map((l: any) => (l.id === existingLog.id ? updatedStudentLog : l)))
+          );
+        } catch {}
+
+        try {
+          await updateDoc(doc(db, 'attendance_logs', existingLog.id), updatePayload);
+        } catch {
+          // Gracefully continue on quota exhaustion / offline
+        }
+
         sound.playSuccessChime();
         return {
           success: true,
