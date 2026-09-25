@@ -584,12 +584,30 @@ export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => 
 
 export async function ensureSuperUserAccount(): Promise<Staff> {
   try {
-    const superUserRef = doc(db, 'staff', SUPER_USER_ACCOUNT.staff_id);
-    await setDoc(superUserRef, SUPER_USER_ACCOUNT, { merge: true });
+    const batch = writeBatch(db);
+    INITIAL_STAFF.forEach((stf) => {
+      const ref = doc(db, 'staff', stf.staff_id);
+      batch.set(ref, stf, { merge: true });
+    });
+    await batch.commit();
   } catch {
     // Offline or initial connection fallback
   }
   return SUPER_USER_ACCOUNT;
+}
+
+export async function ensureOfficialStaffAccounts(): Promise<Staff[]> {
+  try {
+    const batch = writeBatch(db);
+    INITIAL_STAFF.forEach((stf) => {
+      const ref = doc(db, 'staff', stf.staff_id);
+      batch.set(ref, stf, { merge: true });
+    });
+    await batch.commit();
+  } catch (err) {
+    console.warn('Initial staff sync error:', err);
+  }
+  return INITIAL_STAFF;
 }
 
 /**

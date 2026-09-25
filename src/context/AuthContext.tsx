@@ -3,7 +3,13 @@ import { Staff, UserRole } from '../types';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { INITIAL_STAFF, SUPER_USER_ACCOUNT, ensureSuperUserAccount, REMOVED_STAFF_NAMES_OR_IDS } from '../firebase/seed';
+import {
+  INITIAL_STAFF,
+  SUPER_USER_ACCOUNT,
+  ensureSuperUserAccount,
+  ensureOfficialStaffAccounts,
+  REMOVED_STAFF_NAMES_OR_IDS,
+} from '../firebase/seed';
 import { sound } from '../utils/sound';
 
 export const DEFAULT_IDLE_TIMEOUT_MINUTES = 5;
@@ -66,9 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const lastActivityRef = useRef<number>(Date.now());
   const lastThrottleRef = useRef<number>(Date.now());
 
-  // Ensure Super User account exists in Firestore on load
+  // Ensure all 14 official faculty and leadership accounts exist in Firestore on load
   useEffect(() => {
-    ensureSuperUserAccount().catch(() => {});
+    ensureOfficialStaffAccounts().catch(() => {});
   }, []);
 
   const setIdleTimeoutMinutes = useCallback((mins: number) => {
@@ -217,7 +223,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: doc.id,
             ...doc.data(),
           })) as Staff[];
-          const staffList = rawList.filter(
+
+          // Merge baseline official staff with remote documents
+          const staffMap = new Map<string, Staff>();
+          INITIAL_STAFF.forEach((s) => staffMap.set(s.staff_id, s));
+          rawList.forEach((s) => {
+            const existing = staffMap.get(s.staff_id);
+            staffMap.set(s.staff_id, existing ? { ...existing, ...s } : s);
+          });
+
+          const staffList = Array.from(staffMap.values()).filter(
             (s) =>
               !REMOVED_STAFF_NAMES_OR_IDS.has(s.staff_id) &&
               !REMOVED_STAFF_NAMES_OR_IDS.has((s.full_name || '').trim())
