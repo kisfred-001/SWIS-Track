@@ -47,6 +47,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     pendingRequestsCount,
     operationalPolicies,
     todayLogs: contextTodayLogs,
+    logs: contextAllLogs,
   } = useAttendance();
   const { allStaff, canScanTeachers } = useAuth();
   const { isForcedMobile } = useViewport();
@@ -66,7 +67,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showAllRecords, setShowAllRecords] = useState<boolean>(false);
 
   const prevLogCountRef = useRef<number>(0);
-  const todayDateStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   // 1. Real-Time Firebase Firestore Integration: onSnapshot listener on 'attendance_logs'
   useEffect(() => {
@@ -74,10 +74,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const pathForLogs = 'attendance_logs';
 
     try {
-      // Query today's logs ordered by creation timestamp
+      // Query recent logs ordered by creation timestamp (no composite index required)
       const logsQuery = query(
         collection(db, pathForLogs),
-        where('date', '==', todayDateStr),
         orderBy('created_at', 'desc'),
         limit(150)
       );
@@ -123,18 +122,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return () => {
       if (unsub) unsub();
     };
-  }, [todayDateStr]);
+  }, []);
 
-  // Combined active logs: prefer direct Firestore real-time logs, fallback to context todayLogs
+  // Combined active logs: direct Firestore real-time logs, with reliable fallback to context logs
   const activeLogs = useMemo(() => {
     if (realtimeLogs.length > 0) return realtimeLogs;
-    return contextTodayLogs;
-  }, [realtimeLogs, contextTodayLogs]);
+    if (contextTodayLogs && contextTodayLogs.length > 0) return contextTodayLogs;
+    return (contextAllLogs || []).filter((l) => l.status !== 'Deleted');
+  }, [realtimeLogs, contextTodayLogs, contextAllLogs]);
 
   // Filter logs by selected campus if not 'All Campuses'
   const campusFilteredLogs = useMemo(() => {
     if (selectedCampus === 'All Campuses') return activeLogs;
-    return activeLogs.filter((log) => log.campus === selectedCampus);
+    const filtered = activeLogs.filter((log) => log.campus === selectedCampus);
+    return filtered.length > 0 ? filtered : activeLogs;
   }, [activeLogs, selectedCampus]);
 
   // Fast O(1) lookup map of latest log per target (student_id or staff_id)
@@ -765,16 +766,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                       {/* Right: Action Badge + Timestamp + Release details */}
                       <div className="flex items-center justify-between sm:justify-end space-x-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                        {/* Authorized party info if applicable */}
-                        {log.pickup_dropoff_party && (
-                          <div className="text-[10px] text-slate-500 text-left sm:text-right hidden md:block">
-                            <span className="text-slate-400 block">{log.pickup_dropoff_party.type}:</span>
-                            <strong className="text-slate-700 truncate max-w-[130px] block">
-                              {log.pickup_dropoff_party.name}
-                            </strong>
+                        {/* Authorized party info & Sign out options if applicable */}
+                        {(log.pickup_dropoff_party || log.early_departure_reason) && (
+                          <div className="text-[10px] text-slate-500 text-left sm:text-right hidden sm:block max-w-[200px]">
+                            {log.pickup_dropoff_party?.signOutOption && (
+                              <span className="inline-block px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 font-bold border border-blue-200 text-[9px] mb-0.5">
+                                {log.pickup_dropoff_party.signOutOption}
+                              </span>
+                            )}
+                            {log.pickup_dropoff_party?.name && log.pickup_dropoff_party.signOutOption !== 'Student went home alone' && (
+                              <strong className="text-slate-700 truncate block text-[10px]">
+                                {log.pickup_dropoff_party.name}
+                                {log.pickup_dropoff_party.relationship && ` (${log.pickup_dropoff_party.relationship})`}
+                              </strong>
+                            )}
                             {log.early_departure_reason && (
-                              <span className="text-amber-700 text-[9px] block">
-                                Reason: {log.early_departure_reason}
+                              <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 text-[9px] block font-semibold mt-0.5">
+                                Early: {log.early_departure_reason}
                               </span>
                             )}
                           </div>

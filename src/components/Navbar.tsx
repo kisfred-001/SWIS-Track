@@ -22,8 +22,10 @@ import {
   Briefcase,
   Smartphone,
   Monitor,
+  Download,
 } from 'lucide-react';
 import { SchoolLogo } from './SchoolLogo';
+import { BulkExportModal } from './BulkExportModal';
 
 interface NavbarProps {
   onOpenScanner: () => void;
@@ -64,6 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [pinError, setPinError] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(sound.isEnabled());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleToggleSound = () => {
     const next = !soundEnabled;
@@ -243,10 +246,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenScanner}
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm shadow-blue-500/30 transition transform active:scale-95"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm shadow-blue-500/30 transition transform active:scale-95 cursor-pointer"
               >
                 <Scan className="w-4 h-4" />
                 <span className="hidden sm:inline">Launch Scanner</span>
+              </button>
+
+              {/* Bulk Export Button */}
+              <button
+                type="button"
+                onClick={() => setIsExportModalOpen(true)}
+                className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer"
+                title="Bulk Export System Data & Student Badges"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden md:inline">Bulk Export</span>
               </button>
 
               {/* Active User Pill with Switch Modal Trigger */}
@@ -925,6 +939,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+
+      {/* Bulk System Data & Student Badges Export Modal */}
+      <BulkExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </>
   );
 };

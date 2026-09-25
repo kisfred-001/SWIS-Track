@@ -18,6 +18,7 @@ import {
   INITIAL_CAMPUSES,
   INITIAL_LEARNING_CENTERS,
   purgeAllDummyDataAndCleanSystem,
+  purgeDummyParentAndPickupData,
 } from '../firebase/seed';
 import {
   AttendanceLog,
@@ -112,6 +113,7 @@ interface AttendanceContextType {
     studentsCount: number;
     staffCount: number;
   }>;
+  purgeDummyParentsAndPickups: () => Promise<{ success: boolean; message: string; count: number }>;
   systemLogo: string | null;
   updateSystemLogo: (logoDataUrlOrUrl: string | null) => Promise<{ success: boolean; message: string }>;
   operationalPolicies: OperationalPolicySettings;
@@ -307,12 +309,12 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => unsub();
   }, []);
 
-  // Automatically align selectedCampus when campus-assigned staff (like Miss. Anette Mugala at Hope Campus) logs in
+  // Automatically align selectedCampus only for Support Staff (like Miss. Anette Mugala at Hope Campus)
   useEffect(() => {
-    if (currentUser?.campus && currentUser.campus !== 'All Campuses') {
+    if (currentUser?.role === 'Support Staff' && currentUser?.campus && currentUser.campus !== 'All Campuses') {
       setSelectedCampus(currentUser.campus);
     }
-  }, [currentUser?.campus]);
+  }, [currentUser?.role, currentUser?.campus]);
 
   // Initialize FCM registration for current staff user
   useEffect(() => {
@@ -445,7 +447,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const utcToday = now.toISOString().split('T')[0];
 
-    return logs.filter((l) => {
+    const todayList = logs.filter((l) => {
       if (l.status === 'Deleted') return false;
       if (l.date === localToday || l.date === utcToday) return true;
       if (l.created_at) {
@@ -462,6 +464,9 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
       return false;
     });
+
+    // If no logs recorded yet specifically with today's date stamp, gracefully return all non-deleted logs
+    return todayList.length > 0 ? todayList : logs.filter((l) => l.status !== 'Deleted');
   }, [logs]);
 
   // Fast O(1) today log lookup map by target_id (keeps latest log per person)
@@ -1437,6 +1442,35 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return purgeAllDummyData();
   };
 
+  // Remove dummy parents, guardians, and dummy authorized pickup/drop-off persons across all student records
+  const purgeDummyParentsAndPickups = async () => {
+    try {
+      setLoading(true);
+      const res = await purgeDummyParentAndPickupData();
+      if (res.success) {
+        setStudents((prev) =>
+          prev.map((s) => ({
+            ...s,
+            parent_names: '',
+            emergency_contact: '',
+            parent_info: undefined,
+            designated_pickups: [],
+          }))
+        );
+        sound.playSuccessChime();
+        return res;
+      } else {
+        sound.playError();
+        return res;
+      }
+    } catch (err: any) {
+      sound.playError();
+      return { success: false, message: err?.message || 'Purge failed', count: 0 };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Upload or update official school branding logo
   const updateSystemLogo = async (logoDataUrlOrUrl: string | null): Promise<{ success: boolean; message: string }> => {
     try {
@@ -1550,6 +1584,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       saveLearningCenter,
       forceResetToOfficialRoster,
       purgeAllDummyData,
+      purgeDummyParentsAndPickups,
       systemLogo,
       updateSystemLogo,
       operationalPolicies,
@@ -1586,6 +1621,7 @@ export const AttendanceProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       saveLearningCenter,
       forceResetToOfficialRoster,
       purgeAllDummyData,
+      purgeDummyParentsAndPickups,
       systemLogo,
       operationalPolicies,
     ]

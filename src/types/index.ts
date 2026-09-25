@@ -83,6 +83,8 @@ export interface Staff {
   updated_at?: string;
 }
 
+export type StaffUser = Staff;
+
 export interface Student {
   id?: string;
   student_id: string; // Unique ID, e.g., STU-1001
@@ -104,8 +106,21 @@ export interface Student {
   updated_at?: string;
 }
 
+export type SignOutOption =
+  | 'Picked by parent'
+  | 'Picked by Designate'
+  | 'Dropped by designate'
+  | 'Student went home alone';
+
+export type EarlyDepartureReasonOption =
+  | 'Health reasons'
+  | 'Parent request'
+  | 'Child sent home'
+  | 'Enter reason';
+
 export interface PickupDropoffParty {
-  type: 'Parent' | 'Designate';
+  type?: 'Parent' | 'Designate' | 'Self';
+  signOutOption?: SignOutOption;
   name: string;
   relationship?: string;
   phone?: string;

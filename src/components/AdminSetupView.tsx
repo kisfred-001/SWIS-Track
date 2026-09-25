@@ -33,6 +33,7 @@ import {
 import { Campus, LearningCenter, OperationalPolicySettings } from '../types';
 import { SchoolLogo } from './SchoolLogo';
 import { formatTime24to12, DEFAULT_OPERATIONAL_POLICIES } from '../utils/schedule';
+import { BulkExportModal } from './BulkExportModal';
 
 export const AdminSetupView: React.FC = () => {
   const {
@@ -46,6 +47,7 @@ export const AdminSetupView: React.FC = () => {
     saveLearningCenter,
     forceResetToOfficialRoster,
     purgeAllDummyData,
+    purgeDummyParentsAndPickups,
     systemLogo,
     updateSystemLogo,
     operationalPolicies,
@@ -64,6 +66,7 @@ export const AdminSetupView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'branding' | 'operational_policies' | 'campuses' | 'learning_centers' | 'rbac' | 'security' | 'database'
   >('branding');
+  const [isBulkExportOpen, setIsBulkExportOpen] = useState(false);
 
   // Branding & Logo State
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(systemLogo);
@@ -180,6 +183,7 @@ export const AdminSetupView: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [savingMsg, setSavingMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [cleanLoading, setCleanLoading] = useState(false);
+  const [purgeParentsLoading, setPurgeParentsLoading] = useState(false);
   const [cleanResult, setCleanResult] = useState<{
     success: boolean;
     message: string;
@@ -521,6 +525,29 @@ export const AdminSetupView: React.FC = () => {
       });
     } finally {
       setCleanLoading(false);
+    }
+  };
+
+  // Handle Purge Dummy Parents & Authorized Pickups Only
+  const handlePurgeParentsOnly = async () => {
+    if (
+      !window.confirm(
+        'Are you sure you want to remove all dummy parents, guardians, and dummy authorized pickup/drop-off persons across all student records in Firestore?\n\n' +
+        'Students will remain on the roster, but parent details and pickup contacts will be cleared so only genuine records are entered.'
+      )
+    ) {
+      return;
+    }
+    setPurgeParentsLoading(true);
+    setSyncStatus(null);
+    try {
+      const res = await purgeDummyParentsAndPickups();
+      setSyncStatus({
+        type: res.success ? 'success' : 'error',
+        message: res.message,
+      });
+    } finally {
+      setPurgeParentsLoading(false);
     }
   };
 
@@ -2091,7 +2118,7 @@ export const AdminSetupView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCleanSystemData}
-                disabled={cleanLoading || syncLoading}
+                disabled={cleanLoading || syncLoading || purgeParentsLoading}
                 className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50 flex items-center space-x-2 cursor-pointer"
               >
                 <Trash2 className={`w-4 h-4 ${cleanLoading ? 'animate-spin' : ''}`} />
@@ -2100,7 +2127,47 @@ export const AdminSetupView: React.FC = () => {
             </div>
           </div>
 
-          {/* Primary Action 2: Sync Official School CSV Data */}
+          {/* Primary Action 2: Purge Dummy Parents & Authorized Pickups */}
+          <div className="p-5 bg-amber-50/50 border border-amber-200 rounded-xl space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-amber-100 text-amber-800 rounded-lg shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h4 className="text-xs font-bold text-amber-950">
+                    Remove All Dummy Parents, Guardians & Pickup Contacts
+                  </h4>
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-[10px] font-bold uppercase tracking-wider">
+                    Parent / Pickup Clean
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                  Permanently clears out all generated/dummy parent contact names, phone numbers, emergency contact details, and authorized pickup lists from student profiles in Firestore. All official 74 student records remain intact, leaving fields clean for parents/designates to register authentically.
+                </p>
+                <div className="mt-2 text-[10px] text-slate-500 space-y-0.5">
+                  <div>✓ Clears dummy <code className="bg-white px-1 py-0.5 rounded border text-amber-800">parent_names</code>, <code className="bg-white px-1 py-0.5 rounded border text-amber-800">parent_phone</code>, and <code className="bg-white px-1 py-0.5 rounded border text-amber-800">parent_email</code></div>
+                  <div>✓ Empties dummy <code className="bg-white px-1 py-0.5 rounded border text-amber-800">authorized_pickup_persons</code> list</div>
+                  <div>✓ Empties dummy <code className="bg-white px-1 py-0.5 rounded border text-amber-800">emergency_contacts</code> list</div>
+                  <div>✓ Retains student names, admission numbers, assigned campuses, learning centers, supervisors, and PINs</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handlePurgeParentsOnly}
+                disabled={purgeParentsLoading || cleanLoading || syncLoading}
+                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50 flex items-center space-x-2 cursor-pointer"
+              >
+                <Trash2 className={`w-4 h-4 ${purgeParentsLoading ? 'animate-spin' : ''}`} />
+                <span>{purgeParentsLoading ? 'Purging Dummy Parents & Pickups...' : 'Purge Dummy Parents & Authorized Pickups'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Primary Action 3: Sync Official School CSV Data */}
           <div className="p-5 bg-indigo-50/50 border border-indigo-200 rounded-xl space-y-3">
             <div className="flex items-start space-x-3">
               <RefreshCw className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
@@ -2126,8 +2193,37 @@ export const AdminSetupView: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Primary Action 4: Bulk Export System Data & Student Badges */}
+          <div className="p-5 bg-emerald-50/50 border border-emerald-200 rounded-xl space-y-3">
+            <div className="flex items-start space-x-3">
+              <Download className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-emerald-950">
+                  Bulk System Data &amp; Badges Export Center
+                </h4>
+                <p className="text-[11px] text-slate-600 mt-0.5">
+                  Export complete student lists, staff members, administrators, printable student QR badges, live attendance movement logs, and full database ZIP archives.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsBulkExportOpen(true)}
+                className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Launch Bulk Export Center</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Bulk Export Modal */}
+      <BulkExportModal isOpen={isBulkExportOpen} onClose={() => setIsBulkExportOpen(false)} />
 
       {/* Modal: Edit Campus */}
       {editingCampus && (

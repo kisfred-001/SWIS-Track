@@ -20,9 +20,15 @@ import {
   ShieldCheck,
   LogOut,
   LogIn,
+  UserCheck,
+  HeartPulse,
+  PhoneCall,
+  Home,
+  FileText,
 } from 'lucide-react';
-import { Student, PickupDropoffParty } from '../types';
+import { Student, PickupDropoffParty, SignOutOption, EarlyDepartureReasonOption } from '../types';
 import { SchoolLogo } from './SchoolLogo';
+import { isEarlyDepartureTime } from '../utils/schedule';
 
 interface MobileSignInHubProps {
   onNavigateToDashboard?: () => void;
@@ -40,6 +46,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
     processScan,
     findTargetByCode,
     filteredPremisesSummary,
+    operationalPolicies,
   } = useAttendance();
   const { allStaff } = useAuth();
 
@@ -77,10 +84,17 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
 
   // Student Checkout Modal (for Pickup Person & Early Reason)
   const [checkoutStudentTarget, setCheckoutStudentTarget] = useState<Student | null>(null);
-  const [pickupPartyType, setPickupPartyType] = useState<'Parent' | 'Designate'>('Parent');
+  const [signOutOption, setSignOutOption] = useState<SignOutOption>('Picked by parent');
   const [pickupPartyName, setPickupPartyName] = useState<string>('');
   const [pickupPartyRelationship, setPickupPartyRelationship] = useState<string>('');
+  const [pickupPartyPhone, setPickupPartyPhone] = useState<string>('');
   const [checkoutNotes, setCheckoutNotes] = useState<string>('');
+
+  // Early Departure / Check-out Before Official Time State
+  const [isEarlyCheckout, setIsEarlyCheckout] = useState<boolean>(false);
+  const [earlyReasonOption, setEarlyReasonOption] = useState<EarlyDepartureReasonOption>('Health reasons');
+  const [customEarlyReason, setCustomEarlyReason] = useState<string>('');
+
   const [isSubmittingCheckout, setIsSubmittingCheckout] = useState<boolean>(false);
 
   // Stop camera on unmount or mode change
@@ -201,21 +215,17 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
           return;
         }
 
-        // Prompt for pickup person confirmation with pre-selected parent
-        const fatherName = student.parent_info?.father_name;
-        const motherName = student.parent_info?.mother_name;
-        const initialName =
-          fatherName ||
-          motherName ||
-          (student.parent_names || '').split('&')[0]?.trim() ||
-          'Parent / Guardian';
-        const initialRel = fatherName ? 'Father' : motherName ? 'Mother' : 'Parent / Guardian';
-
+        // Open checkout modal with the 4 options
+        const isEarly = isEarlyDepartureTime(new Date(), operationalPolicies);
         setCheckoutStudentTarget(student);
-        setPickupPartyType('Parent');
-        setPickupPartyName(initialName);
-        setPickupPartyRelationship(initialRel);
+        setSignOutOption('Picked by parent');
+        setPickupPartyName(student.parent_names?.split('&')[0]?.trim() || student.parent_info?.father_name || student.parent_info?.mother_name || 'Parent / Guardian');
+        setPickupPartyRelationship('Parent');
+        setPickupPartyPhone(student.emergency_contact || '');
         setCheckoutNotes('');
+        setIsEarlyCheckout(isEarly);
+        setEarlyReasonOption('Health reasons');
+        setCustomEarlyReason('');
         return;
       }
 
@@ -274,13 +284,15 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
     roleOrCenter: string,
     targetType: 'Student' | 'Staff',
     party?: PickupDropoffParty,
-    notes?: string
+    notes?: string,
+    earlyDepartureReason?: string
   ) => {
     try {
       const res = await processScan({
         code,
         party,
         notes,
+        earlyDepartureReason,
         intendedAction: actionType,
       });
 
@@ -351,11 +363,46 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
     if (!checkoutStudentTarget) return;
 
     setIsSubmittingCheckout(true);
+
+    let partyType: 'Parent' | 'Designate' | 'Self' = 'Parent';
+    let finalPartyName = pickupPartyName.trim();
+    let finalRelationship = pickupPartyRelationship.trim();
+
+    if (signOutOption === 'Picked by parent') {
+      partyType = 'Parent';
+      if (!finalPartyName) finalPartyName = 'Parent / Guardian';
+      if (!finalRelationship) finalRelationship = 'Parent';
+    } else if (signOutOption === 'Picked by Designate') {
+      partyType = 'Designate';
+      if (!finalPartyName) finalPartyName = 'Authorized Designate';
+      if (!finalRelationship) finalRelationship = 'Designate';
+    } else if (signOutOption === 'Dropped by designate') {
+      partyType = 'Designate';
+      if (!finalPartyName) finalPartyName = 'Designate';
+      if (!finalRelationship) finalRelationship = 'Designate';
+    } else if (signOutOption === 'Student went home alone') {
+      partyType = 'Self';
+      finalPartyName = `${checkoutStudentTarget.full_name} (Self / Home Alone)`;
+      finalRelationship = 'Student Alone';
+    }
+
     const party: PickupDropoffParty = {
-      type: pickupPartyType,
-      name: pickupPartyName.trim() || 'Parent',
-      relationship: pickupPartyRelationship.trim() || (pickupPartyType === 'Parent' ? 'Parent/Guardian' : 'Authorized Designate'),
+      type: partyType,
+      signOutOption,
+      name: finalPartyName,
+      relationship: finalRelationship,
+      phone: pickupPartyPhone.trim() || undefined,
+      notes: checkoutNotes.trim() || undefined,
     };
+
+    let computedEarlyReason: string | undefined = undefined;
+    if (isEarlyCheckout) {
+      if (earlyReasonOption === 'Enter reason') {
+        computedEarlyReason = customEarlyReason.trim() || 'Early dismissal';
+      } else {
+        computedEarlyReason = earlyReasonOption;
+      }
+    }
 
     await executeAttendanceAction(
       checkoutStudentTarget.pin_code,
@@ -363,7 +410,8 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
       checkoutStudentTarget.learning_center_id,
       'Student',
       party,
-      checkoutNotes.trim()
+      checkoutNotes.trim(),
+      computedEarlyReason
     );
 
     setIsSubmittingCheckout(false);
@@ -925,173 +973,273 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
 
             {/* Scrollable Form Body */}
             <form onSubmit={handleConfirmStudentCheckout} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
-              {/* Quick 1-Tap Pick-Up Selector */}
-              <div>
-                <label className="block text-slate-800 font-black text-xs mb-1.5">
-                  1-Tap Authorized Releasing Person:
+              {/* Sign-Out Options: EXACT 4 Options per user requirement */}
+              <div className="space-y-2">
+                <label className="block text-slate-900 font-black text-xs">
+                  Select Sign-Out Option (Required):
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {/* Father Option if present */}
-                  {checkoutStudentTarget.parent_info?.father_name && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPickupPartyType('Parent');
-                        setPickupPartyName(checkoutStudentTarget.parent_info?.father_name || '');
-                        setPickupPartyRelationship('Father');
-                      }}
-                      className={`min-h-[52px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
-                        pickupPartyName === checkoutStudentTarget.parent_info?.father_name
-                          ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-base">
-                        👨
-                      </div>
-                      <div className="truncate">
-                        <div className="font-bold text-xs truncate">
-                          {checkoutStudentTarget.parent_info.father_name}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          Father • {checkoutStudentTarget.parent_info.father_phone || 'Parent'}
-                        </div>
-                      </div>
-                    </button>
-                  )}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Option 1: Picked by parent */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignOutOption('Picked by parent');
+                      if (!pickupPartyName || pickupPartyName.includes('Alone') || pickupPartyName.includes('Designate')) {
+                        setPickupPartyName(checkoutStudentTarget.parent_names?.split('&')[0]?.trim() || 'Parent');
+                        setPickupPartyRelationship('Parent');
+                      }
+                    }}
+                    className={`min-h-[50px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                      signOutOption === 'Picked by parent'
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 font-bold shadow-xs'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-sm">
+                      👨‍👩‍👧
+                    </div>
+                    <div className="truncate">
+                      <div className="font-bold text-xs truncate">1. Picked by parent</div>
+                      <div className="text-[10px] text-slate-500 truncate">Mother / Father / Guardian</div>
+                    </div>
+                  </button>
 
-                  {/* Mother Option if present */}
-                  {checkoutStudentTarget.parent_info?.mother_name && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPickupPartyType('Parent');
-                        setPickupPartyName(checkoutStudentTarget.parent_info?.mother_name || '');
-                        setPickupPartyRelationship('Mother');
-                      }}
-                      className={`min-h-[52px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
-                        pickupPartyName === checkoutStudentTarget.parent_info?.mother_name
-                          ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-700 font-bold flex items-center justify-center shrink-0 text-base">
-                        👩
-                      </div>
-                      <div className="truncate">
-                        <div className="font-bold text-xs truncate">
-                          {checkoutStudentTarget.parent_info.mother_name}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          Mother • {checkoutStudentTarget.parent_info.mother_phone || 'Parent'}
-                        </div>
-                      </div>
-                    </button>
-                  )}
+                  {/* Option 2: Picked by Designate */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignOutOption('Picked by Designate');
+                      if (!pickupPartyName || pickupPartyName === 'Parent' || pickupPartyName.includes('Alone')) {
+                        setPickupPartyName('');
+                        setPickupPartyRelationship('Authorized Designate');
+                      }
+                    }}
+                    className={`min-h-[50px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                      signOutOption === 'Picked by Designate'
+                        ? 'bg-blue-50 border-blue-600 text-blue-950 ring-2 ring-blue-500/20 font-bold shadow-xs'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0 text-sm">
+                      🚗
+                    </div>
+                    <div className="truncate">
+                      <div className="font-bold text-xs truncate">2. Picked by Designate</div>
+                      <div className="text-[10px] text-slate-500 truncate">Driver / Relative / Friend</div>
+                    </div>
+                  </button>
 
-                  {/* Designated Emergency / Authorized Pickups */}
-                  {checkoutStudentTarget.designated_pickups?.map((des) => (
-                    <button
-                      key={des.id}
-                      type="button"
-                      onClick={() => {
-                        setPickupPartyType('Designate');
-                        setPickupPartyName(des.name);
-                        setPickupPartyRelationship(des.relationship || 'Authorized Designate');
-                      }}
-                      className={`min-h-[52px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
-                        pickupPartyName === des.name
-                          ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-base">
-                        🚗
-                      </div>
-                      <div className="truncate">
-                        <div className="font-bold text-xs truncate">{des.name}</div>
-                        <div className="text-[10px] text-slate-500">
-                          {des.relationship} • {des.phone}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                  {/* Option 3: Dropped by designate */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignOutOption('Dropped by designate');
+                      if (!pickupPartyName || pickupPartyName === 'Parent' || pickupPartyName.includes('Alone')) {
+                        setPickupPartyName('');
+                        setPickupPartyRelationship('Authorized Designate');
+                      }
+                    }}
+                    className={`min-h-[50px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                      signOutOption === 'Dropped by designate'
+                        ? 'bg-amber-50 border-amber-600 text-amber-950 ring-2 ring-amber-500/20 font-bold shadow-xs'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 font-bold flex items-center justify-center shrink-0 text-sm">
+                      🚐
+                    </div>
+                    <div className="truncate">
+                      <div className="font-bold text-xs truncate">3. Dropped by designate</div>
+                      <div className="text-[10px] text-slate-500 truncate">School Shuttle / Designate</div>
+                    </div>
+                  </button>
+
+                  {/* Option 4: Student went home alone */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignOutOption('Student went home alone');
+                      setPickupPartyName(`${checkoutStudentTarget.full_name} (Self / Home Alone)`);
+                      setPickupPartyRelationship('Self');
+                    }}
+                    className={`min-h-[50px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                      signOutOption === 'Student went home alone'
+                        ? 'bg-emerald-50 border-emerald-600 text-emerald-950 ring-2 ring-emerald-500/20 font-bold shadow-xs'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-sm">
+                      🚶
+                    </div>
+                    <div className="truncate">
+                      <div className="font-bold text-xs truncate">4. Student went home alone</div>
+                      <div className="text-[10px] text-slate-500 truncate">Independent Departure</div>
+                    </div>
+                  </button>
                 </div>
               </div>
 
-              {/* Editable Name & Relationship Inputs */}
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1.5">
-                    Releasing To Full Name:
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={pickupPartyName}
-                    onChange={(e) => setPickupPartyName(e.target.value)}
-                    placeholder="Enter name of person picking up child"
-                    className="w-full min-h-[44px] text-sm p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium touch-manipulation"
-                  />
+              {/* Dynamic Party Details if not home alone */}
+              {signOutOption !== 'Student went home alone' && (
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      {signOutOption === 'Picked by parent' ? 'Parent / Guardian Full Name:' : 'Designate Full Name:'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={pickupPartyName}
+                      onChange={(e) => setPickupPartyName(e.target.value)}
+                      placeholder={
+                        signOutOption === 'Picked by parent'
+                          ? 'e.g. Mother, Father, or Guardian full name'
+                          : 'e.g. Driver Robert / Aunt Sarah / Designate'
+                      }
+                      className="w-full min-h-[42px] text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium touch-manipulation"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Relationship:</label>
+                      <input
+                        type="text"
+                        value={pickupPartyRelationship}
+                        onChange={(e) => setPickupPartyRelationship(e.target.value)}
+                        placeholder="e.g. Mother / Driver"
+                        className="w-full min-h-[42px] text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 touch-manipulation"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1">Contact Phone (Optional):</label>
+                      <input
+                        type="text"
+                        value={pickupPartyPhone}
+                        onChange={(e) => setPickupPartyPhone(e.target.value)}
+                        placeholder="+256 7..."
+                        className="w-full min-h-[42px] text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 touch-manipulation font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Check Out Before Official Time Section (4 options) */}
+              <div className="bg-amber-50/70 border border-amber-200 p-3.5 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="earlyCheckoutToggle"
+                      checked={isEarlyCheckout}
+                      onChange={(e) => setIsEarlyCheckout(e.target.checked)}
+                      className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                    />
+                    <label htmlFor="earlyCheckoutToggle" className="font-bold text-amber-950 cursor-pointer text-xs flex items-center space-x-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Check Out Before Official Time</span>
+                    </label>
+                  </div>
+                  {isEarlyCheckout && (
+                    <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+                      Early Departure
+                    </span>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1.5">
-                    Relationship to Child:
-                  </label>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {['Mother', 'Father', 'Guardian', 'Driver', 'Aunt', 'Uncle'].map((rel) => (
+                {isEarlyCheckout && (
+                  <div className="space-y-2 pt-1 border-t border-amber-200/80">
+                    <label className="block text-[11px] font-bold text-amber-900">
+                      Select Early Check-Out Reason (Mandatory):
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {/* 1) Health reasons */}
                       <button
-                        key={rel}
                         type="button"
-                        onClick={() => setPickupPartyRelationship(rel)}
-                        className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer touch-manipulation active:scale-95 ${
-                          pickupPartyRelationship === rel
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        onClick={() => setEarlyReasonOption('Health reasons')}
+                        className={`min-h-[40px] px-2.5 py-2 rounded-xl text-left font-bold text-xs flex items-center space-x-2 cursor-pointer transition touch-manipulation ${
+                          earlyReasonOption === 'Health reasons'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
                         }`}
                       >
-                        {rel}
+                        <HeartPulse className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">1. Health reasons</span>
                       </button>
-                    ))}
+
+                      {/* 2) Parent request */}
+                      <button
+                        type="button"
+                        onClick={() => setEarlyReasonOption('Parent request')}
+                        className={`min-h-[40px] px-2.5 py-2 rounded-xl text-left font-bold text-xs flex items-center space-x-2 cursor-pointer transition touch-manipulation ${
+                          earlyReasonOption === 'Parent request'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                        }`}
+                      >
+                        <PhoneCall className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">2. Parent request</span>
+                      </button>
+
+                      {/* 3) Child sent home */}
+                      <button
+                        type="button"
+                        onClick={() => setEarlyReasonOption('Child sent home')}
+                        className={`min-h-[40px] px-2.5 py-2 rounded-xl text-left font-bold text-xs flex items-center space-x-2 cursor-pointer transition touch-manipulation ${
+                          earlyReasonOption === 'Child sent home'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                        }`}
+                      >
+                        <Home className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">3. Child sent home</span>
+                      </button>
+
+                      {/* 4) Enter reason */}
+                      <button
+                        type="button"
+                        onClick={() => setEarlyReasonOption('Enter reason')}
+                        className={`min-h-[40px] px-2.5 py-2 rounded-xl text-left font-bold text-xs flex items-center space-x-2 cursor-pointer transition touch-manipulation ${
+                          earlyReasonOption === 'Enter reason'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                        }`}
+                      >
+                        <FileText className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">4. Enter reason</span>
+                      </button>
+                    </div>
+
+                    {/* Custom text field when "Enter reason" is chosen */}
+                    {earlyReasonOption === 'Enter reason' && (
+                      <div className="pt-1 animate-in fade-in">
+                        <input
+                          type="text"
+                          required
+                          value={customEarlyReason}
+                          onChange={(e) => setCustomEarlyReason(e.target.value)}
+                          placeholder="Type specific early check-out reason..."
+                          className="w-full min-h-[40px] text-xs p-2.5 bg-white border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-900 touch-manipulation"
+                          autoFocus
+                        />
+                      </div>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    value={pickupPartyRelationship}
-                    onChange={(e) => setPickupPartyRelationship(e.target.value)}
-                    placeholder="e.g. Mother, Father, Driver, Aunt"
-                    className="w-full min-h-[44px] text-sm p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 touch-manipulation"
-                  />
-                </div>
+                )}
               </div>
 
-              {/* Quick Notes / Reason */}
+              {/* Additional Notes */}
               <div>
-                <label className="block text-slate-700 font-bold mb-1.5">
-                  Departure Note / Reason (Optional):
+                <label className="block text-slate-700 font-bold mb-1">
+                  General Departure Notes (Optional):
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {['Regular Dismissal', 'Clinic / Doctor', 'Family Pick-up', 'Approved Early Release'].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setCheckoutNotes(preset)}
-                      className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer touch-manipulation active:scale-95 ${
-                        checkoutNotes === preset
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
                 <input
                   type="text"
                   value={checkoutNotes}
                   onChange={(e) => setCheckoutNotes(e.target.value)}
-                  placeholder="e.g. Regular afternoon pickup, clinic appointment..."
-                  className="w-full min-h-[44px] text-sm p-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white touch-manipulation"
+                  placeholder="e.g. Cleared by front office desk..."
+                  className="w-full min-h-[40px] text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white touch-manipulation"
                 />
               </div>
 
@@ -1106,15 +1254,19 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmittingCheckout || !pickupPartyName.trim()}
+                  disabled={
+                    isSubmittingCheckout ||
+                    (signOutOption !== 'Student went home alone' && !pickupPartyName.trim()) ||
+                    (isEarlyCheckout && earlyReasonOption === 'Enter reason' && !customEarlyReason.trim())
+                  }
                   className="min-h-[48px] py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black shadow-md disabled:opacity-50 transition active:scale-95 cursor-pointer touch-manipulation flex items-center justify-center space-x-1.5 text-sm"
                 >
                   {isSubmittingCheckout ? (
-                    <span>Logging Departure...</span>
+                    <span>Signing Out...</span>
                   ) : (
                     <>
                       <LogOut className="w-4 h-4" />
-                      <span>Authorize Departure</span>
+                      <span>Authorize Sign-Out</span>
                     </>
                   )}
                 </button>

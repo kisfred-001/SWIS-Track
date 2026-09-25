@@ -519,9 +519,6 @@ export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => 
   const student_id = `STU-${num}`;
   // Deterministic 4-digit PIN for each student
   const pin_code = String(1100 + ((index * 37 + 13) % 8800)).padStart(4, '0');
-  const lastName = row.name.split(' ').slice(-1)[0];
-  const fatherPhone = `+256 772 ${String(100 + index).padStart(3, '0')} ${String(200 + index).padStart(3, '0')}`;
-  const motherPhone = `+256 701 ${String(150 + index).padStart(3, '0')} ${String(250 + index).padStart(3, '0')}`;
 
   // Springs Campus boarding option: some students are Boarding, others Day
   const isSprings = row.campus === 'Spring Campus';
@@ -529,30 +526,6 @@ export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => 
 
   // Official supervisors for each learning center
   const supervisor_name = row.supervisor || getSupervisorForCenter(row.campus, row.center);
-
-  // Sample designated drop-off / pick-up persons other than parents
-  const designated_pickups = [
-    {
-      id: `des-${num}-1`,
-      name: `${lastName} Family Driver (Robert)`,
-      relationship: 'School Van / Family Driver',
-      phone: `+256 752 ${String(300 + index).padStart(3, '0')} 111`,
-      id_number: `NIN-CM${String(88000 + index)}`,
-      notes: 'Authorized for daily drop-off & pick-up. Car Reg UBD 412X.',
-    },
-    ...(index % 2 === 0
-      ? [
-          {
-            id: `des-${num}-2`,
-            name: `Aunt Sarah ${lastName}`,
-            relationship: 'Aunt / Guardian',
-            phone: `+256 782 ${String(400 + index).padStart(3, '0')} 222`,
-            id_number: `NIN-CF${String(99000 + index)}`,
-            notes: 'Authorized emergency alternate pickup.',
-          },
-        ]
-      : []),
-  ];
 
   return {
     student_id,
@@ -564,19 +537,9 @@ export const INITIAL_STUDENTS: Student[] = RAW_STUDENT_DATA.map((row, index) => 
     monitor_name: getMonitorForCenter(row.campus, row.center),
     grade: `${row.campus.split(' ')[0]} • ${row.center}`,
     enrollment_type,
-    parent_names: `Mr. David & Mrs. Grace ${lastName}`,
-    emergency_contact: fatherPhone,
-    parent_info: {
-      father_name: `Mr. David ${lastName}`,
-      father_phone: fatherPhone,
-      father_email: `david.${lastName.toLowerCase()}@example.com`,
-      mother_name: `Mrs. Grace ${lastName}`,
-      mother_phone: motherPhone,
-      mother_email: `grace.${lastName.toLowerCase()}@example.com`,
-      home_address: `Plot ${index + 12}, Kampala Road, Uganda`,
-      emergency_phone: fatherPhone,
-    },
-    designated_pickups,
+    parent_names: '',
+    emergency_contact: '',
+    designated_pickups: [],
     qr_code_url: student_id,
     created_at: new Date().toISOString(),
   };
@@ -850,6 +813,18 @@ export async function syncOfficialStaffAndCenters(): Promise<void> {
             needsUpdate = true;
           }
 
+          // Clean dummy parent / pickup data if synthetic driver / aunt or fake phone numbers are present
+          if (
+            data.parent_names?.includes('Mr. David & Mrs. Grace') ||
+            (data.designated_pickups && data.designated_pickups.some((dp: any) => dp.relationship?.includes('Driver') || dp.name?.includes('Family Driver')))
+          ) {
+            updates.parent_names = '';
+            updates.emergency_contact = '';
+            updates.parent_info = null;
+            updates.designated_pickups = [];
+            needsUpdate = true;
+          }
+
           if (needsUpdate) {
             studentBatch.update(d.ref, updates);
             batchNeedsCommit = true;
@@ -862,6 +837,49 @@ export async function syncOfficialStaffAndCenters(): Promise<void> {
     }
   } catch (err) {
     console.warn('Sync official staff and centers error:', err);
+  }
+}
+
+/**
+ * Remove all dummy parents, guardians, and dummy authorized pickup and drop-off persons
+ * from all student records across Firestore.
+ */
+export async function purgeDummyParentAndPickupData(): Promise<{ success: boolean; message: string; count: number }> {
+  try {
+    const studentsSnap = await getDocs(collection(db, 'students'));
+    if (studentsSnap.empty) {
+      return { success: true, message: 'No student records to clean.', count: 0 };
+    }
+
+    let cleanedCount = 0;
+    for (let i = 0; i < studentsSnap.docs.length; i += 300) {
+      const batch = writeBatch(db);
+      const chunk = studentsSnap.docs.slice(i, i + 300);
+      chunk.forEach((d) => {
+        batch.update(d.ref, {
+          parent_names: '',
+          emergency_contact: '',
+          parent_info: null,
+          designated_pickups: [],
+          updated_at: new Date().toISOString(),
+        });
+        cleanedCount++;
+      });
+      await batch.commit();
+    }
+
+    return {
+      success: true,
+      message: `Successfully removed all dummy parents, guardians, and authorized pickup/drop-off records across ${cleanedCount} students.`,
+      count: cleanedCount,
+    };
+  } catch (err: any) {
+    console.error('Error purging dummy parent data:', err);
+    return {
+      success: false,
+      message: err?.message || 'Failed to purge dummy parent data.',
+      count: 0,
+    };
   }
 }
 

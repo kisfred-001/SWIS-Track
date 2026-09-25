@@ -30,7 +30,7 @@ export const AttendanceLogs: React.FC = () => {
   const [editCheckIn, setEditCheckIn] = useState('');
   const [editCheckOut, setEditCheckOut] = useState('');
   const [editPartyName, setEditPartyName] = useState('');
-  const [editPartyType, setEditPartyType] = useState<'Parent' | 'Designate'>('Parent');
+  const [editPartyType, setEditPartyType] = useState<'Parent' | 'Designate' | 'Self'>('Parent');
   const [editEarlyReason, setEditEarlyReason] = useState('');
   const [editReasonPrompt, setEditReasonPrompt] = useState('');
   const [isUrgent, setIsUrgent] = useState(false);
@@ -600,43 +600,90 @@ export const AttendanceLogs: React.FC = () => {
 
               {selectedLog.target_type === 'Student' && (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">
-                        Party Type:
-                      </label>
-                      <select
-                        value={editPartyType}
-                        onChange={(e) => setEditPartyType(e.target.value as any)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-                      >
-                        <option value="Parent">Parent / Guardian</option>
-                        <option value="Designate">Authorized Designate</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">
-                        Party Name:
-                      </label>
-                      <input
-                        type="text"
-                        value={editPartyName}
-                        onChange={(e) => setEditPartyName(e.target.value)}
-                        placeholder="e.g. Robert Miller"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-                    </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Sign-Out / Releasing Option:
+                    </label>
+                    <select
+                      value={
+                        selectedLog.pickup_dropoff_party?.signOutOption ||
+                        (editPartyType === 'Parent' ? 'Picked by parent' : 'Picked by Designate')
+                      }
+                      onChange={(e) => {
+                        const opt = e.target.value as any;
+                        if (opt === 'Picked by parent') {
+                          setEditPartyType('Parent');
+                          if (!editPartyName || editPartyName.includes('Alone')) {
+                            setEditPartyName('Parent');
+                          }
+                        } else if (opt === 'Student went home alone') {
+                          setEditPartyType('Designate');
+                          setEditPartyName(`${selectedLog.target_name} (Self / Home Alone)`);
+                        } else {
+                          setEditPartyType('Designate');
+                          if (!editPartyName || editPartyName === 'Parent' || editPartyName.includes('Alone')) {
+                            setEditPartyName('');
+                          }
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium"
+                    >
+                      <option value="Picked by parent">1. Picked by parent</option>
+                      <option value="Picked by Designate">2. Picked by Designate</option>
+                      <option value="Dropped by designate">3. Dropped by designate</option>
+                      <option value="Student went home alone">4. Student went home alone</option>
+                    </select>
                   </div>
 
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
-                      Early Departure Reason (if applicable):
+                      Releasing Person Full Name:
                     </label>
+                    <input
+                      type="text"
+                      value={editPartyName}
+                      onChange={(e) => setEditPartyName(e.target.value)}
+                      placeholder="e.g. Parent or Designate Name"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block font-semibold text-slate-700">
+                      Early Check-Out Reason (if before official time):
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {['Health reasons', 'Parent request', 'Child sent home', 'Enter reason'].map((reasonPreset) => (
+                        <button
+                          key={reasonPreset}
+                          type="button"
+                          onClick={() => {
+                            if (reasonPreset !== 'Enter reason') {
+                              setEditEarlyReason(reasonPreset);
+                            } else {
+                              if (editEarlyReason === 'Health reasons' || editEarlyReason === 'Parent request' || editEarlyReason === 'Child sent home') {
+                                setEditEarlyReason('');
+                              }
+                            }
+                          }}
+                          className={`p-2 rounded-lg text-xs font-semibold border transition text-left ${
+                            editEarlyReason === reasonPreset || (reasonPreset === 'Enter reason' && editEarlyReason && !['Health reasons', 'Parent request', 'Child sent home'].includes(editEarlyReason))
+                              ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          {reasonPreset === 'Health reasons' && '1. Health reasons'}
+                          {reasonPreset === 'Parent request' && '2. Parent request'}
+                          {reasonPreset === 'Child sent home' && '3. Child sent home'}
+                          {reasonPreset === 'Enter reason' && '4. Enter reason'}
+                        </button>
+                      ))}
+                    </div>
                     <input
                       type="text"
                       value={editEarlyReason}
                       onChange={(e) => setEditEarlyReason(e.target.value)}
-                      placeholder="e.g. Doctor appointment with clinic pass"
+                      placeholder="e.g. Health reasons, Parent request, Child sent home, or custom note..."
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>

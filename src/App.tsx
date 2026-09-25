@@ -35,10 +35,21 @@ function AppContent() {
   const { loading: attendanceLoading } = useAttendance();
   const { viewportMode } = useViewport();
 
-  // On mobile devices, primarily open the option of signing in children and staff!
+  // Active navigation tab (persists across sessions and defaults to real-time dashboard)
   const [activeTab, setActiveTab] = useState<string>(() => {
-    return isMobileDevice() ? 'signin' : 'dashboard';
+    try {
+      const saved = localStorage.getItem('swis_active_tab');
+      if (saved) return saved;
+    } catch {}
+    return 'dashboard';
   });
+
+  const handleSetActiveTab = (tab: string) => {
+    setActiveTab(tab);
+    try {
+      localStorage.setItem('swis_active_tab', tab);
+    } catch {}
+  };
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
 
   if (authLoading && attendanceLoading) {
@@ -65,13 +76,13 @@ function AppContent() {
     <>
       {/* Mobile / Primary Sign In Station for Children and Staff */}
       {activeTab === 'signin' && (
-        <MobileSignInHub onNavigateToDashboard={() => setActiveTab('dashboard')} />
+        <MobileSignInHub onNavigateToDashboard={() => handleSetActiveTab('dashboard')} />
       )}
 
       {activeTab === 'dashboard' && (
         <Dashboard
           onOpenScanner={() => setIsScannerOpen(true)}
-          onNavigateToApprovals={() => setActiveTab('approvals')}
+          onNavigateToApprovals={() => handleSetActiveTab('approvals')}
         />
       )}
 
@@ -98,11 +109,11 @@ function AppContent() {
       <Navbar
         onOpenScanner={() => setIsScannerOpen(true)}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleSetActiveTab}
       />
 
       {/* Real-time Firebase Cloud Messaging Alert Banner for Principals & Directors */}
-      <UrgentAlertBanner onNavigateToApprovals={() => setActiveTab('approvals')} />
+      <UrgentAlertBanner onNavigateToApprovals={() => handleSetActiveTab('approvals')} />
 
       {/* Main Content Area: Responsive Fluid vs Mobile Device Shell */}
       {viewportMode === 'mobile' ? (

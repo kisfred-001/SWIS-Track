@@ -15,8 +15,12 @@ import {
   LogOut,
   LogIn,
   Bed,
+  HeartPulse,
+  PhoneCall,
+  Home,
+  FileText,
 } from 'lucide-react';
-import { PickupDropoffParty, Student, Staff } from '../types';
+import { PickupDropoffParty, Student, Staff, SignOutOption, EarlyDepartureReasonOption } from '../types';
 import { getSchoolSchedule, isEarlyDepartureTime, getBoardingScheduleStatus } from '../utils/schedule';
 
 interface ScannerModalProps {
@@ -43,13 +47,18 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
   } | null>(null);
 
   // Modal form states for Student Check-in / Check-out
-  const [partyType, setPartyType] = useState<'Parent' | 'Designate'>('Parent');
+  const [partyType, setPartyType] = useState<'Parent' | 'Designate' | 'Self'>('Parent');
+  const [signOutOption, setSignOutOption] = useState<SignOutOption>('Picked by parent');
   const [partyName, setPartyName] = useState<string>('');
   const [partyRelationship, setPartyRelationship] = useState<string>('');
   const [partyPhone, setPartyPhone] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+
+  // Early Departure States (4 options)
   const [isEarlyDeparture, setIsEarlyDeparture] = useState<boolean>(false);
-  const [earlyDepartureReason, setEarlyDepartureReason] = useState<string>('');
+  const [earlyReasonOption, setEarlyReasonOption] = useState<EarlyDepartureReasonOption>('Health reasons');
+  const [customEarlyReason, setCustomEarlyReason] = useState<string>('');
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
   const [scanSuccessMessage, setScanSuccessMessage] = useState<string | null>(null);
@@ -210,17 +219,20 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
         setPartyPhone(student.emergency_contact || '');
         setNotes('');
         setIsEarlyDeparture(false);
-        setEarlyDepartureReason('');
+        setEarlyReasonOption('Health reasons');
+        setCustomEarlyReason('');
       } else {
+        setSignOutOption('Picked by parent');
         setPartyType('Parent');
         setPartyName((student.parent_names || '').split('&')[0]?.trim() || '');
-        setPartyRelationship('Parent / Guardian');
+        setPartyRelationship('Parent');
         setPartyPhone(student.emergency_contact || '');
         setNotes('');
         // Check if current time is before normal dismissal via operational policies
         const isEarly = isEarlyDepartureTime(new Date(), operationalPolicies);
         setIsEarlyDeparture(isEarly);
-        setEarlyDepartureReason(isEarly ? 'Early dismissal prior to official school close' : '');
+        setEarlyReasonOption('Health reasons');
+        setCustomEarlyReason('');
       }
 
       setIdentifiedTarget({
@@ -249,21 +261,63 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
         ? identifiedTarget.student!.student_id
         : identifiedTarget.staff!.staff_id;
 
-    const party: PickupDropoffParty | undefined =
-      identifiedTarget.targetType === 'Student'
-        ? {
-            type: partyType,
-            name: partyName.trim() || (partyType === 'Parent' ? 'Parent' : 'Authorized Designate'),
-            relationship: partyRelationship.trim() || undefined,
-            phone: partyPhone.trim() || undefined,
-            notes: notes.trim() || undefined,
-          }
-        : undefined;
+    let party: PickupDropoffParty | undefined = undefined;
+    if (identifiedTarget.targetType === 'Student') {
+      if (identifiedTarget.actionType === 'check_out') {
+        let finalType: 'Parent' | 'Designate' | 'Self' = 'Parent';
+        let finalName = partyName.trim();
+        let finalRel = partyRelationship.trim();
+
+        if (signOutOption === 'Picked by parent') {
+          finalType = 'Parent';
+          if (!finalName) finalName = 'Parent / Guardian';
+          if (!finalRel) finalRel = 'Parent';
+        } else if (signOutOption === 'Picked by Designate') {
+          finalType = 'Designate';
+          if (!finalName) finalName = 'Authorized Designate';
+          if (!finalRel) finalRel = 'Designate';
+        } else if (signOutOption === 'Dropped by designate') {
+          finalType = 'Designate';
+          if (!finalName) finalName = 'Designate';
+          if (!finalRel) finalRel = 'Designate';
+        } else if (signOutOption === 'Student went home alone') {
+          finalType = 'Self';
+          finalName = `${identifiedTarget.student?.full_name} (Self / Home Alone)`;
+          finalRel = 'Student Alone';
+        }
+
+        party = {
+          type: finalType,
+          signOutOption,
+          name: finalName,
+          relationship: finalRel || undefined,
+          phone: partyPhone.trim() || undefined,
+          notes: notes.trim() || undefined,
+        };
+      } else {
+        party = {
+          type: partyType,
+          name: partyName.trim() || (partyType === 'Parent' ? 'Parent' : 'Authorized Designate'),
+          relationship: partyRelationship.trim() || undefined,
+          phone: partyPhone.trim() || undefined,
+          notes: notes.trim() || undefined,
+        };
+      }
+    }
+
+    let computedEarlyReason: string | undefined = undefined;
+    if (isEarlyDeparture) {
+      if (earlyReasonOption === 'Enter reason') {
+        computedEarlyReason = customEarlyReason.trim() || 'Early departure';
+      } else {
+        computedEarlyReason = earlyReasonOption;
+      }
+    }
 
     const res = await processScan({
       code,
       party,
-      earlyDepartureReason: isEarlyDeparture ? earlyDepartureReason.trim() : undefined,
+      earlyDepartureReason: computedEarlyReason,
       intendedAction: identifiedTarget.actionType,
     });
 
@@ -490,98 +544,281 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                       </div>
                     )}
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {identifiedTarget.actionType === 'check_in'
-                        ? 'Dropped Off By:'
-                        : 'Picked Up By:'}
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPartyType('Parent')}
-                        className={`py-2 px-3 rounded-lg border text-center font-medium transition ${
-                          partyType === 'Parent'
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                        }`}
-                      >
-                        Parent / Guardian
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPartyType('Designate')}
-                        className={`py-2 px-3 rounded-lg border text-center font-medium transition ${
-                          partyType === 'Designate'
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                        }`}
-                      >
-                        Authorized Designate
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-medium text-slate-600 mb-1">
-                        Person Full Name:
-                      </label>
-                      <input
-                        type="text"
-                        value={partyName}
-                        onChange={(e) => setPartyName(e.target.value)}
-                        placeholder="e.g. Maria Garcia"
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-medium text-slate-600 mb-1">
-                        Relationship:
-                      </label>
-                      <input
-                        type="text"
-                        value={partyRelationship}
-                        onChange={(e) => setPartyRelationship(e.target.value)}
-                        placeholder={partyType === 'Parent' ? 'Mother / Father' : 'e.g. Aunt / Babysitter'}
-                        className="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Early Departure Fields on Check-out */}
-                  {identifiedTarget.actionType === 'check_out' && (
-                    <div className="border-t border-slate-200 pt-3 space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="earlyDeparture"
-                          checked={isEarlyDeparture}
-                          onChange={(e) => setIsEarlyDeparture(e.target.checked)}
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <label
-                          htmlFor="earlyDeparture"
-                          className="font-semibold text-slate-800 cursor-pointer"
-                        >
-                          Flag as Early Departure
+                  {/* Check-In vs Check-Out Specific Controls */}
+                  {identifiedTarget.actionType === 'check_in' ? (
+                    <>
+                      <div>
+                        <label className="block font-semibold text-slate-700 mb-1">
+                          Dropped Off By:
                         </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setPartyType('Parent')}
+                            className={`py-2 px-3 rounded-lg border text-center font-medium transition ${
+                              partyType === 'Parent'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            Parent / Guardian
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPartyType('Designate')}
+                            className={`py-2 px-3 rounded-lg border text-center font-medium transition ${
+                              partyType === 'Designate'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            Authorized Designate
+                          </button>
+                        </div>
                       </div>
 
-                      {isEarlyDeparture && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
                           <label className="block font-medium text-slate-600 mb-1">
-                            Early Departure Reason (Mandatory note):
+                            Person Full Name:
                           </label>
                           <input
                             type="text"
-                            value={earlyDepartureReason}
-                            onChange={(e) => setEarlyDepartureReason(e.target.value)}
-                            placeholder="e.g. Medical appointment, Family emergency, Approved pass"
-                            className="w-full px-3 py-1.5 border border-amber-300 bg-amber-50/50 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-800"
+                            value={partyName}
+                            onChange={(e) => setPartyName(e.target.value)}
+                            placeholder="e.g. Maria Garcia"
+                            className="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                           />
                         </div>
+                        <div>
+                          <label className="block font-medium text-slate-600 mb-1">
+                            Relationship:
+                          </label>
+                          <input
+                            type="text"
+                            value={partyRelationship}
+                            onChange={(e) => setPartyRelationship(e.target.value)}
+                            placeholder={partyType === 'Parent' ? 'Mother / Father' : 'e.g. Driver / Aunt'}
+                            className="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Check-Out: Exactly 4 Options */
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1.5 text-xs">
+                          Select Sign-Out Option (Required):
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {/* 1) Picked by parent */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSignOutOption('Picked by parent');
+                              if (!partyName || partyName.includes('Alone') || partyName.includes('Designate')) {
+                                setPartyName(identifiedTarget.student?.parent_names?.split('&')[0]?.trim() || 'Parent');
+                                setPartyRelationship('Parent');
+                              }
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold text-xs transition cursor-pointer ${
+                              signOutOption === 'Picked by parent'
+                                ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            1. Picked by parent
+                          </button>
+
+                          {/* 2) Picked by Designate */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSignOutOption('Picked by Designate');
+                              if (!partyName || partyName === 'Parent' || partyName.includes('Alone')) {
+                                setPartyName('');
+                                setPartyRelationship('Authorized Designate');
+                              }
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold text-xs transition cursor-pointer ${
+                              signOutOption === 'Picked by Designate'
+                                ? 'bg-blue-50 border-blue-600 text-blue-950 ring-2 ring-blue-500/20 shadow-xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            2. Picked by Designate
+                          </button>
+
+                          {/* 3) Dropped by designate */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSignOutOption('Dropped by designate');
+                              if (!partyName || partyName === 'Parent' || partyName.includes('Alone')) {
+                                setPartyName('');
+                                setPartyRelationship('Authorized Designate');
+                              }
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold text-xs transition cursor-pointer ${
+                              signOutOption === 'Dropped by designate'
+                                ? 'bg-amber-50 border-amber-600 text-amber-950 ring-2 ring-amber-500/20 shadow-xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            3. Dropped by designate
+                          </button>
+
+                          {/* 4) Student went home alone */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSignOutOption('Student went home alone');
+                              setPartyName(`${identifiedTarget.student?.full_name} (Self / Home Alone)`);
+                              setPartyRelationship('Self');
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold text-xs transition cursor-pointer ${
+                              signOutOption === 'Student went home alone'
+                                ? 'bg-emerald-50 border-emerald-600 text-emerald-950 ring-2 ring-emerald-500/20 shadow-xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            4. Student went home alone
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Party details if not home alone */}
+                      {signOutOption !== 'Student went home alone' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+                          <div>
+                            <label className="block font-medium text-slate-600 mb-1 text-[11px]">
+                              {signOutOption === 'Picked by parent' ? 'Parent / Guardian Name:' : 'Designate Name:'}
+                            </label>
+                            <input
+                              type="text"
+                              value={partyName}
+                              onChange={(e) => setPartyName(e.target.value)}
+                              placeholder="Name of person..."
+                              className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-medium text-slate-600 mb-1 text-[11px]">
+                              Relationship:
+                            </label>
+                            <input
+                              type="text"
+                              value={partyRelationship}
+                              onChange={(e) => setPartyRelationship(e.target.value)}
+                              placeholder="e.g. Mother, Driver, Aunt"
+                              className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
+                            />
+                          </div>
+                        </div>
                       )}
+
+                      {/* Check Out Before Official Time (4 reasons) */}
+                      <div className="border border-amber-200 bg-amber-50/60 p-3 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="earlyDeparture"
+                              checked={isEarlyDeparture}
+                              onChange={(e) => setIsEarlyDeparture(e.target.checked)}
+                              className="rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                            />
+                            <label
+                              htmlFor="earlyDeparture"
+                              className="font-bold text-amber-950 cursor-pointer text-xs"
+                            >
+                              Check out before official time
+                            </label>
+                          </div>
+                          {isEarlyDeparture && (
+                            <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+                              Early Departure
+                            </span>
+                          )}
+                        </div>
+
+                        {isEarlyDeparture && (
+                          <div className="space-y-1.5 pt-1 border-t border-amber-200">
+                            <label className="block font-bold text-amber-900 text-[11px]">
+                              Early Check-Out Reason:
+                            </label>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {/* 1) Health reasons */}
+                              <button
+                                type="button"
+                                onClick={() => setEarlyReasonOption('Health reasons')}
+                                className={`p-2 rounded-lg text-left font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition ${
+                                  earlyReasonOption === 'Health reasons'
+                                    ? 'bg-amber-600 text-white shadow-xs'
+                                    : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                                }`}
+                              >
+                                <HeartPulse className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">1. Health reasons</span>
+                              </button>
+
+                              {/* 2) Parent request */}
+                              <button
+                                type="button"
+                                onClick={() => setEarlyReasonOption('Parent request')}
+                                className={`p-2 rounded-lg text-left font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition ${
+                                  earlyReasonOption === 'Parent request'
+                                    ? 'bg-amber-600 text-white shadow-xs'
+                                    : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                                }`}
+                              >
+                                <PhoneCall className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">2. Parent request</span>
+                              </button>
+
+                              {/* 3) Child sent home */}
+                              <button
+                                type="button"
+                                onClick={() => setEarlyReasonOption('Child sent home')}
+                                className={`p-2 rounded-lg text-left font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition ${
+                                  earlyReasonOption === 'Child sent home'
+                                    ? 'bg-amber-600 text-white shadow-xs'
+                                    : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                                }`}
+                              >
+                                <Home className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">3. Child sent home</span>
+                              </button>
+
+                              {/* 4) Enter reason */}
+                              <button
+                                type="button"
+                                onClick={() => setEarlyReasonOption('Enter reason')}
+                                className={`p-2 rounded-lg text-left font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition ${
+                                  earlyReasonOption === 'Enter reason'
+                                    ? 'bg-amber-600 text-white shadow-xs'
+                                    : 'bg-white border border-amber-300 text-amber-950 hover:bg-amber-100'
+                                }`}
+                              >
+                                <FileText className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">4. Enter reason</span>
+                              </button>
+                            </div>
+
+                            {earlyReasonOption === 'Enter reason' && (
+                              <input
+                                type="text"
+                                value={customEarlyReason}
+                                onChange={(e) => setCustomEarlyReason(e.target.value)}
+                                placeholder="Type specific departure reason..."
+                                className="w-full mt-1.5 px-3 py-1.5 border border-amber-300 bg-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-900 text-xs font-medium"
+                                autoFocus
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

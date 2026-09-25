@@ -157,85 +157,113 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
           {/* Parents & Guardians Contact Card */}
           <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-3">
-            <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-              <Phone className="w-3.5 h-3.5 text-blue-600" />
-              <span>Parents &amp; Primary Guardians</span>
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Father */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <div className="font-bold text-slate-800">
-                  {pInfo?.father_name || student.parent_names?.split('&')[0]?.trim() || 'Father'}
-                </div>
-                <div className="text-slate-500 text-[11px]">Primary Parent Contact</div>
-                {pInfo?.father_phone && (
-                  <div className="flex items-center space-x-1.5 pt-1 text-slate-700">
-                    <Phone className="w-3 h-3 text-slate-400" />
-                    <a
-                      href={`tel:${pInfo.father_phone}`}
-                      className="font-mono text-blue-600 hover:underline"
-                    >
-                      {pInfo.father_phone}
-                    </a>
-                  </div>
-                )}
-                {pInfo?.father_email && (
-                  <div className="flex items-center space-x-1.5 text-slate-700">
-                    <Mail className="w-3 h-3 text-slate-400" />
-                    <span className="text-slate-600">{pInfo.father_email}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Mother */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <div className="font-bold text-slate-800">
-                  {pInfo?.mother_name || student.parent_names?.split('&')[1]?.trim() || 'Mother'}
-                </div>
-                <div className="text-slate-500 text-[11px]">Secondary Parent Contact</div>
-                {pInfo?.mother_phone && (
-                  <div className="flex items-center space-x-1.5 pt-1 text-slate-700">
-                    <Phone className="w-3 h-3 text-slate-400" />
-                    <a
-                      href={`tel:${pInfo.mother_phone}`}
-                      className="font-mono text-purple-600 hover:underline"
-                    >
-                      {pInfo.mother_phone}
-                    </a>
-                  </div>
-                )}
-                {pInfo?.mother_email && (
-                  <div className="flex items-center space-x-1.5 text-slate-700">
-                    <Mail className="w-3 h-3 text-slate-400" />
-                    <span className="text-slate-600">{pInfo.mother_email}</span>
-                  </div>
-                )}
-              </div>
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <Phone className="w-3.5 h-3.5 text-blue-600" />
+                <span>Parents &amp; Primary Guardians</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => onEdit(student)}
+                className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
+              >
+                + Update Parent Info
+              </button>
             </div>
+
+            {pInfo?.father_name || pInfo?.mother_name || student.parent_names ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Father */}
+                {pInfo?.father_name && (
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                    <div className="font-bold text-slate-800">
+                      {pInfo.father_name}
+                    </div>
+                    <div className="text-slate-500 text-[11px]">Father / Guardian</div>
+                    {pInfo.father_phone && (
+                      <div className="flex items-center space-x-1.5 pt-1 text-slate-700">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <a
+                          href={`tel:${pInfo.father_phone}`}
+                          className="font-mono text-blue-600 hover:underline"
+                        >
+                          {pInfo.father_phone}
+                        </a>
+                      </div>
+                    )}
+                    {pInfo.father_email && (
+                      <div className="flex items-center space-x-1.5 text-slate-700">
+                        <Mail className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-600">{pInfo.father_email}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mother */}
+                {pInfo?.mother_name && (
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                    <div className="font-bold text-slate-800">
+                      {pInfo.mother_name}
+                    </div>
+                    <div className="text-slate-500 text-[11px]">Mother / Guardian</div>
+                    {pInfo.mother_phone && (
+                      <div className="flex items-center space-x-1.5 pt-1 text-slate-700">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <a
+                          href={`tel:${pInfo.mother_phone}`}
+                          className="font-mono text-purple-600 hover:underline"
+                        >
+                          {pInfo.mother_phone}
+                        </a>
+                      </div>
+                    )}
+                    {pInfo.mother_email && (
+                      <div className="flex items-center space-x-1.5 text-slate-700">
+                        <Mail className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-600">{pInfo.mother_email}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-slate-500 space-y-1">
+                <p className="font-semibold text-xs text-slate-700">No Parent or Guardian Contact Registered Yet</p>
+                <p className="text-[11px] text-slate-400">
+                  Dummy records have been removed. Click "Edit Student Information" to record official parent names and contact numbers.
+                </p>
+              </div>
+            )}
 
             {/* Address & Emergency Contact */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="flex items-start space-x-2 text-slate-600">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-[10px] text-slate-400">Residential Address</div>
-                  <div className="font-medium text-slate-800">
-                    {pInfo?.home_address || 'Address on school file'}
+            {(pInfo?.home_address || pInfo?.emergency_phone || student.emergency_contact) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+                {pInfo?.home_address && (
+                  <div className="flex items-start space-x-2 text-slate-600">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-[10px] text-slate-400">Residential Address</div>
+                      <div className="font-medium text-slate-800">
+                        {pInfo.home_address}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )}
 
-              <div className="flex items-start space-x-2 text-slate-600">
-                <Phone className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-[10px] text-slate-400">24/7 Emergency Line</div>
-                  <div className="font-mono font-bold text-red-700">
-                    {pInfo?.emergency_phone || student.emergency_contact || 'None registered'}
+                {(pInfo?.emergency_phone || student.emergency_contact) && (
+                  <div className="flex items-start space-x-2 text-slate-600">
+                    <Phone className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-[10px] text-slate-400">24/7 Emergency Line</div>
+                      <div className="font-mono font-bold text-red-700">
+                        {pInfo?.emergency_phone || student.emergency_contact}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Designated Authorized Drop-Off / Pick-Up Persons */}
