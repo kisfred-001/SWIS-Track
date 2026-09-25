@@ -201,27 +201,27 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col justify-between p-4 sm:p-6 font-sans">
+    <div className="min-h-screen bg-[#A71C21] flex flex-col justify-between p-4 sm:p-6 font-sans">
       {/* Top Brand Bar */}
-      <header className="max-w-4xl w-full mx-auto flex items-center justify-between text-white/80 py-2">
+      <header className="max-w-4xl w-full mx-auto flex items-center justify-between text-slate-900 bg-[#FCCB0D] px-4 py-2.5 rounded-2xl shadow-lg border border-[#e5b70a]">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 border border-blue-400/30">
+          <div className="w-10 h-10 rounded-xl bg-[#3e3d40] flex items-center justify-center text-amber-300 shadow-md border border-slate-600 shrink-0">
             <School className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-black tracking-tight text-white text-lg">SWIS Track</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase tracking-wider">
+              <span className="font-black tracking-tight text-[#1c1b1e] text-lg">Spirit &amp; Word</span>
+              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#3e3d40] text-amber-300 uppercase tracking-wider">
                 Official Terminal
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Spring Campus & Hope Campus • School Attendance System
+            <p className="text-[11px] text-[#3e3d40] font-bold">
+              Attendance Tracking System • Spring Campus &amp; Hope Campus
             </p>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-full">
+        <div className="hidden sm:flex items-center space-x-2 text-xs font-bold text-white bg-[#3e3d40] px-3.5 py-1.5 rounded-xl shadow-xs">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           <span>Premises Security Active</span>
         </div>
@@ -231,32 +231,28 @@ export const LoginScreen: React.FC = () => {
       <div className="max-w-xl w-full mx-auto my-auto py-4">
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
           {/* Header Card */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 text-center relative overflow-hidden">
-            {/* Ambient background decoration */}
-            <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center mx-auto mb-3 shadow-inner">
-              <Lock className="w-7 h-7 text-indigo-300" />
+          <div className="bg-[#FCCB0D] text-slate-900 p-6 text-center relative overflow-hidden border-b border-[#e5b70a]">
+            <div className="w-14 h-14 rounded-2xl bg-[#3e3d40] border border-slate-600 text-amber-300 flex items-center justify-center mx-auto mb-3 shadow-md">
+              <Lock className="w-7 h-7" />
             </div>
 
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 mb-2">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#3e3d40] text-amber-300 mb-2 shadow-xs">
               <Building2 className="w-3.5 h-3.5" />
               <span>Multi-Campus Identity System</span>
             </div>
 
-            <h1 className="text-2xl font-black text-white tracking-tight">
+            <h1 className="text-2xl font-black text-[#1c1b1e] tracking-tight">
               {idleTimedOut ? 'Session Inactivity Lock' : 'School Terminal Sign In'}
             </h1>
 
-            <p className="text-xs text-slate-300 mt-1.5 max-w-md mx-auto leading-relaxed">
+            <p className="text-xs text-[#3e3d40] font-semibold mt-1.5 max-w-md mx-auto leading-relaxed">
               {idleTimedOut
                 ? `Terminal locked automatically after ${idleTimeoutMinutes} minutes of inactivity to safeguard student records. Enter your staff PIN or credentials to resume.`
-                : 'Welcome to SWIS Track. All faculty and staff must authenticate with their 3-digit PIN, account credentials, or select their staff persona before accessing terminal operations.'}
+                : 'Welcome to Spirit & Word Attendance Tracking System. All faculty and staff must authenticate with their 3-digit PIN, account credentials, or select their staff persona before accessing terminal operations.'}
             </p>
 
             {idleTimedOut && (
-              <div className="mt-3 inline-flex items-center space-x-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-200 px-3 py-1 rounded-xl text-xs font-semibold">
+              <div className="mt-3 inline-flex items-center space-x-1.5 bg-[#A71C21] text-white px-3 py-1 rounded-xl text-xs font-bold shadow-xs">
                 <AlertTriangle className="w-4 h-4 text-amber-300" />
                 <span>Inactivity Security Protocol Triggered</span>
               </div>
@@ -274,11 +270,11 @@ export const LoginScreen: React.FC = () => {
                 }}
                 className={`py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                   authMode === 'pin'
-                    ? 'bg-white text-indigo-900 shadow-sm'
-                    : 'hover:text-slate-900 hover:bg-slate-200/60'
+                    ? 'bg-[#3e3d40] text-white shadow-md'
+                    : 'hover:text-slate-900 hover:bg-slate-200'
                 }`}
               >
-                <KeyRound className="w-4 h-4 text-indigo-600" />
+                <KeyRound className="w-4 h-4 text-amber-300" />
                 <span>Staff PIN</span>
               </button>
 
@@ -290,11 +286,11 @@ export const LoginScreen: React.FC = () => {
                 }}
                 className={`py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                   authMode === 'email'
-                    ? 'bg-white text-indigo-900 shadow-sm'
-                    : 'hover:text-slate-900 hover:bg-slate-200/60'
+                    ? 'bg-[#3e3d40] text-white shadow-md'
+                    : 'hover:text-slate-900 hover:bg-slate-200'
                 }`}
               >
-                <Mail className="w-4 h-4 text-blue-600" />
+                <Mail className="w-4 h-4 text-amber-300" />
                 <span>Account Login</span>
               </button>
 
@@ -306,11 +302,11 @@ export const LoginScreen: React.FC = () => {
                 }}
                 className={`py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                   authMode === 'roster'
-                    ? 'bg-white text-indigo-900 shadow-sm'
-                    : 'hover:text-slate-900 hover:bg-slate-200/60'
+                    ? 'bg-[#3e3d40] text-white shadow-md'
+                    : 'hover:text-slate-900 hover:bg-slate-200'
                 }`}
               >
-                <Users className="w-4 h-4 text-purple-600" />
+                <Users className="w-4 h-4 text-amber-300" />
                 <span>Staff Directory</span>
               </button>
             </div>
@@ -406,9 +402,9 @@ export const LoginScreen: React.FC = () => {
                 <div className="max-w-xs mx-auto pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition flex items-center justify-center space-x-2 active:scale-98 cursor-pointer"
+                    className="w-full py-3 bg-[#3e3d40] hover:bg-[#2e2d30] active:bg-slate-900 text-white font-bold rounded-xl text-sm shadow-md transition flex items-center justify-center space-x-2 active:scale-98 cursor-pointer"
                   >
-                    <Lock className="w-4 h-4" />
+                    <Lock className="w-4 h-4 text-amber-300" />
                     <span>Unlock Terminal</span>
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </button>
@@ -441,7 +437,7 @@ export const LoginScreen: React.FC = () => {
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                       placeholder="e.g. kisfred@gmail.com or staff@swis.ac.ug"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm border-2 border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition bg-white text-slate-900"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm border-2 border-slate-300 rounded-xl focus:border-[#3e3d40] focus:ring-4 focus:ring-slate-100 focus:outline-none transition bg-white text-slate-900"
                     />
                   </div>
                 </div>
@@ -456,7 +452,7 @@ export const LoginScreen: React.FC = () => {
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="Enter password or 3-digit PIN"
-                      className="w-full pl-4 pr-10 py-2.5 text-sm border-2 border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition bg-white text-slate-900"
+                      className="w-full pl-4 pr-10 py-2.5 text-sm border-2 border-slate-300 rounded-xl focus:border-[#3e3d40] focus:ring-4 focus:ring-slate-100 focus:outline-none transition bg-white text-slate-900"
                     />
                     <button
                       type="button"
@@ -478,11 +474,11 @@ export const LoginScreen: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition flex items-center justify-center space-x-2 active:scale-98 cursor-pointer"
+                  className="w-full py-3 bg-[#3e3d40] hover:bg-[#2e2d30] active:bg-slate-900 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition flex items-center justify-center space-x-2 active:scale-98 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
                       <span>Authenticating Credentials...</span>
                     </>
                   ) : (
@@ -516,7 +512,7 @@ export const LoginScreen: React.FC = () => {
                     onClick={() => setSelectedFilter('all')}
                     className={`px-2 py-1 rounded-lg transition ${
                       selectedFilter === 'all'
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-[#3e3d40] text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -527,7 +523,7 @@ export const LoginScreen: React.FC = () => {
                     onClick={() => setSelectedFilter('admin')}
                     className={`px-2 py-1 rounded-lg transition ${
                       selectedFilter === 'admin'
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-[#3e3d40] text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -538,7 +534,7 @@ export const LoginScreen: React.FC = () => {
                     onClick={() => setSelectedFilter('spring')}
                     className={`px-2 py-1 rounded-lg transition ${
                       selectedFilter === 'spring'
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-[#3e3d40] text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -549,7 +545,7 @@ export const LoginScreen: React.FC = () => {
                     onClick={() => setSelectedFilter('hope')}
                     className={`px-2 py-1 rounded-lg transition ${
                       selectedFilter === 'hope'
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-[#3e3d40] text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -564,7 +560,7 @@ export const LoginScreen: React.FC = () => {
                 value={searchStaff}
                 onChange={(e) => setSearchStaff(e.target.value)}
                 placeholder="Search staff by name, role, or center..."
-                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:border-indigo-600 focus:outline-none bg-slate-50"
+                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:border-[#3e3d40] focus:outline-none bg-slate-50"
               />
 
               {/* Staff Grid */}
@@ -579,21 +575,21 @@ export const LoginScreen: React.FC = () => {
                       className={`flex items-center space-x-2.5 p-2.5 rounded-xl border text-left transition group cursor-pointer ${
                         isSuper
                           ? 'border-purple-300 bg-purple-50/70 hover:bg-purple-100/70'
-                          : 'border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40'
+                          : 'border-slate-200 hover:border-[#3e3d40] hover:bg-slate-50'
                       }`}
                     >
                       <div
                         className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition ${
                           isSuper
                             ? 'bg-purple-600 text-white shadow-xs'
-                            : 'bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white text-slate-700'
+                            : 'bg-slate-100 group-hover:bg-[#3e3d40] group-hover:text-white text-slate-700'
                         }`}
                       >
                         {staff.full_name.charAt(0)}
                       </div>
                       <div className="truncate flex-1">
                         <div className="flex items-center space-x-1">
-                          <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-900 truncate">
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-slate-950 truncate">
                             {staff.full_name}
                           </p>
                           {isSuper && <span className="text-[10px] text-purple-600 font-black">★</span>}
@@ -611,7 +607,7 @@ export const LoginScreen: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 transition" />
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#3e3d40] shrink-0 transition" />
                     </button>
                   );
                 })}
@@ -624,7 +620,7 @@ export const LoginScreen: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowCredentialsGuide(!showCredentialsGuide)}
-              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-indigo-900 transition cursor-pointer"
+              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-slate-900 transition cursor-pointer"
             >
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
@@ -658,7 +654,7 @@ export const LoginScreen: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleFillSuperUserPin}
-                      className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs cursor-pointer"
+                      className="px-2.5 py-1 bg-[#3e3d40] hover:bg-[#2e2d30] text-white rounded-lg text-[11px] font-bold transition shadow-2xs cursor-pointer"
                     >
                       Quick Sign In (PIN 555)
                     </button>
@@ -672,7 +668,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Irene Lulika</strong> (Principal • Springs)
                       <span className="text-[10px] text-slate-500 block font-mono">principal@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 101
                     </span>
                   </div>
@@ -681,7 +677,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mr. Jaxon Lulika</strong> (Director • Springs)
                       <span className="text-[10px] text-slate-500 block font-mono">pastor@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 102
                     </span>
                   </div>
@@ -690,7 +686,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Khasoma Susan</strong> (Administrator • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">susan.khasoma@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 103
                     </span>
                   </div>
@@ -699,7 +695,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Juliet Arinaitwe</strong> (Admin Assistant • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">jarineitwe@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 104
                     </span>
                   </div>
@@ -708,7 +704,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Miss. Anette Mugala</strong> (Support Staff • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">annet@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 105
                     </span>
                   </div>
@@ -717,7 +713,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Irene Oryem</strong> (Kayil Supervisor • Springs)
                       <span className="text-[10px] text-slate-500 block font-mono">irene.auma@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 201
                     </span>
                   </div>
@@ -726,7 +722,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mr. Arthur Mutebi</strong> (Splendor Supervisor • Springs)
                       <span className="text-[10px] text-slate-500 block font-mono">arthur@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 202
                     </span>
                   </div>
@@ -735,7 +731,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Eunice Mutebe</strong> (Bethany Supervisor • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">eunice@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 203
                     </span>
                   </div>
@@ -744,7 +740,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mr. Shafic Musika</strong> (Azusa Supervisor • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">shafic@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 204
                     </span>
                   </div>
@@ -753,7 +749,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Doreen Mugaga</strong> (Antioch Supervisor • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">doreen.amali@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 205
                     </span>
                   </div>
@@ -762,7 +758,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mr. David Kimbugwe Mugaga</strong> (Doxa Supervisor • Springs)
                       <span className="text-[10px] text-slate-500 block font-mono">david.kimbugwe@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 206
                     </span>
                   </div>
@@ -771,7 +767,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Julie Mayanja</strong> (Bloom & Archie Supervisor • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">julie.mayanja@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 207
                     </span>
                   </div>
@@ -780,7 +776,7 @@ export const LoginScreen: React.FC = () => {
                       <strong className="text-slate-800">Mrs. Joan Nandhego</strong> (Bethany Monitor • Hope)
                       <span className="text-[10px] text-slate-500 block font-mono">joan@spiritandword.ug</span>
                     </div>
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-bold">
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-bold">
                       PIN: 208
                     </span>
                   </div>
@@ -790,16 +786,16 @@ export const LoginScreen: React.FC = () => {
           </div>
 
           {/* Security Assurance Footer */}
-          <div className="p-3 bg-slate-900 text-white/70 text-center text-[10px] flex items-center justify-center space-x-2">
+          <div className="p-3 bg-slate-900 text-white/80 text-center text-[10px] flex items-center justify-center space-x-2">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>SWIS Track Premises Access • Safe International School Attendance & Verification</span>
+            <span>Spirit &amp; Word Premises Access • Safe Attendance &amp; Verification</span>
           </div>
         </div>
       </div>
 
       {/* Page Footer */}
-      <footer className="max-w-4xl w-full mx-auto text-center text-xs text-slate-500 py-2">
-        <p>© {new Date().getFullYear()} SWIS Track International • Spring Campus & Hope Campus • Role-Based Terminal Access</p>
+      <footer className="max-w-4xl w-full mx-auto text-center text-xs text-amber-100/90 font-medium py-2">
+        <p>© {new Date().getFullYear()} Spirit &amp; Word Attendance Tracking System • Spring Campus &amp; Hope Campus • Role-Based Terminal Access</p>
       </footer>
     </div>
   );
