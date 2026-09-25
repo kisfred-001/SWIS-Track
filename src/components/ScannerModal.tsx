@@ -703,13 +703,13 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                     </div>
 
                     {/* Numeric Keypad for fast touch screen usage */}
-                    <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+                    <div className="grid grid-cols-3 gap-2.5 max-w-xs mx-auto">
                       {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                         <button
                           key={digit}
                           type="button"
                           onClick={() => appendPinDigit(digit)}
-                          className="py-3 bg-slate-100 hover:bg-slate-200 active:bg-blue-100 active:text-blue-700 rounded-xl text-lg font-bold text-slate-800 transition"
+                          className="min-h-[48px] py-3.5 bg-slate-100 hover:bg-slate-200 active:bg-blue-100 active:text-blue-700 rounded-xl text-xl font-bold text-slate-800 transition touch-manipulation cursor-pointer active:scale-95"
                         >
                           {digit}
                         </button>
@@ -717,21 +717,21 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose }) =
                       <button
                         type="button"
                         onClick={clearPin}
-                        className="py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition"
+                        className="min-h-[48px] py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition touch-manipulation cursor-pointer active:scale-95"
                       >
                         CLEAR
                       </button>
                       <button
                         type="button"
                         onClick={() => appendPinDigit('0')}
-                        className="py-3 bg-slate-100 hover:bg-slate-200 active:bg-blue-100 active:text-blue-700 rounded-xl text-lg font-bold text-slate-800 transition"
+                        className="min-h-[48px] py-3.5 bg-slate-100 hover:bg-slate-200 active:bg-blue-100 active:text-blue-700 rounded-xl text-xl font-bold text-slate-800 transition touch-manipulation cursor-pointer active:scale-95"
                       >
                         0
                       </button>
                       <button
                         type="button"
                         onClick={() => handleManualSubmit()}
-                        className="py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-sm"
+                        className="min-h-[48px] py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black transition shadow-sm touch-manipulation cursor-pointer active:scale-95"
                       >
                         ENTER
                       </button>

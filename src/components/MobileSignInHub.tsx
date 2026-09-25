@@ -489,15 +489,15 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
             setPinInput('');
             setPinError('');
           }}
-          className={`py-3 rounded-xl text-xs font-black transition flex items-center justify-center space-x-2 cursor-pointer ${
+          className={`min-h-[48px] py-3 px-2 rounded-xl text-xs sm:text-sm font-black transition flex items-center justify-center space-x-2 cursor-pointer touch-manipulation select-none active:scale-[0.98] ${
             activeTarget === 'children'
               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4 shrink-0" />
           <span>Sign In Children</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">4-Digit</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 font-mono">4-Digit</span>
         </button>
 
         <button
@@ -507,15 +507,15 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
             setPinInput('');
             setPinError('');
           }}
-          className={`py-3 rounded-xl text-xs font-black transition flex items-center justify-center space-x-2 cursor-pointer ${
+          className={`min-h-[48px] py-3 px-2 rounded-xl text-xs sm:text-sm font-black transition flex items-center justify-center space-x-2 cursor-pointer touch-manipulation select-none active:scale-[0.98] ${
             activeTarget === 'staff'
               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-purple-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Briefcase className="w-4 h-4" />
+          <Briefcase className="w-4 h-4 shrink-0" />
           <span>Sign In Staff</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">3-Digit</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 font-mono">3-Digit</span>
         </button>
       </div>
 
@@ -527,14 +527,14 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
             setActionType('check_in');
             setPinError('');
           }}
-          className={`py-2.5 px-3 rounded-2xl border transition flex items-center justify-center space-x-2 cursor-pointer ${
+          className={`min-h-[46px] py-3 px-3 rounded-2xl border transition flex items-center justify-center space-x-2 cursor-pointer touch-manipulation select-none active:scale-[0.98] ${
             actionType === 'check_in'
-              ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-black shadow-xs ring-2 ring-emerald-400/20'
+              ? 'bg-emerald-50 border-emerald-500 text-emerald-950 font-black shadow-xs ring-2 ring-emerald-400/30'
               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
-          <LogIn className="w-4 h-4 text-emerald-600" />
-          <span>Morning Check-In (Arrival)</span>
+          <LogIn className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="truncate">Arrival (In)</span>
         </button>
 
         <button
@@ -543,30 +543,30 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
             setActionType('check_out');
             setPinError('');
           }}
-          className={`py-2.5 px-3 rounded-2xl border transition flex items-center justify-center space-x-2 cursor-pointer ${
+          className={`min-h-[46px] py-3 px-3 rounded-2xl border transition flex items-center justify-center space-x-2 cursor-pointer touch-manipulation select-none active:scale-[0.98] ${
             actionType === 'check_out'
-              ? 'bg-blue-50 border-blue-500 text-blue-900 font-black shadow-xs ring-2 ring-blue-400/20'
+              ? 'bg-blue-50 border-blue-500 text-blue-950 font-black shadow-xs ring-2 ring-blue-400/30'
               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
-          <LogOut className="w-4 h-4 text-blue-600" />
-          <span>Check-Out (Departure)</span>
+          <LogOut className="w-4 h-4 text-blue-600 shrink-0" />
+          <span className="truncate">Departure (Out)</span>
         </button>
       </div>
 
       {/* Input Method Switcher: PIN Pad | QR Camera | Quick Search */}
-      <div className="bg-slate-100 p-1 rounded-2xl grid grid-cols-3 gap-1 text-xs font-bold text-slate-600">
+      <div className="bg-slate-100 p-1.5 rounded-2xl grid grid-cols-3 gap-1.5 text-xs font-bold text-slate-600">
         <button
           type="button"
           onClick={() => {
             setInputMethod('pin');
             setPinError('');
           }}
-          className={`py-2 rounded-xl transition flex items-center justify-center space-x-1.5 ${
+          className={`min-h-[44px] py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer touch-manipulation ${
             inputMethod === 'pin' ? 'bg-white text-indigo-900 shadow-xs' : 'hover:text-slate-900'
           }`}
         >
-          <Keyboard className="w-3.5 h-3.5 text-indigo-600" />
+          <Keyboard className="w-4 h-4 text-indigo-600 shrink-0" />
           <span>Touch PIN</span>
         </button>
 
@@ -576,11 +576,11 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
             setInputMethod('camera');
             setPinError('');
           }}
-          className={`py-2 rounded-xl transition flex items-center justify-center space-x-1.5 ${
+          className={`min-h-[44px] py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer touch-manipulation ${
             inputMethod === 'camera' ? 'bg-white text-indigo-900 shadow-xs' : 'hover:text-slate-900'
           }`}
         >
-          <Camera className="w-3.5 h-3.5 text-blue-600" />
+          <Camera className="w-4 h-4 text-blue-600 shrink-0" />
           <span>QR Scanner</span>
         </button>
 
@@ -590,11 +590,11 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
             setInputMethod('search');
             setPinError('');
           }}
-          className={`py-2 rounded-xl transition flex items-center justify-center space-x-1.5 ${
+          className={`min-h-[44px] py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer touch-manipulation ${
             inputMethod === 'search' ? 'bg-white text-indigo-900 shadow-xs' : 'hover:text-slate-900'
           }`}
         >
-          <Search className="w-3.5 h-3.5 text-emerald-600" />
+          <Search className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Name List</span>
         </button>
       </div>
@@ -708,7 +708,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
       {inputMethod === 'search' && (
         <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm space-y-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
             <input
               type="text"
               value={searchQuery}
@@ -718,7 +718,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                   ? 'Type child name or PIN...'
                   : 'Type staff name or role...'
               }
-              className="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+              className="w-full min-h-[44px] text-sm pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 touch-manipulation"
             />
           </div>
 
@@ -736,13 +736,13 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                   return (
                     <div
                       key={s.student_id}
-                      className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between gap-2 transition"
+                      className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-200 flex items-center justify-between gap-2 transition touch-manipulation"
                     >
-                      <div className="flex items-center space-x-2.5 truncate">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-800 font-bold flex items-center justify-center text-xs shrink-0">
+                      <div className="flex items-center space-x-2.5 truncate min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-800 font-bold flex items-center justify-center text-xs shrink-0">
                           {s.full_name.charAt(0)}
                         </div>
-                        <div className="truncate">
+                        <div className="truncate min-w-0">
                           <div className="font-bold text-xs text-slate-900 truncate">
                             {s.full_name}
                           </div>
@@ -760,7 +760,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                               setCheckoutStudentTarget(s);
                               setPickupPartyName(s.parent_names || 'Parent');
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] transition shadow-xs"
+                            className="min-h-[44px] min-w-[80px] px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs transition shadow-xs touch-manipulation cursor-pointer flex items-center justify-center"
                           >
                             Sign Out
                           </button>
@@ -770,7 +770,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                             onClick={() =>
                               executeAttendanceAction(s.pin_code, s.full_name, s.learning_center_id, 'Student')
                             }
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] transition shadow-xs"
+                            className="min-h-[44px] min-w-[80px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs transition shadow-xs touch-manipulation cursor-pointer flex items-center justify-center"
                           >
                             Sign In
                           </button>
@@ -797,13 +797,13 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                   return (
                     <div
                       key={st.staff_id}
-                      className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-between gap-2 transition"
+                      className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-200 flex items-center justify-between gap-2 transition touch-manipulation"
                     >
-                      <div className="flex items-center space-x-2.5 truncate">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-800 font-bold flex items-center justify-center text-xs shrink-0">
+                      <div className="flex items-center space-x-2.5 truncate min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 font-bold flex items-center justify-center text-xs shrink-0">
                           {st.full_name.charAt(0)}
                         </div>
-                        <div className="truncate">
+                        <div className="truncate min-w-0">
                           <div className="font-bold text-xs text-slate-900 truncate">
                             {st.full_name}
                           </div>
@@ -818,7 +818,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                           <button
                             type="button"
                             onClick={() => executeAttendanceAction(st.pin_code, st.full_name, st.role, 'Staff')}
-                            className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] transition shadow-xs"
+                            className="min-h-[44px] min-w-[80px] px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs transition shadow-xs touch-manipulation cursor-pointer flex items-center justify-center"
                           >
                             Clock Out
                           </button>
@@ -826,7 +826,7 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                           <button
                             type="button"
                             onClick={() => executeAttendanceAction(st.pin_code, st.full_name, st.role, 'Staff')}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] transition shadow-xs"
+                            className="min-h-[44px] min-w-[80px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs transition shadow-xs touch-manipulation cursor-pointer flex items-center justify-center"
                           >
                             Clock In
                           </button>
@@ -940,13 +940,13 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                         setPickupPartyName(checkoutStudentTarget.parent_info?.father_name || '');
                         setPickupPartyRelationship('Father');
                       }}
-                      className={`p-2.5 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation ${
+                      className={`min-h-[52px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
                         pickupPartyName === checkoutStudentTarget.parent_info?.father_name
                           ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-base">
                         👨
                       </div>
                       <div className="truncate">
@@ -969,13 +969,13 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                         setPickupPartyName(checkoutStudentTarget.parent_info?.mother_name || '');
                         setPickupPartyRelationship('Mother');
                       }}
-                      className={`p-2.5 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation ${
+                      className={`min-h-[52px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
                         pickupPartyName === checkoutStudentTarget.parent_info?.mother_name
                           ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-xl bg-pink-100 text-pink-700 font-bold flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-700 font-bold flex items-center justify-center shrink-0 text-base">
                         👩
                       </div>
                       <div className="truncate">
@@ -999,13 +999,13 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                         setPickupPartyName(des.name);
                         setPickupPartyRelationship(des.relationship || 'Authorized Designate');
                       }}
-                      className={`p-2.5 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation ${
+                      className={`min-h-[52px] p-3 rounded-2xl border text-left transition flex items-center space-x-2.5 cursor-pointer touch-manipulation active:scale-[0.98] ${
                         pickupPartyName === des.name
                           ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-base">
                         🚗
                       </div>
                       <div className="truncate">
@@ -1020,9 +1020,9 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
               </div>
 
               {/* Editable Name & Relationship Inputs */}
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">
+                  <label className="block text-slate-700 font-bold mb-1.5">
                     Releasing To Full Name:
                   </label>
                   <input
@@ -1031,24 +1031,24 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                     value={pickupPartyName}
                     onChange={(e) => setPickupPartyName(e.target.value)}
                     placeholder="Enter name of person picking up child"
-                    className="w-full text-sm sm:text-xs p-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                    className="w-full min-h-[44px] text-sm p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium touch-manipulation"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">
+                  <label className="block text-slate-700 font-bold mb-1.5">
                     Relationship to Child:
                   </label>
-                  <div className="flex flex-wrap gap-1.5 mb-1.5">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {['Mother', 'Father', 'Guardian', 'Driver', 'Aunt', 'Uncle'].map((rel) => (
                       <button
                         key={rel}
                         type="button"
                         onClick={() => setPickupPartyRelationship(rel)}
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition cursor-pointer ${
+                        className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer touch-manipulation active:scale-95 ${
                           pickupPartyRelationship === rel
                             ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         {rel}
@@ -1060,26 +1060,26 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                     value={pickupPartyRelationship}
                     onChange={(e) => setPickupPartyRelationship(e.target.value)}
                     placeholder="e.g. Mother, Father, Driver, Aunt"
-                    className="w-full text-sm sm:text-xs p-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full min-h-[44px] text-sm p-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 touch-manipulation"
                   />
                 </div>
               </div>
 
               {/* Quick Notes / Reason */}
               <div>
-                <label className="block text-slate-700 font-bold mb-1">
+                <label className="block text-slate-700 font-bold mb-1.5">
                   Departure Note / Reason (Optional):
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {['Regular Dismissal', 'Clinic / Doctor', 'Family Pick-up', 'Approved Early Release'].map((preset) => (
                     <button
                       key={preset}
                       type="button"
                       onClick={() => setCheckoutNotes(preset)}
-                      className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition cursor-pointer ${
+                      className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer touch-manipulation active:scale-95 ${
                         checkoutNotes === preset
                           ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200'
+                          : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
                       {preset}
@@ -1091,23 +1091,23 @@ export const MobileSignInHub: React.FC<MobileSignInHubProps> = ({
                   value={checkoutNotes}
                   onChange={(e) => setCheckoutNotes(e.target.value)}
                   placeholder="e.g. Regular afternoon pickup, clinic appointment..."
-                  className="w-full text-sm sm:text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full min-h-[44px] text-sm p-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white touch-manipulation"
                 />
               </div>
 
               {/* Sticky Action Footer */}
-              <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 shrink-0">
+              <div className="pt-3 border-t border-slate-200 grid grid-cols-2 gap-2.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setCheckoutStudentTarget(null)}
-                  className="py-3 px-4 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition active:scale-95 cursor-pointer touch-manipulation"
+                  className="min-h-[48px] py-3 px-4 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition active:scale-95 cursor-pointer touch-manipulation flex items-center justify-center text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingCheckout || !pickupPartyName.trim()}
-                  className="py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black shadow-md disabled:opacity-50 transition active:scale-95 cursor-pointer touch-manipulation flex items-center justify-center space-x-1.5"
+                  className="min-h-[48px] py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black shadow-md disabled:opacity-50 transition active:scale-95 cursor-pointer touch-manipulation flex items-center justify-center space-x-1.5 text-sm"
                 >
                   {isSubmittingCheckout ? (
                     <span>Logging Departure...</span>

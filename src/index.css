@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+@layer utilities {
+  /* Touch target utility (min 44x44px) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Custom scrollbars for simulated mobile viewport */
+.mobile-viewport-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.mobile-viewport-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mobile-viewport-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.mobile-viewport-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* When forced mobile shell is active, ensure layout items collapse to single columns nicely */
+.mobile-shell-container {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.mobile-shell-container .grid {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+.mobile-shell-container .mobile-shell-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.mobile-shell-container .mobile-shell-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.mobile-shell-container .table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

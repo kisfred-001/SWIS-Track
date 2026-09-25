@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AttendanceProvider, useAttendance } from './context/AttendanceContext';
+import { ViewportProvider, useViewport } from './context/ViewportContext';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { AttendanceLogs } from './components/AttendanceLogs';
@@ -21,6 +22,7 @@ import { UrgentAlertBanner } from './components/UrgentAlertBanner';
 import { IdleLockModal } from './components/IdleLockModal';
 import { InactivityWarningBanner } from './components/InactivityWarningBanner';
 import { LoginScreen } from './components/LoginScreen';
+import { MobileDeviceShell } from './components/MobileDeviceShell';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
 
 const isMobileDevice = (): boolean => {
@@ -31,6 +33,7 @@ const isMobileDevice = (): boolean => {
 function AppContent() {
   const { loading: authLoading, currentUser } = useAuth();
   const { loading: attendanceLoading } = useAttendance();
+  const { viewportMode } = useViewport();
 
   // On mobile devices, primarily open the option of signing in children and staff!
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -57,6 +60,38 @@ function AppContent() {
     return <LoginScreen />;
   }
 
+  // Core view content
+  const renderActiveTabContent = () => (
+    <>
+      {/* Mobile / Primary Sign In Station for Children and Staff */}
+      {activeTab === 'signin' && (
+        <MobileSignInHub onNavigateToDashboard={() => setActiveTab('dashboard')} />
+      )}
+
+      {activeTab === 'dashboard' && (
+        <Dashboard
+          onOpenScanner={() => setIsScannerOpen(true)}
+          onNavigateToApprovals={() => setActiveTab('approvals')}
+        />
+      )}
+
+      {/* Staff Management Module */}
+      {activeTab === 'staff' && <StaffManagementView />}
+
+      {activeTab === 'campuses' && <CampusesView />}
+
+      {activeTab === 'attendance' && <AttendanceLogs />}
+
+      {activeTab === 'approvals' && <EditRequestsTab />}
+
+      {activeTab === 'roster' && <RosterManagement />}
+
+      {activeTab === 'reports' && <ReportingView />}
+
+      {activeTab === 'setup' && <AdminSetupView />}
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Top Application Header */}
@@ -69,42 +104,25 @@ function AppContent() {
       {/* Real-time Firebase Cloud Messaging Alert Banner for Principals & Directors */}
       <UrgentAlertBanner onNavigateToApprovals={() => setActiveTab('approvals')} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Mobile / Primary Sign In Station for Children and Staff */}
-        {activeTab === 'signin' && (
-          <MobileSignInHub onNavigateToDashboard={() => setActiveTab('dashboard')} />
-        )}
-
-        {activeTab === 'dashboard' && (
-          <Dashboard
-            onOpenScanner={() => setIsScannerOpen(true)}
-            onNavigateToApprovals={() => setActiveTab('approvals')}
-          />
-        )}
-
-        {/* Staff Management Module */}
-        {activeTab === 'staff' && <StaffManagementView />}
-
-        {activeTab === 'campuses' && <CampusesView />}
-
-        {activeTab === 'attendance' && <AttendanceLogs />}
-
-        {activeTab === 'approvals' && <EditRequestsTab />}
-
-        {activeTab === 'roster' && <RosterManagement />}
-
-        {activeTab === 'reports' && <ReportingView />}
-
-        {activeTab === 'setup' && <AdminSetupView />}
-      </main>
+      {/* Main Content Area: Responsive Fluid vs Mobile Device Shell */}
+      {viewportMode === 'mobile' ? (
+        <div className="flex-1 w-full flex items-center justify-center py-4 bg-slate-200/70">
+          <MobileDeviceShell>
+            {renderActiveTabContent()}
+          </MobileDeviceShell>
+        </div>
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {renderActiveTabContent()}
+        </main>
+      )}
 
       {/* Floating Action Scanner Button (Quick Access) */}
       <div className="fixed bottom-6 right-6 z-30">
         <button
           type="button"
           onClick={() => setIsScannerOpen(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-4 py-3 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition transform hover:-translate-y-0.5 active:scale-95"
+          className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-4 py-3 rounded-full shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition transform hover:-translate-y-0.5 active:scale-95 cursor-pointer"
         >
           <Scan className="w-5 h-5 animate-pulse" />
           <span className="text-xs tracking-wide uppercase hidden sm:inline">
@@ -145,7 +163,9 @@ export default function App() {
   return (
     <AuthProvider>
       <AttendanceProvider>
-        <AppContent />
+        <ViewportProvider>
+          <AppContent />
+        </ViewportProvider>
       </AttendanceProvider>
     </AuthProvider>
   );

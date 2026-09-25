@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAttendance } from '../context/AttendanceContext';
+import { useViewport } from '../context/ViewportContext';
 import { sound } from '../utils/sound';
 import {
   School,
@@ -19,6 +20,8 @@ import {
   Menu,
   X,
   Briefcase,
+  Smartphone,
+  Monitor,
 } from 'lucide-react';
 import { SchoolLogo } from './SchoolLogo';
 
@@ -54,6 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     selectedCampus,
     setSelectedCampus,
   } = useAttendance();
+  const { viewportMode, setViewportMode } = useViewport();
 
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -166,7 +170,46 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Quick Actions & User Switcher */}
-            <div className="flex items-center space-x-2.5">
+            <div className="flex items-center space-x-2 sm:space-x-2.5">
+              {/* Device View Segmented Switcher */}
+              <div
+                className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 shadow-xs"
+                role="group"
+                aria-label="Device View Switcher"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewportMode('auto')}
+                  className={`flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    viewportMode === 'auto'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/60'
+                  }`}
+                  title="Responsive (Auto) - Fluid full-width desktop view"
+                  aria-pressed={viewportMode === 'auto'}
+                >
+                  <Monitor className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden md:inline">Responsive (Auto)</span>
+                  <span className="hidden xs:inline md:hidden">Auto</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewportMode('mobile')}
+                  className={`flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    viewportMode === 'mobile'
+                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xs ring-1 ring-indigo-400/40'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/60'
+                  }`}
+                  title="Mobile View - Fixed-width centered mobile phone shell preview"
+                  aria-pressed={viewportMode === 'mobile'}
+                >
+                  <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden md:inline">Mobile View</span>
+                  <span className="hidden xs:inline md:hidden">Mobile</span>
+                </button>
+              </div>
+
               {/* Sound Toggle */}
               <button
                 type="button"
@@ -280,7 +323,45 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Mobile Collapsible Navigation Menu */}
           {mobileMenuOpen && (
-            <div className="sm:hidden py-3 border-t border-slate-800 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="sm:hidden py-3 border-t border-slate-800 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* Device View Mode Switcher in Mobile Drawer */}
+              <div className="bg-slate-800/80 p-2 rounded-2xl border border-slate-700/80">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 px-1 flex items-center justify-between">
+                  <span>Display Mode</span>
+                  <span className="text-indigo-400 font-mono">{viewportMode === 'mobile' ? 'Phone Shell Active' : 'Fluid Auto Active'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewportMode('auto');
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      viewportMode === 'auto'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-900/80 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Monitor className="w-3.5 h-3.5" />
+                    <span>Responsive (Auto)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewportMode('mobile');
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      viewportMode === 'mobile'
+                        ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xs'
+                        : 'bg-slate-900/80 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>Mobile View</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Primary Mobile Gate Check-in for Children and Staff */}
               <button
                 type="button"
