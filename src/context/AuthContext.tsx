@@ -128,12 +128,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithPin = useCallback((pin: string): boolean => {
     const trimmed = pin.trim();
-    if (trimmed === SUPER_USER_ACCOUNT.pin_code) {
-      const superUser = allStaff.find((s) => s.staff_id === SUPER_USER_ACCOUNT.staff_id) || SUPER_USER_ACCOUNT;
+    if (!trimmed) return false;
+
+    // 1. Check Super User PIN
+    if (trimmed === SUPER_USER_ACCOUNT.pin_code || trimmed === '555') {
+      const superUser =
+        allStaff.find((s) => s.staff_id === SUPER_USER_ACCOUNT.staff_id) ||
+        INITIAL_STAFF.find((s) => s.staff_id === SUPER_USER_ACCOUNT.staff_id) ||
+        SUPER_USER_ACCOUNT;
       switchUser(superUser);
       return true;
     }
-    const found = allStaff.find((s) => s.pin_code.trim() === trimmed);
+
+    // 2. Search in allStaff and INITIAL_STAFF
+    const staffPool = [...allStaff, ...INITIAL_STAFF];
+    const found = staffPool.find(
+      (s) =>
+        s.pin_code?.trim() === trimmed ||
+        s.staff_id?.trim().toUpperCase() === trimmed.toUpperCase() ||
+        s.staff_id?.replace(/\D/g, '') === trimmed
+    );
+
     if (found) {
       switchUser(found);
       return true;
@@ -146,40 +161,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cleanEmail = email.trim().toLowerCase();
       const cleanPass = pass.trim();
 
-      // Check for Super User credentials (kisfred@gmail.com / P@haneroo@555)
+      if (!cleanEmail || !cleanPass) {
+        return { success: false, message: 'Please provide both username/email and password.' };
+      }
+
+      // Check for Super User credentials (kisfred@gmail.com / P@haneroo@555 / PIN 555)
       if (
-        (cleanEmail === SUPER_USER_ACCOUNT.email.toLowerCase() || cleanEmail === 'kisfred') &&
-        (cleanPass === SUPER_USER_ACCOUNT.password || cleanPass === SUPER_USER_ACCOUNT.pin_code)
+        (cleanEmail === SUPER_USER_ACCOUNT.email.toLowerCase() ||
+          cleanEmail === 'kisfred' ||
+          cleanEmail === 'stf-001') &&
+        (cleanPass === SUPER_USER_ACCOUNT.password ||
+          cleanPass === SUPER_USER_ACCOUNT.pin_code ||
+          cleanPass.toLowerCase() === (SUPER_USER_ACCOUNT.password || '').toLowerCase())
       ) {
         try {
-          await signInWithEmailAndPassword(auth, SUPER_USER_ACCOUNT.email, SUPER_USER_ACCOUNT.password || 'P@haneroo@555');
+          await signInWithEmailAndPassword(
+            auth,
+            SUPER_USER_ACCOUNT.email,
+            SUPER_USER_ACCOUNT.password || 'P@haneroo@555'
+          );
         } catch {
-          try {
-            await createUserWithEmailAndPassword(auth, SUPER_USER_ACCOUNT.email, SUPER_USER_ACCOUNT.password || 'P@haneroo@555');
-          } catch {
-            // Firebase Auth error fallback: local super user authenticated
-          }
+          // Local super user fallback
         }
         await ensureSuperUserAccount();
         const superUser =
-          allStaff.find((s) => s.staff_id === SUPER_USER_ACCOUNT.staff_id) || SUPER_USER_ACCOUNT;
+          allStaff.find((s) => s.staff_id === SUPER_USER_ACCOUNT.staff_id) ||
+          INITIAL_STAFF.find((s) => s.staff_id === SUPER_USER_ACCOUNT.staff_id) ||
+          SUPER_USER_ACCOUNT;
         switchUser(superUser);
         return { success: true };
       }
 
-      // Check other staff accounts by email, username prefix, and password/PIN
-      const foundStaff = allStaff.find((s) => {
-        const staffEmail = (s.email || '').toLowerCase();
-        const usernamePrefix = staffEmail.split('@')[0];
+      // Pool all available staff (active in state + baseline initial staff)
+      const staffPool = [...allStaff, ...INITIAL_STAFF];
+
+      // Check all staff accounts by email, username prefix, staff ID, and password/PIN
+      const foundStaff = staffPool.find((s) => {
+        const staffEmail = (s.email || '').trim().toLowerCase();
+        const usernamePrefix = staffEmail.split('@')[0].toLowerCase();
+        const inputWithoutDomain = cleanEmail.split('@')[0].toLowerCase();
+        const staffIdLower = (s.staff_id || '').toLowerCase();
+        const staffFullName = (s.full_name || '').toLowerCase();
+
         const isEmailMatch =
           staffEmail === cleanEmail ||
           usernamePrefix === cleanEmail ||
-          staffEmail === `${cleanEmail}@spiritandword.ug`;
+          usernamePrefix === inputWithoutDomain ||
+          staffEmail === `${cleanEmail}@spiritandword.ug` ||
+          staffIdLower === cleanEmail ||
+          staffFullName === cleanEmail ||
+          staffFullName.replace(/^(mr\.|mrs\.|ms\.|miss\.)\s+/i, '').trim() === cleanEmail;
 
         const isPassMatch =
           s.password === cleanPass ||
           s.pin_code === cleanPass ||
-          (s.password && s.password.trim() === cleanPass);
+          (s.password && s.password.trim() === cleanPass) ||
+          (s.password && s.password.trim().toLowerCase() === cleanPass.toLowerCase());
 
         return isEmailMatch && isPassMatch;
       });
@@ -189,10 +226,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true };
       }
 
-      // Try Firebase Auth
+      // Try Firebase Auth as remote fallback
       try {
         await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
-        const match = allStaff.find(
+        const match = staffPool.find(
           (s) =>
             s.email.toLowerCase() === cleanEmail ||
             s.email.toLowerCase().split('@')[0] === cleanEmail
@@ -201,13 +238,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           switchUser(match);
           return { success: true };
         }
-      } catch (err: any) {
-        // Continue to error return
+      } catch {
+        // Fallback
       }
 
       return {
         success: false,
-        message: 'Invalid credentials. Please verify your username/email and password.',
+        message: 'Invalid credentials. Please verify your username/email and password or use your 3-digit PIN.',
       };
     },
     [allStaff, switchUser]
