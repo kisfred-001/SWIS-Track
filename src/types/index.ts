@@ -157,6 +157,7 @@ export interface AttendanceLog {
   created_at: string;
   updated_at?: string;
   last_edited_by?: string;
+  audit_note?: string;
 }
 
 export interface EditRequest {

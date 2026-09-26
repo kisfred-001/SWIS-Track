@@ -267,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* ROW 3: Real-Time Dashboard, Campus Modules, Staff Module, Attendance Logs & Edit Requests, Roster & Badges, Analytics & Reports */}
+          {/* ROW 3: Real-Time Dashboard, Student Attendance, Staff Attendance, Campus Modules, Staff Roster, Attendance Logs & Edit Requests, Roster & Badges, Analytics & Reports */}
           <div className="flex items-center justify-between py-2 border-b border-white/20 gap-1.5 overflow-x-auto scrollbar-none text-xs font-bold">
             <div className="flex items-center space-x-2 shrink-0 flex-wrap sm:flex-nowrap gap-y-2">
               {/* Real-Time Dashboard */}
@@ -281,7 +281,35 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <School className="w-4 h-4" />
-                <span>Real-Time Dashboard</span>
+                <span>Dashboard</span>
+              </button>
+
+              {/* Student Attendance Page */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('student_attendance')}
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
+                  activeTab === 'student_attendance'
+                    ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
+                }`}
+              >
+                <Users className="w-4 h-4 text-indigo-700" />
+                <span>Student Tracking</span>
+              </button>
+
+              {/* Staff Attendance Page */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('staff_attendance')}
+                className={`px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 shadow-xs ${
+                  activeTab === 'staff_attendance'
+                    ? 'bg-[#FCCB0D] text-slate-900 ring-2 ring-white/50 font-extrabold'
+                    : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
+                }`}
+              >
+                <Briefcase className="w-4 h-4 text-amber-700" />
+                <span>Staff Tracking</span>
               </button>
 
               {/* Campus Modules */}
@@ -294,7 +322,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'bg-[#ebebeb] text-slate-900 hover:bg-[#FCCB0D]'
                 }`}
               >
-                <span>Campus Modules</span>
+                <span>Campuses</span>
               </button>
 
               {/* Staff Module */}

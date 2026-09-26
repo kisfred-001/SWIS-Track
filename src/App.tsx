@@ -24,6 +24,8 @@ import { InactivityWarningBanner } from './components/InactivityWarningBanner';
 import { LoginScreen } from './components/LoginScreen';
 import { MobileDeviceShell } from './components/MobileDeviceShell';
 import { SimplifiedLandingPage } from './components/SimplifiedLandingPage';
+import { StudentAttendanceTable } from './components/StudentAttendanceTable';
+import { StaffAttendanceTable } from './components/StaffAttendanceTable';
 import { ShieldCheck, Scan, School, Loader2 } from 'lucide-react';
 
 function AppContent() {
@@ -114,7 +116,13 @@ function AppContent() {
         />
       )}
 
-      {/* Staff Management Module */}
+      {/* Dedicated Student Attendance Datasheet Page */}
+      {activeTab === 'student_attendance' && <StudentAttendanceTable />}
+
+      {/* Dedicated Staff Attendance Datasheet Page */}
+      {activeTab === 'staff_attendance' && <StaffAttendanceTable />}
+
+      {/* Staff Management Roster Module */}
       {activeTab === 'staff' && <StaffManagementView />}
 
       {activeTab === 'campuses' && <CampusesView />}

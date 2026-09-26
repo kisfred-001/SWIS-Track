@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export interface RefreshButtonProps {
-  onRefresh?: () => Promise<void> | void;
+  onRefresh?: () => Promise<any> | any;
   isRefreshing?: boolean;
   label?: string;
   variant?: 'primary' | 'secondary' | 'dark' | 'outline' | 'minimal';
